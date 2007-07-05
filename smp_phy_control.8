@@ -1,11 +1,12 @@
-.TH SMP_PHY_CONTROL "8" "June 2006" "smp_utils-0.90" SMP_UTILS
+.TH SMP_PHY_CONTROL "8" "August 2006" "smp_utils-0.91" SMP_UTILS
 .SH NAME
 smp_phy_control \- invoke PHY CONTROL SMP function
 .SH SYNOPSIS
 .B smp_phy_control
-[\fI--help\fR] [\fI--hex\fR] [\fI--interface=<params>\fR] [\fI--min=<n>\fR]
-[\fI--max=<n>\fR] [\fI--op=<op>\fR] [\fI--phy=<n>\fR] [\fI--pptv=<n>\fR]
-[\fI--raw\fR] [\fI--sa=<sas_addr>\fR] [\fI--verbose\fR] [\fI--version\fR]
+[\fI--expected=<n>\fR] [\fI--help\fR] [\fI--hex\fR]
+[\fI--interface=<params>\fR] [\fI--min=<n>\fR] [\fI--max=<n>\fR]
+[\fI--op=<op>\fR] [\fI--phy=<n>\fR] [\fI--pptv=<n>\fR] [\fI--raw\fR]
+[\fI--sa=<sas_addr>\fR] [\fI--verbose\fR] [\fI--version\fR]
 \fI<smp_device>[,<n>]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -31,6 +32,14 @@ which might be in an environment variable or not needed) is
 harmless. In other words a phy's state is only changed when
 either '--max=', '--min=', '--op=' or '--pptv=' is given
 with a non default value.
+.TP
+--expected=<n> | -E <n>
+set the 'expected expander change count' field in the SMP request.
+The value <n> is from 0 to 65535 inclusive with 0 being the default
+value. When <n> is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
 .TP
 --help | -h
 output the usage message then exit.
@@ -78,7 +87,7 @@ send the response to stdout in binary. All error messages are sent to stderr.
 specifies the SAS address of the SMP target device. Typically this is an
 expander. This option may not be needed if the <smp_device> has the target's
 SAS address within it. The <sas_addr> is in decimal but most SAS addresses
-are shown in hexadecimal. The give a number in hexadecimal either prefix
+are shown in hexadecimal. To give a number in hexadecimal either prefix
 it with '0x' or put a trailing 'h' on it.
 .TP
 --verbose | -v

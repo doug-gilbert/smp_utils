@@ -101,7 +101,6 @@ void SmpImmediateIoctl(int fd, int ioc_num);
  *****************************************************************/
 int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 {
-        MPIDefaultReply_t *pReply = NULL;
         int CmdBlkSize;
         int status = -1;
 
@@ -115,8 +114,11 @@ int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
         mpiBlkPtr->hdr.port = 0;
 
         if (ioctl(fd, (unsigned long) MPTCOMMAND, (char *) mpiBlkPtr) != 0)
-                perror("IOCTL failed");
+                perror("MPTCOMMAND ioctl failed");
         else {
+#if 0
+                MPIDefaultReply_t *pReply = NULL;
+
                 /* Be smarter about dumping and using data.
                  * If SCSI IO, reply may be null and data xfer
                  * will be good. If a non-SCSI IO, if reply is
@@ -132,26 +134,22 @@ int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
                         status = pReply->IOCStatus & MPI_IOCSTATUS_MASK;
 
                 } else
+#endif
                         status = 0;
         }
 
         return status;
 }
 
-#if 1
 int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
-                        struct smp_req_resp * rresp, int verbose)
+                 struct smp_req_resp * rresp, int verbose)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
         pSmpPassthroughReply_t smpReply;
         uint numBytes;
         int  k, status;
-        /* here is my hard coded expander sas address */
-        // unsigned char expanderSasAddr[] =
-        //               {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
-        /* here is a Request General */
-        // unsigned char smp_request[] = {0x40, 0, 0, 0};
+        char reply_m[1200];
         u16     ioc_stat;
         unsigned char * ucp;
         int ret = -1;
@@ -172,8 +170,9 @@ int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         if (mpiBlkPtr == NULL)
                 goto err_out;
         memset(mpiBlkPtr, 0, sizeof(mpiIoctlBlk_t) + numBytes);
-        mpiBlkPtr->replyFrameBufPtr = (char *)rresp->response;
-        memset(mpiBlkPtr->replyFrameBufPtr, 0, rresp->max_response_len);
+        mpiBlkPtr->replyFrameBufPtr = reply_m;
+        memset(mpiBlkPtr->replyFrameBufPtr, 0, sizeof(reply_m));
+        mpiBlkPtr->maxReplyBytes = sizeof(reply_m);
         smpReq = (pSmpPassthroughRequest_t)mpiBlkPtr->MF;
         mpiBlkPtr->dataSgeOffset = offsetof(SmpPassthroughRequest_t, SGL) / 4;
         smpReply = (pSmpPassthroughReply_t)mpiBlkPtr->replyFrameBufPtr;
@@ -207,7 +206,75 @@ int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         }
 
         ioc_stat = smpReply->IOCStatus & MPI_IOCSTATUS_MASK;
-        if (ioc_stat != MPI_IOCSTATUS_SUCCESS) {
+        if ((ioc_stat != MPI_IOCSTATUS_SUCCESS) ||
+            (smpReply->SASStatus != MPI_SASSTATUS_SUCCESS)) {
+                if (verbose) {
+                        switch(smpReply->SASStatus) {
+                        case MPI_SASSTATUS_UNKNOWN_ERROR: 
+                                fprintf(stderr, "Unknown SAS (SMP) error\n");
+                                break;
+                        case MPI_SASSTATUS_INVALID_FRAME: 
+                                fprintf(stderr, "Invalid frame\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_BAD_DEST: 
+                                fprintf(stderr, "Unable to connect (bad "
+                                        "destination)\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_BREAK_RECEIVED: 
+                                fprintf(stderr, "Unable to connect (break "
+                                        "received)\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED: 
+                                fprintf(stderr, "Unable to connect (connect "
+                                        "rate not supported)\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_PORT_LAYER_REQUEST: 
+                                fprintf(stderr, "Unable to connect (port "
+                                        "layer request)\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED: 
+                                fprintf(stderr, "Unable to connect (protocol "
+                                        "(SMP target) not supported)\n");
+                                break;
+                        case MPI_SASSTATUS_UTC_WRONG_DESTINATION: 
+                                fprintf(stderr, "Unable to connect (wrong "
+                                        "destination)\n");
+                                break;
+                        case MPI_SASSTATUS_SHORT_INFORMATION_UNIT: 
+                                fprintf(stderr, "Short information unit\n");
+                                break;
+                        case MPI_SASSTATUS_DATA_INCORRECT_DATA_LENGTH: 
+                                fprintf(stderr, "Incorrect data length\n");
+                                break;
+                        case MPI_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT: 
+                                fprintf(stderr, "Initiator response "
+                                        "timeout\n");
+                                break;
+                        default:
+                                if (smpReply->SASStatus !=
+                                    MPI_SASSTATUS_SUCCESS) {
+                                        fprintf(stderr, "Unrecognized SAS "
+                                                "(SMP) error 0x%x\n",
+                                                smpReply->SASStatus);
+                                        break;
+                                }
+                                if (smpReply->IOCStatus ==
+                                    MPI_IOCSTATUS_SAS_SMP_REQUEST_FAILED)
+                                        fprintf(stderr, "SMP request failed "
+                                                "(IOCStatus)\n");
+                                else if (smpReply->IOCStatus ==
+                                         MPI_IOCSTATUS_SAS_SMP_DATA_OVERRUN)
+                                        fprintf(stderr, "SMP data overrun "
+                                                "(IOCStatus)\n");
+                                else if (smpReply->IOCStatus ==
+                                         MPI_IOCSTATUS_SCSI_DEVICE_NOT_THERE)
+                                        fprintf(stderr, "Device not there "
+                                                "(IOCStatus)\n");
+                                else
+                                        fprintf(stderr, "IOCStatus=0x%x\n",
+                                                smpReply->IOCStatus);
+                        }
+                }
                 if (verbose > 1)
                         fprintf(stderr, "IOCStatus=0x%X IOCLogInfo=0x%X "
                                 "SASStatus=0x%X\n",
@@ -228,95 +295,6 @@ err_out:
         }
         return ret;
 }
-
-#else
-
-int smp_send_req(int fd, int subvalue, struct smp_req_resp * rresp,
-                 int verbose)
-{
-        mpiIoctlBlk_t * mpiBlkPtr = NULL;
-        pSmpPassthroughRequest_t smpReq;
-        pSmpPassthroughReply_t smpReply;
-        uint numBytes;
-        int  status, k;
-        u16     ioc_stat;
-        unsigned char * ucp;
-        int ret = -1;
-
-        numBytes = offsetof(SmpPassthroughRequest_t, SGL) +
-                   (2 * sizeof(SGESimple64_t));
-        mpiBlkPtr = malloc(sizeof(mpiIoctlBlk_t) + numBytes);
-        if (mpiBlkPtr == NULL)
-                goto err_out;
-        memset(mpiBlkPtr, 0, sizeof(mpiIoctlBlk_t) + numBytes);
-        mpiBlkPtr->replyFrameBufPtr = malloc(REPLY_SIZE);
-        if (mpiBlkPtr->replyFrameBufPtr == NULL)
-                goto err_out;
-        memset(mpiBlkPtr->replyFrameBufPtr, 0, REPLY_SIZE);
-        smpReq = (pSmpPassthroughRequest_t)mpiBlkPtr->MF;
-        mpiBlkPtr->dataSgeOffset = offsetof(SmpPassthroughRequest_t, SGL) / 4;
-        smpReply = (pSmpPassthroughReply_t)mpiBlkPtr->replyFrameBufPtr;
-
-        /* send smp request */
-        mpiBlkPtr->dataOutSize = rresp->request_len;
-        mpiBlkPtr->dataOutBufPtr = malloc(mpiBlkPtr->dataOutSize);
-        if (mpiBlkPtr->dataOutBufPtr == NULL)
-                goto err_out;
-        memcpy(mpiBlkPtr->dataOutBufPtr, rresp->request, rresp->request_len);
-        mpiBlkPtr->dataInSize = 1020;
-        mpiBlkPtr->dataInBufPtr = malloc(mpiBlkPtr->dataInSize);
-        if(mpiBlkPtr->dataInBufPtr == NULL)
-                goto err_out;
-        memset(mpiBlkPtr->dataInBufPtr, 0, mpiBlkPtr->dataInSize);
-
-        /* Populate the SMP Request
-         */
-
-        /* PassthroughFlags
-         * Bit7: 0=two SGLs 1=Payload returned in Reply
-         */
-        memset(smpReq, 0, sizeof(smpReq));
-        smpReq->RequestDataLength = rresp->request_len; // <<<<<<<<<<<< ??
-        smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
-        ucp = (unsigned char *)&smpReq->SASAddress;
-        for (k = 0; k < 8; ++k)
-                ucp[k] = rresp->sas_addr[7 - k];
-
-        status = issueMptCommand(fd, subvalue, mpiBlkPtr);
-
-        if (status != 0) {
-                if (verbose > 1)
-                        fprintf(stderr, "issueMptCommand failed\n");
-                goto err_out;
-        }
-
-        ioc_stat = smpReply->IOCStatus & MPI_IOCSTATUS_MASK;
-        if (ioc_stat != MPI_IOCSTATUS_SUCCESS) {
-                printf("IOCStatus=0x%X IOCLogInfo=0x%X SASStatus=0x%X\n",
-                    smpReply->IOCStatus,
-                    smpReply->IOCLogInfo,
-                    smpReply->SASStatus);
-        } else {
-                printf("succeeded\n");
-        }
-        memcpy(rresp->response, mpiBlkPtr->dataInBufPtr, rresp->max_response_len);
-        rresp->act_response_len = -1;
-        ret = 0;
-
-err_out:
-        if (mpiBlkPtr) {
-                if (mpiBlkPtr->dataInBufPtr)
-                        free(mpiBlkPtr->dataInBufPtr);
-                if (mpiBlkPtr->dataOutBufPtr)
-                        free(mpiBlkPtr->dataOutBufPtr);
-                if (mpiBlkPtr->replyFrameBufPtr)
-                        free(mpiBlkPtr->replyFrameBufPtr);
-                free(mpiBlkPtr);
-        }
-        rresp->transport_err = ret;
-        return ret;
-}
-#endif
 
 #if 0
 /*****************************************************************

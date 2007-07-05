@@ -1,12 +1,12 @@
-.TH SMP_CONF_ROUTE_INFO "8" "June 2006" "smp_utils-0.90" SMP_UTILS
+.TH SMP_CONF_ROUTE_INFO "8" "August 2006" "smp_utils-0.91" SMP_UTILS
 .SH NAME
 smp_conf_route_info \- invoke CONFIGURE ROUTE INFORMATION SMP function
 .SH SYNOPSIS
 .B smp_conf_route_info
-[\fI--disable\fR] [\fI--help\fR] [\fI--hex\fR] [\fI--index=<n>\fR]
-[\fI--interface=<params>\fR] [\fI--phy=<n>\fR] [\fI--raw\fR]
-[\fI--routed=<sas_addr>\fR] [\fI--sa=<sas_addr>\fR] [\fI--verbose\fR]
-[\fI--version\fR] \fI<smp_device>[,<n>]\fR
+[\fI--disable\fR] [\fI--expected=<n>\fR] [\fI--help\fR] [\fI--hex\fR]
+[\fI--index=<n>\fR] [\fI--interface=<params>\fR] [\fI--phy=<n>\fR]
+[\fI--raw\fR] [\fI--routed=<sas_addr>\fR] [\fI--sa=<sas_addr>\fR]
+[\fI--verbose\fR] [\fI--version\fR] \fI<smp_device>[,<n>]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -27,6 +27,14 @@ set the "disable expander route entry" flag in a row of the router table
 associated with '--phy=<n>' of the given SMP target (e.g. an expander).
 Within the router table the row that is disabled is identified by
 the expander route index given by '--index=<n>'.
+.TP
+--expected=<n> | -E <n>
+set the 'expected expander change count' field in the SMP request.
+The value <n> is from 0 to 65535 inclusive with 0 being the default
+value. When <n> is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
 .TP
 --help | -h
 output the usage message then exit.
@@ -53,14 +61,14 @@ send the response to stdout in binary. All error messages are sent to stderr.
 specifies the SAS address to be placed in a row (given by '--index=<n>') of
 the router table associated with '--phy=<n>'. Default value is 0.
 The <sas_addr> is in decimal but most SAS addresses are given in hexadecimal.
-The give a number in hexadecimal either prefix it with '0x' or put a
+To give a number in hexadecimal either prefix it with '0x' or put a
 trailing 'h' on it.
 .TP
 --sa=<sas_addr> | -s <sas_addr>
 specifies the SAS address of the SMP target device. Typically this is an
 expander. This option may not be needed if the <smp_device> has the target's
 SAS address within it. The <sas_addr> is in decimal but most SAS addresses
-are shown in hexadecimal. The give a number in hexadecimal either prefix
+are shown in hexadecimal. To give a number in hexadecimal either prefix
 it with '0x' or put a trailing 'h' on it.
 .TP
 --verbose | -v

@@ -1,11 +1,11 @@
-.TH SMP_REP_GENERAL "8" "June 2006" "smp_utils-0.90" SMP_UTILS
+.TH SMP_REP_GENERAL "8" "July 2006" "smp_utils-0.91" SMP_UTILS
 .SH NAME
 smp_rep_general \- invoke REPORT GENERAL SMP function
 .SH SYNOPSIS
 .B smp_rep_general
-[\fI--help\fR] [\fI--hex\fR] [\fI--interface=<params>\fR] [\fI--raw\fR]
-[\fI--sa=<sas_addr>\fR] [\fI--verbose\fR] [\fI--version\fR]
-\fI<smp_device>[,<n>]\fR
+[\fI--change_report\fR] [\fI--help\fR] [\fI--hex\fR]
+[\fI--interface=<params>\fR] [\fI--raw\fR] [\fI--sa=<sas_addr>\fR]
+[\fI--verbose\fR] [\fI--version\fR] \fI<smp_device>[,<n>]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -15,6 +15,11 @@ and the <sas_addr>. Depending on the interface, the <sas_addr>
 may be deduced from the <smp_device>. With one interface there is
 one <smp_device> per machine so the '<smp_device>,<n>' syntax is
 needed to differentiate between HBAs if there are multiple present.
+.TP
+--change_report | -c
+reports (prints to stdout) the value of the expander change count
+field from the response. The value is printed in decimal and is
+obtained from a 16 bit field.
 .TP
 --help | -h
 output the usage message then exit.
@@ -34,7 +39,7 @@ send the response to stdout in binary. All error messages are sent to stderr.
 specifies the SAS address of the SMP target device. Typically this is an
 expander. This option may not be needed if the <smp_device> has the target's
 SAS address within it. The <sas_addr> is in decimal but most SAS addresses
-are shown in hexadecimal. The give a number in hexadecimal either prefix
+are shown in hexadecimal. To give a number in hexadecimal either prefix
 it with '0x' or put a trailing 'h' on it.
 .TP
 --verbose | -v

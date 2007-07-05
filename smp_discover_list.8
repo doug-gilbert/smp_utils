@@ -1,16 +1,16 @@
-.TH SMP_DISCOVER "8" "August 2006" "smp_utils-0.91" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "August 2006" "smp_utils-0.91" SMP_UTILS
 .SH NAME
-smp_discover \- invoke DISCOVER SMP function
+smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
-.B smp_discover
-[\fI--brief\fR] [\fI--help\fR] [\fI--hex\fR] [\fI--ignore\fR]
-[\fI--interface=<params>\fR] [\fI--multiple\fR] [\fI--num=<n>\fR]
-[\fI--phy=<n>\fR] [\fI--raw\fR] [\fI--sa=<sas_addr>\fR] [\fI--verbose\fR]
-[\fI--version\fR] \fI<smp_device>[,<n>]\fR
+.B smp_discover_list
+[\fI--brief\fR] [\fI--descriptor=<n>\fR] [\fI--filter=<n>\fR] [\fI--help\fR]
+[\fI--hex\fR] [\fI--ignore\fR] [\fI--interface=<params>\fR] [\fI--num=<n>\fR]
+[\fI--one\fR] [\fI--phy=<n>\fR] [\fI--raw\fR] [\fI--sa=<sas_addr>\fR]
+[\fI--verbose\fR] [\fI--version\fR] \fI<smp_device>[,<n>]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) DISCOVER request function to a SMP
+Sends a SAS Management Protocol (SMP) DISCOVER LIST request function to a SMP
 target and decodes or outputs the response. The SMP target is identified by
 the <smp_device> and the <sas_addr>. Depending on the interface,
 the <sas_addr> may be deduced from the <smp_device>. With one interface
@@ -18,10 +18,18 @@ there is one <smp_device> per machine so the '<smp_device>,<n>' syntax is
 needed to differentiate between HBAs if there are multiple present.
 .TP
 --brief | -b
-reduce the decoded response output. If used twice will exit if there is
-no attached device (after outputting that). When used with '--multiple'
-unattached phys are not listed; when used twice, trims attached phys
-output.
+reduce the decoded response output.
+.TP
+--descriptor=<n> | -d <n>
+set the descriptor type field in the request. When <n> is 0 (default) use
+DISCOVER response format as descriptor in the response. When <n> is 1 use
+the short format (i.e. 24 byte per descriptor) descriptor in the response.
+.TP
+--filter=<n> | -f <n>
+set the filter field in the request. When <n> is 0 (default) fetch
+descriptors for all phys. When <n> is 1 only fetch descriptors for
+phys attached to expanders. When <n> is 2 only fetch descriptors for
+phys attached to expanders or end devices.
 .TP
 --help | -h
 output the usage message then exit.
@@ -37,22 +45,24 @@ interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
---multiple | -m
-loops over multiple phys within SMP target (typically an expander) and
-does a DISCOVER request and outputs a one line summary. Phy 0 is queried
-first, then phy 1, continuing until an error occurs. If '--brief' is given
-then there is no output for phys that indicate there is no attached device;
-when used twice additionally trims the output line of attached phys.
-.TP
 --num=<n> | -n <n>
-number of phys to fetch, starting at '--phy=<n>' when the '--multiple'
-option is given. The default value is 0 which is interpreted
-as "the rest" (i.e. until a "phy does not exist" function result is
-received). This option is ignored in the absence of the '--multiple'
-option.
+maximum number of descriptors fetch. If any descriptors are in the
+response the first phy id will be greater than or equal to the
+argument of '--phy=<n>'. Note that maximum SMP frame size is
+1032 bytes (including a trailing 4 byte CRC) which may limit
+the number of descriptors that can be fetched by a single DISCOVER
+LIST function (especially when '--descriptor=0').
+.TP
+--one | -o
+use one line (summarized) format for each descriptor in the response.
+The default action when this option is not given is to output multiple
+indented lines for each descriptor in the response.
 .TP
 --phy=<n> | -p <n>
 phy identifier. This is a value between 0 and 127. Default is 0.
+This is the lowest numbered phy id to attempt fetch in the response.
+Note that due to the filter field setting, the first phy id in
+the response may be greater than the argument to this option.
 .TP
 --raw | -r
 send the response to stdout in binary. All error messages are sent to stderr.
@@ -70,12 +80,13 @@ increase the verbosity of the output. Can be used multiple times
 --version | -V
 print the version string and then exit.
 .SH SINGLE LINE FORMAT
-The '--multiple' option causes SMP DISCOVER responses to be compressed to
-a header followed by one line per phy. To save space SAS addresses are shown
-in hex without a '0x' prefix or 'h' suffix. The header line gives the SAS
-address of the SMP target itself and assumes it is an expander.
+The '--one' option causes SMP DISCOVER LIST descriptors to be compressed to
+a header section followed by one line per phy. To save space SAS addresses
+are shown in hex without a '0x' prefix or 'h' suffix. The header section
+outputs information found in the DISCOVER LIST response's header section.
 .PP
-Each line starts with "  phy  <n>:" where <n> is the phy
+For each descriptor in the DISCOVER LIST response, one line is output
+starting with "  phy  <n>:" where <n> is the phy
 identifier (and they are origin zero). That is followed by the routing
 attribute represented by a single letter which is either "D" for direct
 routing, "S" to subtractive routing and "T" for table routing. Then comes
@@ -117,4 +128,4 @@ Copyright \(co 2006 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_discover_list, smp_phy_control
+.B smp_utils, smp_discover, smp_phy_control

@@ -9,9 +9,14 @@ to 0 .
 
 There is a pass through ioctl defined for the /dev/mptctl
 device which this library uses. Since '/dev/mptctl,<n>' only
-decsribes a (SMP) host, the SAS address of the target device
-must be given  (i.e. therefore the '--sa=<sas_addr>' option
-must be given.
+describes a SMP host (initiator), the SAS address of the target
+SMP device must also be given. This can be done on the command
+line (with the '--sa=<sas_addr>' option) or with the environment
+variable SMP_UTILS_SAS_ADDR set to the SAS address of the SMP
+target device.
+
+To save typing, the SMP host (i.e. '/dev/mptctl,<n>') can be
+placed in the SMP_UTILS_DEVICE environment variable
 
 Douglas Gilbert
-29th May 2006
+16th August 2006

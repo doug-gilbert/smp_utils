@@ -11,12 +11,14 @@ LD = $(CC)
 
 EXECS = smp_rep_general smp_rep_manufacturer smp_discover smp_phy_control \
 	smp_rep_phy_err_log smp_rep_phy_sata smp_rep_route_info \
-	smp_read_gpio smp_conf_route_info smp_write_gpio
+	smp_read_gpio smp_conf_route_info smp_write_gpio smp_phy_test \
+	smp_discover_list
 
 MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_discover.8 smp_phy_control.8 smp_rep_phy_err_log.8 \
 	  smp_rep_phy_sata.8 smp_rep_route_info.8 smp_read_gpio.8 \
-	  smp_conf_route_info.8 smp_write_gpio.8
+	  smp_conf_route_info.8 smp_write_gpio.8 smp_phy_test.8 \
+	  smp_discover_list.8
 MAN_PREF = man8
 
 OS_FLAGS = -DSMP_UTILS_LINUX
@@ -88,6 +90,12 @@ smp_conf_route_info: smp_conf_route_info.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 smp_write_gpio: smp_write_gpio.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_phy_test: smp_phy_test.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_discover_list: smp_discover_list.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 install: $(EXECS)

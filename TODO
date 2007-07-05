@@ -1,8 +1,7 @@
- - complete the existing SMP functions
  - track new functions and additions to existing functions in the
    SAS-2 draft and SFF-8485
  - implement CSMI/SDI and sg_io_hdr version 3 (plus) type interfaces
 
 
 Douglas Gilbert
-10th June 2006
+15th August 2006

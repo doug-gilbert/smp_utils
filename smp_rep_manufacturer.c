@@ -46,7 +46,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.02 20060608";
+static char * version_str = "1.04 20060816";
 
 #define ME "smp_rep_manufacturer: "
 
@@ -115,7 +115,7 @@ int main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
-    int ret = 1;
+    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -142,7 +142,7 @@ int main(int argc, char * argv[])
            phy_id = smp_get_num(optarg);
            if ((phy_id < 0) || (phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             if (verbose)
                 fprintf(stderr, "'--phy=<n>' option not needed so "
@@ -155,7 +155,7 @@ int main(int argc, char * argv[])
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad argument to '--sa'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
             break;
@@ -168,7 +168,7 @@ int main(int argc, char * argv[])
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (optind < argc) {
@@ -182,7 +182,7 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "Unexpected extra argument: %s\n",
                         argv[optind]);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == device_name[0]) {
@@ -193,14 +193,14 @@ int main(int argc, char * argv[])
             fprintf(stderr, "missing device name!\n    [Could use "
                     "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after comma in <device> name\n");
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == sa) {
@@ -221,7 +221,7 @@ int main(int argc, char * argv[])
             fprintf(stderr, "SAS (target) address not in naa-5 format\n");
             if ('\0' == i_params[0]) {
                 fprintf(stderr, "    use any '--interface=' to continue\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
@@ -229,7 +229,7 @@ int main(int argc, char * argv[])
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
-        return 1;
+        return SMP_LIB_FILE_ERROR;
 
     if (verbose) {
         fprintf(stderr, "    Report manufacturer information request: ");
@@ -246,54 +246,67 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
         fprintf(stderr, "smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
+        ret = -1;
         goto err_out;
     }
     if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
         fprintf(stderr, "response too short, len=%d\n",
                 smp_rr.act_response_len);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     len = smp_resp[3];
     if (0 == len) {
         len = smp_get_func_def_resp_len(smp_resp[1]);
         if (len < 0) {
-            fprintf(stderr, "unable to determine reponse length\n");
-            goto err_out;
+            len = 0;
+            if (verbose > 0)
+                fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex) {
-        dStrHex((const char *)smp_resp, len, 1);
-        ret = 0;
-        goto err_out;
-    } else if (do_raw) {
-        dStrRaw((const char *)smp_resp, len);
-        ret = 0;
+    if (do_hex || do_raw) {
+        if (do_hex)
+            dStrHex((const char *)smp_resp, len, 1);
+        else
+            dStrRaw((const char *)smp_resp, len);
+        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[1] != smp_req[1])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[2])
+            ret = smp_resp[2];
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
         fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
                 smp_resp[0]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
         fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
                 smp_req[1], smp_resp[1]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
 
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
         fprintf(stderr, "Report manufacturer information result: %s\n", cp);
+        ret = smp_resp[2];
         goto err_out;
     }
-    ret = 0;
     printf("Report manufacturer response:\n");
+    res = (smp_resp[4] << 8) + smp_resp[5];
+    if (verbose || res)
+        printf("  Expander change count: %d\n", res);
     printf("  SAS-1.1 format: %d\n", smp_resp[8] & 1);
     printf("  vendor identification: %.8s\n", smp_resp + 12);
     printf("  product identification: %.16s\n", smp_resp + 20);
@@ -308,7 +321,10 @@ int main(int argc, char * argv[])
 
 err_out:
     res = smp_initiator_close(&tobj);
-    if (res < 0)
-        return 1;
-    return ret;
+    if (res < 0) {
+        fprintf(stderr, ME "close error: %s\n", safe_strerror(errno));
+        if (0 == ret)
+            return SMP_LIB_FILE_ERROR;
+    }
+    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
 }
