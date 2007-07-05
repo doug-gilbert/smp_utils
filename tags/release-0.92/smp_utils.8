@@ -1,0 +1,187 @@
+.TH SMP_UTILS "8" "December 2006" "smp_utils\-0.92" SMP_UTILS
+.SH NAME
+smp_* \- invoke a SMP function
+.SH SYNOPSIS
+.B smp_*
+[\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+smp_utils is a package of utilities. Each utility sends a Serial Attached
+SCSI (SAS) Management Protocol (SMP) request to a \fISMP_DEVICE\fR (a SMP
+target). If an error occurs then an error message is sent to stderr. If
+no error occurs, the response is decoded (the default), output in ASCII
+hex (when \fI\-\-hex\fR is given) or output in binary to stdout (when
+\fI\-\-raw\fR is given).
+.PP
+If \fISMP_DEVICE[,N]\fR is not given then the value in the environment
+variable SMP_UTILS_DEVICE is used.
+.SH INTERFACE
+Currently there are multiple interfaces that allow SMP functions to
+be passed through to a SMP target.
+.PP
+One method is to have a \fISMP_DEVICE\fR which is actually the SMP
+initiator (e.g. '/dev/mptcl,0'). In this case the SMP target's
+SAS address must be supplied with \fI\-\-sa=SAS_ADDR\fR.
+.PP
+Another method is to have a \fISMP_DEVICE\fR which represents the SMP target.
+In this case no \fISMP_DEVICE\fR needs to be given (since it is implicit).
+This method may be simpler but it has some limitations (e.g. it assumes the
+SMP target has already been discovered which may not be the case for the
+initial discovery process).
+.PP
+Each utility in smp_utils attempts to work out which interface it has been
+given by examining the \fISMP_DEVICE\fR file. There are two interfaces
+supported currently:
+.TP
+\fBmpt\fR
+This specifies the MPT fusion SAS pass-through which uses the '/dev/mptctl'
+device node. If mpt drivers are loaded but '/dev/mptctl' is not present then
+a 'modprobe mptctl' command may be needed in Linux. If there are multiple
+mpt fusion controllers (HBAs) in the computer, then the user will need
+to specify which one to use with the syntax: '/dev/mptcl,<n>' where <n>
+is the "ioc_num". This number can be found in the log where the mptsas
+driver is registered. In Linux it can be found
+in '/proc/scsi/mptsas/<host_no>' in the 2.4 series and additionally
+in '/sys/class/scsi_host/host<n>/unique_id' in the 2.6 series. When this
+interface is used the \fI\-\-sa=SAS_ADDR\fR option must be given to specify
+the SAS address of the SMP target. When the mptctl driver is loaded in
+Linux there should be a character device node at '/dev/mptctl' with
+major 10 and minor 220.
+.TP
+\fBtpl\fR (\fBai\fR)
+This interface is currently used by one adaptec 94xx driver. The "device"
+name will usually be "smp_portal" and it will be found within the sysfs
+file system (typically mounted under "/sys"). The target SMP SAS address
+is implicit (as is the SMP initiator). Either 'tpl' or 'ai' can be used
+to specify this interface.
+.SH ENVIRONMENT VARIABLES
+If the device name is not given then the SMP_UTILS_DEVICE environment
+variable is checked and if present its contents are used as the device name.
+.PP
+If the SAS address (of the SMP target) is not given and it is
+required (i.e. it is not implicit in the device name) then
+the SMP_UTILS_SAS_ADDR environment variable is checked and if present
+its contents are used as the SAS address. SAS addresses are usually given
+in hex indicated by a leading '0x' or trailing 'h'.
+.PP
+In all cases command line options override the corresponding
+environment variable.
+.SH COMMON OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+If an option takes a numeric argument then that argument is assumed to
+be decimal unless otherwise indicated (e.g. with a leading "0x" or a
+trailing "h").
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+revision 4a of the SAS\-2 draft introduced an 'expected expander change
+count' field in some SMP requests. The idea is to detect other SMP
+initiators trying to change the state of an expander. The value \fIEX\fR
+is from 0 to 65535 inclusive with 0 being the default value. When \fIEX\fR
+is greater than zero then if the value doesn't match the expander
+change count of the SMP target (i.e. the expander) when the request
+arrives then the target ignores the request and sets a function
+result of "invalid expander change count" in the response.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message for the utility then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. This option is usually not needed since the
+interface type is guessed by a utility based on the characteristics of the
+given \fISMP_DEVICE\fR argument or what is in the corresponding environment
+variables. \fIPARAMS\fR is of the form: \fIINTF[,force]\fR.
+If the guess doesn't work then the interface can be specified by
+giving a \fIINTF\fR of either 'mpt' or 'tpl' ( with 'ai' being a synonym
+for 'tpl'). Sanity checks are still performed and a utility may refuse if
+it doesn't agree with the given \fIINTF\fR. If the user is really sure then
+adding a ',force' will force the utility to use the given interface.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address associated with it. The \fISAS_ADDR\fR is in decimal
+but most SAS addresses are shown in hexadecimal. To give a number in
+hexadecimal either prefix it with '0x' or put a trailing 'h' on it. If this
+option is not given then the value in the environment variable
+SMP_UTILS_SAS_ADDR is used.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH EXIT STATUS
+To aid scripts that call these utilities, the exit status is set to
+indicate success (0) or failure (1 or more):
+.TP
+.B 0
+success
+.TP
+.B 1 \- 63
+reserved for SMP function result codes. See SAS draft or standard,
+application layer, management application layer, SMP functions.
+Here are some common function result codes: 1 [unknown SMP function],
+2 [SMP function failed], 16 [phy does not exist], 17 [index does not
+exist], 18 [phy does not support SATA] and 19 [unknown phy operation].
+.TP
+.B 91
+syntax error. Either illegal options, options with bad arguments or
+a combination of options that is not permitted.
+.TP
+.B 92
+the utility is unable to open, close or use the given \fISMP_DEVICE\fR.
+The given file name could be incorrect or there may be permission
+problems. Adding the \fI\-\-verbose\fR option may give more information.
+.TP
+.B 97
+the response to a SMP function failed sanity checks.
+.TP
+.B 99
+any error that can't be categorized into values 1 to 97 may yield
+this value. This includes transport and operating system errors.
+.SH NOTES
+Finding the SAS address of an expander can be a challenge in some
+environments. An enclosure containing one or more expanders may
+have the expander SAS address(es) printed on the back of the
+device, a bit like ethernet MAC addresses.
+.PP
+In the Linux 2.6 kernel series the expander SAS address may well
+be in the sysfs tree but it is not always easy to find. Doing
+this search may help:
+.PP
+  # find /sys \-name "sas_device:expander*"
+.PP
+Then change directory to any path found and call 'cat sas_address'
+.PP
+Another approach is to work backwards from SCSI devices (i.e. logical
+units). The protocol specific port log page (log page 18h) contains
+fields for the "attached SAS address". sg_logs from the sg3_utils
+package could be used like this:
+.PP
+  # sg_logs \-\-page=18h /dev/sdb
+.PP
+Any given "attached SAS address" is either a HBA, an expander or 0
+indicating that port is not connected.
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_conf_general, smp_conf_route_info, smp_discover, smp_discover_list,
+.B smp_phy_control, smp_phy_test, smp_read_gpio, smp_rep_general,
+.B smp_rep_manufacturer, smp_rep_phy_err_log, smp_rep_phy_sata,
+.B smp_rep_route_info, smp_write_gpio, sg_logs(sg3_utils)

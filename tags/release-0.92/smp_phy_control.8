@@ -1,0 +1,108 @@
+.TH SMP_PHY_CONTROL "8" "December 2006" "smp_utils\-0.92" SMP_UTILS
+.SH NAME
+smp_phy_control \- invoke PHY CONTROL SMP function
+.SH SYNOPSIS
+.B smp_phy_control
+[\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR] [\fI\-\-min=MI\fR]
+[\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR] [\fI\-\-raw\fR]
+[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) PHY CONTROL request function to a SMP
+target. The SMP target is identified by the \fISMP_DEVICE\fR and the
+\fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be deduced
+from the \fISMP_DEVICE\fR. With one interface there is one \fISMP_DEVICE\fR
+per machine so the \fISMP_DEVICE,N\fR syntax is needed to differentiate
+between HBAs if there are multiple present.
+.PP
+The PHY CONTROL function is used to change the state of a phy within a SMP
+target. SMP targets are typically SAS expanders which have multiple phys.
+Certain operation values (e.g. 'lr' (link reset) and 'hr' (hard reset))
+change the state of the attached phy. Sending such operation values to the
+phy in the SMP target that is attached to the originator (i.e. the SMP
+initiator) may lead to a bad response.
+.PP
+Invoking this utility with no arguments (other than \fISMP_DEVICE\fR which
+might be in an environment variable and \fI\-\-sa=SAS_ADDR\fR which might
+be in an environment variable or not needed) is harmless. In other words a
+phy's state is only changed when either \fI\-\-max=MA\fR, \fI\-\-min=MI\fR,
+\fI\-\-op=OP\fR or \fI\-\-pptv=TI\fR is given with a non default value.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-M\fR, \fB\-\-max\fR=\fIMA\fR
+permits the programmed maximum physical link rate to be changed on the
+gven phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
+Gbps, 10 \-> 6 Gbps. Default value is 0.
+.TP
+\fB\-m\fR, \fB\-\-min\fR=\fIMI\fR
+permits the programmed minimum physical link rate to be changed on the
+given phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
+Gbps, 10 \-> 6 Gbps. Default value is 0.
+.TP
+\fB\-o\fR, \fB\-\-op\fR=\fIOP\fR
+specifies the operation to be performed on the given phy. The \fIOP\fR
+argument can be either numeric or a string. If a number is given, it is put
+into the 'phy operation' field of the request. Allowable strings are
+abbreviations of which only the first two characters need to match. The
+supported strings are: 'nop' (no operation), 'lr' (link reset), 'hr' (hard
+reset), 'dis' (disable phy), 'cel' (clear error log), 'ca' (clear
+affiliation), 'tspss' (transmit SATA port selection signal) and 'citnl' (clear
+STP I_T nexus loss (bit)).  The default value is 0 (no operation).
+.TP
+\fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
+phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+.TP
+\fB\-P\fR, \fB\-\-pptv\fR=\fITI\fR
+partial pathway timeout value. The units are microseconds and the permitted
+values are between 0 and 15 inclusive. 7 microseconds is recommended by
+sas2r07.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most SAS
+addresses are shown in hexadecimal. To give a number in hexadecimal either
+prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_discover(smp_utils)
