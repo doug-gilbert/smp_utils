@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.01 20060608";
+static char * version_str = "1.02 20060816";
 
 #define ME "smp_read_gpio: "
 
@@ -124,7 +124,7 @@ int main(int argc, char * argv[])
     struct smp_req_resp smp_rr;
     int subvalue = 0;
     char * cp;
-    int ret = 1;
+    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     memset(i_params, 0, sizeof i_params);
@@ -141,7 +141,7 @@ int main(int argc, char * argv[])
             rcount = smp_get_num(optarg);
             if ((rcount < 1) || (rcount > 255)) {
                 fprintf(stderr, "bad argument to '--count'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'h':
@@ -155,7 +155,7 @@ int main(int argc, char * argv[])
             rindex = smp_get_num(optarg);
             if ((rindex < 0) || (rindex > 255)) {
                 fprintf(stderr, "bad argument to '--index'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'I':
@@ -166,7 +166,7 @@ int main(int argc, char * argv[])
            phy_id = smp_get_num(optarg);
            if ((phy_id < 0) || (phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             if (verbose)
                 fprintf(stderr, "'--phy=<n>' option not needed so "
@@ -179,7 +179,7 @@ int main(int argc, char * argv[])
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad argument to '--sa'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
             break;
@@ -187,7 +187,7 @@ int main(int argc, char * argv[])
             rtype = smp_get_num(optarg);
             if ((rtype < 0) || (rtype > 255)) {
                 fprintf(stderr, "bad argument to '--type'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'v':
@@ -199,7 +199,7 @@ int main(int argc, char * argv[])
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (optind < argc) {
@@ -213,7 +213,7 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "Unexpected extra argument: %s\n",
                         argv[optind]);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == device_name[0]) {
@@ -224,14 +224,14 @@ int main(int argc, char * argv[])
             fprintf(stderr, "missing device name!\n    [Could use "
                     "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after comma in <device> name\n");
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == sa) {
@@ -252,7 +252,7 @@ int main(int argc, char * argv[])
             fprintf(stderr, "SAS (target) address not in naa-5 format\n");
             if ('\0' == i_params[0]) {
                 fprintf(stderr, "    use any '--interface=' to continue\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
@@ -260,7 +260,7 @@ int main(int argc, char * argv[])
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
-        return 1;
+        return SMP_LIB_FILE_ERROR;
     smp_req[2] = rtype;
     smp_req[3] = rindex;
     smp_req[4] = rcount;
@@ -279,40 +279,52 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
         fprintf(stderr, "smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
+        ret = -1;
         goto err_out;
     }
     if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
         fprintf(stderr, "response too short, len=%d\n",
                 smp_rr.act_response_len);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     len = 4 + (rcount * 4);      /* length in bytes, excluding 4 byte CRC */
-    if (do_hex) {
-        dStrHex((const char *)smp_resp, len, 1);
-        ret = 0;
-        goto err_out;
-    } else if (do_raw) {
-        dStrRaw((const char *)smp_resp, len);
-        ret = 0;
+    if (do_hex || do_raw) {
+        if (do_hex)
+            dStrHex((const char *)smp_resp, len, 1);
+        else
+            dStrRaw((const char *)smp_resp, len);
+        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[1] != smp_req[1])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[2])
+            ret = smp_resp[2];
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
         fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
                 smp_resp[0]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
         fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
                 smp_req[1], smp_resp[1]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
 
     }
-    ret = 0;
+    if (smp_resp[2]) {
+        ret = smp_resp[2];
+        goto err_out;
+    }
     printf("Read GPIO register response:\n");
     decoded = 0;
     if (0 == rtype) {
@@ -355,7 +367,8 @@ int main(int argc, char * argv[])
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        return 1;
+        if (0 == ret)
+            return SMP_LIB_FILE_ERROR;
     }
-    return ret;
+    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
 }

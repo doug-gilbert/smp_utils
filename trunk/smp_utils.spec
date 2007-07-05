@@ -1,17 +1,17 @@
-%define	name	smp_utils
-%define	version	0.90
-%define	release	1
+%define name    smp_utils
+%define version 0.91
+%define release 1
 
-Summary:	Utilities for SAS management protocol (SMP)
-Name:		%{name}
-Version:	%{version}
-Release:	%{release}
-License:	FreeBSD
-Group:		Utilities/System
-URL:		http://www.torque.net/sg/smp_utils.html
-Source0:	http://www.torque.net/sg/p/%{name}-%{version}.tgz
-BuildRoot:	%{_tmppath}/%{name}-%{version}-root
-Packager:	Douglas Gilbert <dgilbert at interlog dot com>
+Summary:        Utilities for SAS management protocol (SMP)
+Name:           %{name}
+Version:        %{version}
+Release:        %{release}
+License:        FreeBSD
+Group:          Utilities/System
+URL:            http://www.torque.net/sg/smp_utils.html
+Source0:        http://www.torque.net/sg/p/%{name}-%{version}.tgz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-root
+Packager:       Douglas Gilbert <dgilbert at interlog dot com>
 
 %description
 This is a package of utilities. Each utility sends a Serial Attached
@@ -39,10 +39,10 @@ make \
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
 
 make install \
- 	PREFIX=%{_prefix} \
- 	INSTDIR=%{buildroot}/%{_bindir} \
- 	MANDIR=%{buildroot}/%{_mandir} \
-	INCLUDEDIR=%{buildroot}/%{_includedir}
+        PREFIX=%{_prefix} \
+        INSTDIR=%{buildroot}/%{_bindir} \
+        MANDIR=%{buildroot}/%{_mandir} \
+        INCLUDEDIR=%{buildroot}/%{_includedir}
 
 %clean
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
@@ -54,6 +54,9 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
+* Tue Aug 22 2006 - dgilbert at interlog dot com
+- add smp_phy_test and smp_discover_list, uniform exit status values
+  * smp_utils-0.91
 * Sun Jun 11 2006 - dgilbert at interlog dot com
 - add smp_read_gpio, smp_conf_route_info and smp_write_gpio
   * smp_utils-0.90
