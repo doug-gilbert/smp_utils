@@ -9,32 +9,40 @@ introduced functions have no corresponding utility.
 
 SMP Function                          Standard         smp_utils utility
 ------------------------------------  ---------------  ---------------------
-CONFIGURE GENERAL                     2(5a)
-CONFIGURE PHY EVENT INFORMATION       2(5a)
-CONFIGURE ROUTE INFORMATION           1, 2(5a)         smp_conf_route_info
-DISCOVER                              1, 1.1, 2(5a)    smp_discover
-DISCOVER LIST                         2(5a)            smp_discover_list
-ENABLE DISABLE ZONING                 2(5a)
-PHY CONTROL                           1, 2(5a)         smp_phy_control
-PHY TEST FUNCTION                     1.1, 2(5a)       smp_phy_test
+CONFIGURE GENERAL                     2                smp_conf_general
+CONFIGURE PHY EVENT INFORMATION       2    
+CONFIGURE ROUTE INFORMATION           1, 2             smp_conf_route_info
+CONFIGURE ZONE PERMISSION TABLE       2    
+CONFIGURE ZONE PHY INFORMATION        2    
+DISCOVER                              1, 1.1, 2        smp_discover
+DISCOVER LIST                         2                smp_discover_list
+ENABLE DISABLE ZONING                 2    
+PHY CONTROL                           1, 2             smp_phy_control
+PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO                             SFF-8485         smp_read_gpio
-REPORT EXPANDER ROUTE TABLE           2(5a)
-REPORT GENERAL                        1, 1.1, 2(5a)    smp_rep_general
-REPORT MANUFACTURER                   1, 1.1, 2(5a)    smp_rep_manufacturer
-REPORT PHY BROADCAST COUNTS           2(5a)
-REPORT PHY EVENT INFORMATION          2(5a)
-REPORT PHY ERROR LOG                  1, 2(5a)         smp_rep_phy_err_log
-REPORT PHY SATA                       1, 2(5a)         smp_rep_phy_sata
-REPORT ROUTE INFORMATION              1, 2(5a)         smp_rep_route_info
-REPORT SELF-CONFIGURATION STATUS      2(5a)
+REPORT EXPANDER ROUTE TABLE           2    
+REPORT GENERAL                        1, 1.1, 2        smp_rep_general
+REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
+REPORT PHY BROADCAST COUNTS           2    
+REPORT PHY ERROR LOG                  1, 2             smp_rep_phy_err_log
+REPORT PHY EVENT INFORMATION          2    
+REPORT PHY SATA                       1, 2             smp_rep_phy_sata
+REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
+REPORT SELF-CONFIGURATION STATUS      2    
+REPORT ZONE PERMISSION                2    
 WRITE GPIO                            SFF-8485         smp_write_gpio
-ZONED BROADCAST                       2(5a)
+ZONE ACTIVATE                         2    
+ZONE LOCK                             2    
+ZONE UNLOCK                           2    
+ZONED BROADCAST                       2    
 
+There are 24 SMP functions defined in sas2r07.pdf (plus 2 in SFF-8485)
+of which smp_utils currently implements 13.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
 SAS-1.1 standard (ANSI INCITS 417-2006). The most recent draft of SAS-2
-is sas2r05a.pdf .
+is sas2r07.pdf .
 
 At this time all SMP functions introduced in the original standard
 and SAS-1.1 have corresponding smp_utils utilities. Currently
@@ -43,4 +51,4 @@ introduced function in SAS-2.
 
 
 Doug Gilbert
-22nd August 2006
+20th November 2006

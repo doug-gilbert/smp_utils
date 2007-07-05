@@ -31,7 +31,7 @@
  */
 
 /*
- * Version 1.06 [20060722]
+ * Version 1.09 [20061109]
  */
 
 
@@ -39,17 +39,15 @@
  * be useful to Linux applications that communicate with devices that
  * use the Serial Attached SCSI (SAS) Management Protocol (SMP).
  * Reference: SCSI: http://www.t10.org and the most recent SAS draft
- * SAS-2 (revision 5a).
+ * SAS-2 (revision 6).
  * This header is organised into two parts: part 1 is operating system
  * independent (i.e. may be useful to other OSes) and part 2 is Linux
  * specific (or at least closely related).
  */
 
-
-/*
- * PART 1: OPERATING SYSTEM INDEPENDENT SECTION
- *         ------------------------------------
- */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* SAS transport frame types associated with SMP */
 #define SMP_FRAME_TYPE_REQ 0x40
@@ -60,6 +58,7 @@
 #define SMP_FN_REPORT_MANUFACTURER 0x1
 #define SMP_FN_READ_GPIO_REG 0x2
 #define SMP_FN_REPORT_SELF_CONFIG 0x3
+#define SMP_FN_REPORT_ZONE_PERMISSION_TBL 0x4
 #define SMP_FN_DISCOVER 0x10
 #define SMP_FN_REPORT_PHY_ERR_LOG 0x11
 #define SMP_FN_REPORT_PHY_SATA 0x12
@@ -67,12 +66,16 @@
 #define SMP_FN_REPORT_PHY_EVENT_INFO 0x14
 #define SMP_FN_REPORT_PHY_BROADCAST 0x15
 #define SMP_FN_DISCOVER_LIST 0x16
-#define SMP_FN_REPORT_EXP_ROUTE_TAB 0x17
+#define SMP_FN_REPORT_EXP_ROUTE_TBL 0x17
 #define SMP_FN_CONFIG_GENERAL 0x80
 #define SMP_FN_ENABLE_DISABLE_ZONING 0x81
 #define SMP_FN_WRITE_GPIO_REG 0x82
-#define SMP_FN_CONFIG_ZONE_PERMISSION 0x83
 #define SMP_FN_ZONED_BROADCAST 0x85
+#define SMP_FN_ZONE_LOCK 0x86
+#define SMP_FN_ZONE_ACTIVATE 0x87
+#define SMP_FN_ZONE_UNLOCK 0x88
+#define SMP_FN_CONFIG_ZONE_PHY_INFO 0x8a
+#define SMP_FN_CONFIG_ZONE_PERMISSION_TBL 0x8b
 #define SMP_FN_CONFIG_ROUTE_INFO 0x90
 #define SMP_FN_PHY_CONTROL 0x91
 #define SMP_FN_PHY_TEST_FUNCTION 0x92
@@ -84,6 +87,7 @@
 #define SMP_FRES_FUNCTION_FAILED 0x2
 #define SMP_FRES_INVALID_REQUEST_LEN 0x3
 #define SMP_FRES_INVALID_EXP_CHANGE_COUNT 0x4
+#define SMP_FRES_BUSY 0x5
 #define SMP_FRES_NO_PHY 0x10
 #define SMP_FRES_NO_INDEX 0x11
 #define SMP_FRES_NO_SATA_SUPPORT 0x12
@@ -91,10 +95,16 @@
 #define SMP_FRES_UNKNOWN_PHY_TEST_FN 0x14
 #define SMP_FRES_PHY_TEST_IN_PROGRESS 0x15
 #define SMP_FRES_PHY_VACANT 0x16
-#define SMP_FRES_PHY_EVENT_INFO_SRC 0x17
-#define SMP_FRES_ZONE_VIOLATION 0x20
-#define SMP_FRES_PHYSICAL_PRESENCE_NOT 0x21
-#define SMP_FRES_UNKNOWN_DIS_EN_ZONING 0x22
+#define SMP_FRES_UNKNOWN_PHY_EVENT_INFO_SRC 0x17
+#define SMP_FRES_UNKNOWN_DESCRIPTOR_TYPE 0x18
+#define SMP_FRES_UNKNOWN_PHY_FILTER 0x19
+#define SMP_FRES_LOGICAL_LINK_RATE 0x1a
+#define SMP_FRES_SMP_ZONE_VIOLATION 0x20
+#define SMP_FRES_NO_MANAGEMENT_ACCESS 0x21
+#define SMP_FRES_UNKNOWN_EN_DIS_ZONING_VAL 0x22
+#define SMP_FRES_ZONE_LOCK_VIOLATION 0x23
+#define SMP_FRES_NOT_ACTIVATED 0x24
+#define SMP_FRES_UNKNOWN_ZONE_PHY_INFO_VAL 0x25
 
 /* Utilities can use these process status values for syntax errors and
    file (device node) problems (e.g. not found or permissions). Numbers
@@ -185,5 +195,10 @@ extern int smp_get_num(const char * buf);
    to supporting the multipliers of smp_get_num(), this function supports:
    t T TiB  *(2**40); TB *(10**12); p P PiB  *(2**50); PB  *(10**15) . */
 extern long long smp_get_llnum(const char * buf);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
