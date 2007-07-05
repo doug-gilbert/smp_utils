@@ -46,9 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.01 20060816";
-
-#define ME "smp_write_gpio: "
+static char * version_str = "1.02 20061206";
 
 
 static struct option long_options[] = {
@@ -70,33 +68,33 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_write_gpio  [--count=<n>] [--data=<h>,<h>...] [--help] "
+          "smp_write_gpio [--count=CO] [--data=H,H...] [--help] "
           "[--hex]\n"
-          "                       [--index=<n>] [--interface=<params>] "
+          "                      [--index=IN] [--interface=PARAMS] "
           "[--raw]\n"
-          "                       [--sa=<sas_addr>] [type=<n>] [--verbose] "
+          "                      [--sa=SAS_ADDR] [type=TY] [--verbose] "
           "[--version]\n"
-          "                       <smp_device>[,<n>]\n"
-          "  where: --count=<n>|-c <n>   register count (dwords to write) "
+          "                      SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --count=CO|-c CO     register count (dwords to write) "
           "(def: 1)\n"
-          "         --data=<h>,<h>...|-d <h>,<h>...\n"
-          "                              comma separated list of hex bytes "
-          "to write\n"
-          "         --data=-|-d -        read stdin for hex bytes to write\n"
-          "         --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --index=<n>|-i <n>   register index (def: 0)\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "    --data=H,H...|-d H,H...    comma separated list of hex "
+          "bytes to write\n"
+          "    --data=-|-d -        read stdin for hex bytes to write\n"
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --index=IN|-i IN     register index (def: 0)\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --raw|-r             output response in binary\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP target "
-          "(use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --type=<n>|-t <n>    register type (def: 0 (GPIO_CFG))\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --raw|-r             output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                         or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                         not be needed\n"
+          "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n\n"
           "Performs a SMP WRITE GPIO REGISTER function\n"
           );
 
@@ -312,7 +310,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -359,7 +357,8 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -378,9 +377,10 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -410,6 +410,8 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }

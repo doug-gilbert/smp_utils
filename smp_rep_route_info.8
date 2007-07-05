@@ -1,58 +1,81 @@
-.TH SMP_REP_ROUTE_INFO "8" "August 2006" "smp_utils-0.91" SMP_UTILS
+.TH SMP_REP_ROUTE_INFO "8" "December 2006" "smp_utils\-0.92" SMP_UTILS
 .SH NAME
 smp_rep_route_info \- invoke REPORT ROUTE INFORMATION SMP function
 .SH SYNOPSIS
 .B smp_rep_route_info
-[\fI--help\fR] [\fI--hex\fR] [\fI--index=<n>\fR] [\fI--interface=<params>\fR]
-[\fI--phy=<n>\fR] [\fI--raw\fR] [\fI--sa=<sas_addr>\fR] [\fI--verbose\fR]
-[\fI--version\fR] \fI<smp_device>[,<n>]\fR
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=IN\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-multiple\fR] [\fI\-\-num=NUM\fR]
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) REPORT ROUTE INFORMATION
-request function to a SMP target. The SMP target is identified by
-the <smp_device> and the <sas_addr>. Depending on the interface,
-the <sas_addr> may be deduced from the <smp_device>. With one interface
-there is one <smp_device> per machine so the '<smp_device>,<n>' syntax is
-needed to differentiate between HBAs if there are multiple present.
+Sends a SAS Management Protocol (SMP) REPORT ROUTE INFORMATION function to
+a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
+\fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. With one interface there is one
+\fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
+differentiate between HBAs if there are multiple present.
 .PP
 Each phy in a SAS expander that has an associated routing attribute
 of "table" has a router table. The number of rows (or entries) in
 each router table is given by the "expander route indexes" field
 in the response of the REPORT GENERAL function.
+.PP
+When the \fI\-\-multiple\fR option is given, the REPORT ROUTE INFORMATION
+function is called multiple times. The index value increments on
+each iteration, starting from \fI\-\-index=IN\fR (default 0). If
+\fI\-\-num=NUM\fR is given and \fINUM\fR is greater than zero then that is
+the maximum number of iterations performed. If \fI\-\-num=NUM\fR is not
+given (or \fINUM\fR is zero) then iterations continue until there are 4
+adjacent disabled route entries (or some error is detected).
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
 .TP
---help | -h
+\fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
 .TP
---hex | -H
+\fB\-H\fR, \fB\-\-hex\fR
 output the response in hexadecimal.
 .TP
---index=<n> | -i <n>
-expander route index. This is a value between 0 and 65535. Default is 0.
-More precisely the maximum index value is (expander_route_indexes - 1).
+\fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
+expander route index. \fIIN\fR is a value between 0 and 65535. Default is 0.
+More precisely the maximum index value is (expander_route_indexes \- 1).
 .TP
---interface=<params> | -I <params>
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
---phy=<n> | -p <n>
-phy identifier. This is a value between 0 and 127. Default is 0.
+\fB\-m\fR, \fB\-\-multiple\fR
+call the REPORT ROUTE INFORMATION function multiple times, starting at
+\fI\-\-index=IN\fR, incrementing the index value on each iteration for a
+maximum of \fI\-\-num=NUM\fR iterations. For each enabled route table entry,
+one line is output. If \fI\-\-num=NUM\fR is not given (or \fINUM\fR is zero)
+then iterations continue until 4 adjacent disabled entries are found (or
+some error occurs).
 .TP
---raw | -r
+\fB\-n\fR, \fB\-\-num\fR=\fINUM\fR
+used with \fI\-\-multiple\fR option to specify the maximum number of
+iterations.
+.TP
+\fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
+phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
 send the response to stdout in binary. All error messages are sent to stderr.
 .TP
---sa=<sas_addr> | -s <sas_addr>
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an
-expander. This option may not be needed if the <smp_device> has the target's
-SAS address within it. The <sas_addr> is in decimal but most SAS addresses
-are shown in hexadecimal. To give a number in hexadecimal either prefix
-it with '0x' or put a trailing 'h' on it.
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
+SAS addresses are shown in hexadecimal. To give a number in hexadecimal
+either prefix it with '0x' or put a trailing 'h' on it.
 .TP
---verbose | -v
-increase the verbosity of the output. Can be used multiple times
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
 .TP
---version | -V
+\fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH AUTHORS
 Written by Douglas Gilbert.
