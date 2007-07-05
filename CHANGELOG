@@ -1,0 +1,12 @@
+Each utility has its own version number, date of last change and
+some description at the top of its ".c" file. All utilities in the main
+directory have their own "man" pages.
+
+Changelog for smp_utils-0.90 [20060611]
+  - add smp_read_gpio utility (READ GPIO REGISTER)
+  - add logic to read SMP_UTILS_DEVICE and SMP_UTILS_SAS_ADDR
+    environment variables if those options not on command line
+  - add smp_conf_route_info (CONFIGURE ROUTE INFORMATION)
+  - add smp_write_gpio (WRITE GPIO REGISTER)
+  - add debian build infrastructure
+  - add smp_utils.html to doc subdirectory
