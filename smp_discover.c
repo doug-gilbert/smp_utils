@@ -45,9 +45,7 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.05 20060816";
-
-#define ME "smp_discover: "
+static char * version_str = "1.07 20061206";
 
 
 static struct option long_options[] = {
@@ -70,32 +68,33 @@ static void usage()
 {
     fprintf(stderr, "Usage: "
           "smp_discover   [--brief] [--help] [--hex] [--ignore]\n"
-          "                      [--interface=<params>] [--multiple] "
-          "[--num=<n>]\n"
-          "                      [--phy=<n>] [--raw] [--sa=<sas_addr>] "
-          "[--verbose]\n"
-          "                      [--version] <smp_device>[,<n>]\n"
-          "  where: --brief|-b           brief decoded output\n"
-          "         --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --ignore|-i          sets the Ignore Zone Group bit\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "                      [--interface=PARAMS] [--multiple] "
+          "[--num=NUM] [--phy=ID]\n"
+          "                      [--raw] [--sa=SAS_ADDR] [--verbose] "
+          "[--version]\n"
+          "                      SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --brief|-b           brief decoded output\n"
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --ignore|-i          sets the Ignore Zone Group bit\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --multiple|-m        query multiple phys, output 1 line "
+          "    --multiple|-m        query multiple phys, output 1 line "
           "for each\n"
-          "         --num=<n>|-n <n>     number of phys to fetch when '-m' "
+          "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
           "is given\n"
-          "                              (def: 0 -> the rest)\n"
-          "         --phy=<n>|-p <n>     phy identifier (def: 0) [starting "
+          "                         (def: 0 -> the rest)\n"
+          "    --phy=ID|-p ID       phy identifier (def: 0) [starting "
           "phy id]\n"
-          "         --raw|-r             output response in binary\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP "
-          "target (use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --raw|-r             output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                         or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                         not be needed\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n\n"
           "Performs a SMP DISCOVER function\n"
           );
 
@@ -152,6 +151,44 @@ static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
         else
             snprintf(b, b_len, "reserved [%d]", val);
         break;
+    }
+    return b;
+}
+
+static char * smp_get_attached_reason(int val, int b_len, char * b)
+{
+    switch (val) {
+    case 0: snprintf(b, b_len, "unknown"); break;
+    case 1: snprintf(b, b_len, "power on"); break;
+    case 2: snprintf(b, b_len, "hard reset");
+         break;
+    case 3: snprintf(b, b_len, "link reset");
+         break;
+    case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
+    case 5: snprintf(b, b_len, "error in multiplexing sequence"); break;
+    case 6: snprintf(b, b_len, "I_T nexus loss"); break;
+    case 7: snprintf(b, b_len, "break timeout timer expired"); break;
+    case 8: snprintf(b, b_len, "phy test function stopped"); break;
+    default: snprintf(b, b_len, "reserved [%d]", val); break;
+    }
+    return b;
+}
+
+static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
+{
+    switch (val) {
+    case 0: snprintf(b, b_len, "phy enabled; unknown"); break;
+    case 1: snprintf(b, b_len, "phy disabled"); break;
+    case 2: snprintf(b, b_len, "phy enabled; speed negotiation failed");
+         break;
+    case 3: snprintf(b, b_len, "phy enabled; SATA spinup hold state");
+         break;
+    case 4: snprintf(b, b_len, "phy enabled; port selector"); break;
+    case 5: snprintf(b, b_len, "phy enabled; reset in progress"); break;
+    case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
+    case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
+    case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
+    default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
 }
@@ -258,6 +295,8 @@ static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         return -1;
     }
     if (smp_rr.transport_err) {
@@ -337,26 +376,11 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
         printf("  attached device type: %s\n", smp_attached_device_type[res]);
     if ((do_brief > 1) && (0 == res))
         return 0;
+    printf("  attached reason: %s\n",
+           smp_get_attached_reason(0xf & smp_resp[12], sizeof(b), b));
 
-    res = (0xf & smp_resp[13]);
-    switch (res) {
-    case 0: snprintf(b, sizeof(b), "phy enabled; unknown");
-                 break;
-    case 1: snprintf(b, sizeof(b), "phy disabled"); break;
-    case 2: snprintf(b, sizeof(b), "phy enabled; speed negotiation failed");
-                 break;
-    case 3: snprintf(b, sizeof(b), "phy enabled; SATA spinup hold state");
-                 break;
-    case 4: snprintf(b, sizeof(b), "phy enabled; port selector");
-                 break;
-    case 5: snprintf(b, sizeof(b), "phy enabled; reset in progress");
-                 break;
-    case 8: snprintf(b, sizeof(b), "phy enabled; 1.5 Gbps"); break;
-    case 9: snprintf(b, sizeof(b), "phy enabled; 3 Gbps"); break;
-    case 0xa: snprintf(b, sizeof(b), "phy enabled; 6 Gbps"); break;
-    default: snprintf(b, sizeof(b), "reserved [%d]", res); break;
-    }
-    printf("  negotiated physical link rate: %s\n", b);
+    printf("  negotiated logical link rate: %s\n",
+           smp_get_neg_xxx_link_rate(0xf & smp_resp[13], sizeof(b), b));
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !! (smp_resp[14] & 8), !! (smp_resp[14] & 4),
@@ -445,6 +469,11 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
             ull |= smp_resp[68 + j];
         }
         printf("  self-configuration sas address: 0x%llx\n", ull);
+    }
+    if (len > 95) {
+        printf("  negotiated physical link rate: %s\n",
+               smp_get_neg_xxx_link_rate(0xf & smp_resp[94], sizeof(b), b));
+        printf("  hardware muxing supported: %d\n", !!(smp_resp[95] & 0x1));
     }
     return 0;
 }
@@ -707,7 +736,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -743,7 +772,7 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -762,9 +791,10 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }

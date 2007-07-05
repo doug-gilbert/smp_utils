@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <fcntl.h>
 //#include <curses.h>
 #include <unistd.h>
@@ -14,8 +15,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <malloc.h>
-#include <linux/major.h>
+// #include <linux/major.h>
 
 
 #include "mpi_type.h"

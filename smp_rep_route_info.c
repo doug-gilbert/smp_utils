@@ -46,9 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.03 20060816";
-
-#define ME "smp_rep_route_info: "
+static char * version_str = "1.05 20061208";
 
 
 static struct option long_options[] = {
@@ -56,6 +54,8 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"multiple", 0, 0, 'm'},
+        {"num", 1, 0, 'n'},
         {"phy", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
@@ -67,25 +67,32 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_route_info [--help] [--hex] [--index=<n>] "
-          "[--interface=<params>]\n"
-          "                       [--phy=<n>] [--raw] [--sa=<sas_addr>] "
-          "[--verbose]\n"
-          "                       [--version] <smp_device>[,<n>]\n"
-          "  where: --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --index=<n>|-i <n>   expander route index (def: 0)\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "smp_rep_route_info [--help] [--hex] [--index=IN] "
+          "[--interface=PARAMS]\n"
+          "                          [--multiple] [--num=NUM] [--phy=ID] "
+          "[--raw]\n"
+          "                          [--sa=SAS_ADDR] [--verbose] "
+          "[--version]\n"
+          "                          SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --help|-h         print out usage message\n"
+          "    --hex|-H          print response in hexadecimal\n"
+          "    --index=IN|-i IN    expander route index (def: 0)\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --phy=<n>|-p <n>     phy identifier (def: 0)\n"
-          "         --raw|-r             output response in binary\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP "
-          "target (use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --multiple|-m     query multiple indexes, output 1 "
+          "line for each\n"
+          "    --num=NUM|-n NUM  number of indexes to examine when '-m' "
+          "is given\n"
+          "    --phy=ID|-p ID    phy identifier (def: 0)\n"
+          "    --raw|-r          output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                      or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                      not be needed\n"
+          "    --verbose|-v      increase verbosity\n"
+          "    --version|-V      print version string and exit\n\n"
           "Performs a SMP REPORT ROUTE INFORMATION function\n"
           );
 
@@ -99,24 +106,196 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
+/* Returns 0 for success and sets *resp_len to length of response in
+ * bytes excluding trailing CRC. Returns SMP_LIB errors or
+ * -1 for other errors.
+ */
+static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
+                        unsigned char * resp, int max_resp_len,
+                        int * resp_len, int do_hex, int do_raw, int verbose)
+{
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ROUTE_INFO,
+                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    struct smp_req_resp smp_rr;
+    char b[256];
+    char * cp;
+    int len, res, k;
+
+    smp_req[6] = (index >> 8) & 0xff;
+    smp_req[7] = index & 0xff;
+    smp_req[9] = phy_id;
+    if (verbose) {
+        fprintf(stderr, "    Report route information request: ");
+        for (k = 0; k < (int)sizeof(smp_req); ++k)
+            fprintf(stderr, "%02x ", smp_req[k]);
+        fprintf(stderr, "\n");
+    }
+    memset(&smp_rr, 0, sizeof(smp_rr));
+    smp_rr.request_len = sizeof(smp_req);
+    smp_rr.request = smp_req;
+    smp_rr.max_response_len = max_resp_len;
+    smp_rr.response = resp;
+    res = smp_send_req(top, &smp_rr, verbose);
+
+    if (res) {
+        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
+        return -1;
+    }
+    if (smp_rr.transport_err) {
+        fprintf(stderr, "smp_send_req transport_error=%d\n",
+                smp_rr.transport_err);
+        return -1;
+    }
+    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
+        fprintf(stderr, "response too short, len=%d\n",
+                smp_rr.act_response_len);
+        return SMP_LIB_CAT_MALFORMED;
+    }
+    len = resp[3];
+    if (0 == len) {
+        len = smp_get_func_def_resp_len(resp[1]);
+        if (len < 0) {
+            len = 0;
+            if (verbose > 1)
+                fprintf(stderr, "unable to determine response length\n");
+        }
+    }
+    len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if (do_hex || do_raw) {
+        if (do_hex)
+            dStrHex((const char *)resp, len, 1);
+        else
+            dStrRaw((const char *)resp, len);
+        if (SMP_FRAME_TYPE_RESP != resp[0])
+            return SMP_LIB_CAT_MALFORMED;
+        if (resp[1] != smp_req[1])
+            return SMP_LIB_CAT_MALFORMED;
+        if (resp[2])
+            return resp[2];
+        if (resp_len)
+            *resp_len = len;
+        return 0;
+    }
+    if (SMP_FRAME_TYPE_RESP != resp[0]) {
+        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                resp[0]);
+        return SMP_LIB_CAT_MALFORMED;
+    }
+    if (resp[1] != smp_req[1]) {
+        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], resp[1]);
+        return SMP_LIB_CAT_MALFORMED;
+    }
+    if (resp[2]) {
+        if (verbose > 0) {
+            cp = smp_get_func_res_str(resp[2], sizeof(b), b);
+            fprintf(stderr, "Report route information result: %s\n", cp);
+        }
+        return resp[2];
+    }
+    if (resp_len)
+        *resp_len = len;
+    return 0;
+}
+
+#define MAX_NUM_INDEXES 16384
+#define MAX_ADJACENT_DISABLED 4
+
+static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
+                       int num_ind, int do_hex, int do_raw, int verbose)
+{
+    unsigned char smp_resp[128];
+    unsigned long long ull;
+    int res, len, j, k, num, disabled, adj_dis;
+    int first = 1;
+
+    num = num_ind ? (index + num_ind) : MAX_NUM_INDEXES;
+    for (adj_dis = 0, k = index; k < num; ++k) {
+        res = do_rep_route(top, phy_id, k, smp_resp, sizeof(smp_resp),
+                           &len, do_hex, do_raw, verbose);
+        if (SMP_FRES_NO_INDEX == res)
+            return 0;   /* expected, end condition */
+        if (res)
+            return res;
+        if (first && (! do_raw)) {
+            first = 0;
+            printf("Route table for phy_id: %d\n", phy_id);
+        }
+        if (do_hex || do_raw)
+            continue;
+        disabled = !!(smp_resp[12] & 0x80);
+        if ((0 == num_ind) && disabled) {
+            if (++adj_dis >= MAX_ADJACENT_DISABLED) {
+                if (verbose > 2)
+                    fprintf(stderr, "number of 'adjacent disables' exceeded "
+                            "at index=%d\n", k);
+                break;
+            }
+        }
+        if (disabled)
+            continue;
+        adj_dis = 0;
+        ull = 0;
+        for (j = 0; j < 8; ++j) {
+            if (j > 0)
+                ull <<= 8;
+            ull |= smp_resp[16 + j];
+        }
+        printf("  Index: %d    Routed SAS address: 0x%llx\n", k, ull);
+    }
+    return 0;
+}
+
+static int do_single(struct smp_target_obj * top, int phy_id, int index,
+                     int do_hex, int do_raw, int verbose)
+{
+    unsigned char smp_resp[128];
+    unsigned long long ull;
+    int res, len, j;
+
+    res = do_rep_route(top, phy_id, index, smp_resp, sizeof(smp_resp),
+                       &len, do_hex, do_raw, verbose);
+    if (res)
+        return res;
+    if (do_hex || do_raw)
+        return 0;
+
+    printf("Report route information response:\n");
+    res = (smp_resp[4] << 8) + smp_resp[5];
+    if (verbose || (res > 0))
+        printf("  expander change count: %d\n", res);
+    printf("  expander route index: %d\n", (smp_resp[6] << 8) + smp_resp[7]);
+    printf("  phy identifier: %d\n", smp_resp[9]);
+    printf("  expander route entry disabled: %d\n", !!(smp_resp[12] & 0x80));
+    if ((! (smp_resp[12] & 0x80)) || (verbose > 0)) {
+        ull = 0;
+        for (j = 0; j < 8; ++j) {
+            if (j > 0)
+                ull <<= 8;
+            ull |= smp_resp[16 + j];
+        }
+        printf("  routed SAS address: 0x%llx\n", ull);
+    }
+    return 0;
+}
+
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len;
+    int res, c;
     int do_hex = 0;
     int er_ind = 0;
+    int multiple = 0;
+    int do_num = 0;
     int phy_id = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
-    unsigned long long ull;
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ROUTE_INFO,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
-    struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
@@ -126,7 +305,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHi:I:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "hHi:I:mn:p:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -146,14 +325,24 @@ int main(int argc, char * argv[])
         case 'i':
            er_ind = smp_get_num(optarg);
            if ((er_ind < 0) || (er_ind > 65535)) {
-                fprintf(stderr, "bad argument to '--index'\n");
+                fprintf(stderr, "inappropriate value after '--index'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'm':
+            ++multiple;
+            break;
+        case 'n':
+           do_num = smp_get_num(optarg);
+           if ((do_num < 0) || (do_num > 16382)) {
+                fprintf(stderr, "inappropriate value after '--num'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'p':
            phy_id = smp_get_num(optarg);
            if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+                fprintf(stderr, "inappropriate value after '--phy'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -172,7 +361,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -208,7 +397,8 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -227,115 +417,41 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
+    if (verbose > 2)
+            fprintf(stderr, "  phy_id=%d  expander_route_index=%d\n",
+                    phy_id, er_ind);
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    smp_req[6] = (er_ind >> 8) & 0xff;
-    smp_req[7] = er_ind & 0xff;
-    smp_req[9] = phy_id;
-    if (verbose) {
-        fprintf(stderr, "    Report route information request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
-            fprintf(stderr, "%02x ", smp_req[k]);
-        fprintf(stderr, "\n");
-    }
-    memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = sizeof(smp_req);
-    smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(smp_resp);
-    smp_rr.response = smp_resp;
-    res = smp_send_req(&tobj, &smp_rr, verbose);
+    if (multiple)
+        ret = do_multiple(&tobj, phy_id, er_ind, do_num, do_hex, do_raw,
+                          verbose);
+    else
+        ret = do_single(&tobj, phy_id, er_ind, do_hex, do_raw, verbose);
 
-    if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        ret = -1;
-        goto err_out;
-    }
-    if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
-        ret = -1;
-        goto err_out;
-    }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    len = smp_resp[3];
-    if (0 == len) {
-        len = smp_get_func_def_resp_len(smp_resp[1]);
-        if (len < 0) {
-            len = 0;
-            if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+    if ((0 == verbose) && ret) {
+        if (SMP_LIB_CAT_MALFORMED == ret)
+            fprintf(stderr, "Report route information malformed response\n");
+        else {
+            cp = smp_get_func_res_str(ret, sizeof(b), b);
+            fprintf(stderr, "Report route information result: %s\n", cp);
         }
     }
-    len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex || do_raw) {
-        if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
-        else
-            dStrRaw((const char *)smp_resp, len);
-        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
-            ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[1] != smp_req[1])
-            ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[2])
-            ret = smp_resp[2];
-        goto err_out;
-    }
-    if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
 
-    }
-    if (smp_resp[2]) {
-        cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Report route information result: %s\n", cp);
-        ret = smp_resp[2];
-        goto err_out;
-    }
-    printf("Report route information response:\n");
-    res = (smp_resp[4] << 8) + smp_resp[5];
-    if (verbose || (res > 0))
-        printf("  expander change count: %d\n", res);
-    printf("  expander route index: %d\n", (smp_resp[6] << 8) + smp_resp[7]);
-    printf("  phy identifier: %d\n", smp_resp[9]);
-    printf("  expander route entry disabled: %d\n", !!(smp_resp[12] & 0x80));
-    if ((! (smp_resp[12] & 0x80)) || (verbose > 0)) {
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= smp_resp[16 + j];
-        }
-        printf("  routed SAS address: 0x%llx\n", ull);
-    }
-
-err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, ME "close error: %s\n", safe_strerror(errno));
+        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }

@@ -46,9 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.01 20060816";
-
-#define ME "smp_phy_test: "
+static char * version_str = "1.02 20061206";
 
 
 static struct option long_options[] = {
@@ -72,36 +70,37 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_phy_test [--control=<n>] [--dwords=<n>] [--expected=<n>]\n"
-          "                    [--function=<n>] [--help] [--hex] "
-          "[--interface=<params>]\n"
-          "                    [--linkrate=<n>] [--pattern=<n>] [--phy=<n>]\n"
-          "                    [--raw] [--sa=<sas_addr>] [--verbose] "
+          "smp_phy_test [--control=CO] [--dwords=DW] [--expected=EX]\n"
+          "                    [--function=FN] [--help] [--hex] "
+          "[--interface=PARAMS]\n"
+          "                    [--linkrate=LR] [--pattern=PA] [--phy=ID]\n"
+          "                    [--raw] [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
-          "                    <smp_device>[,<n>]\n"
-          "  where: --control=<n>|-c <n>  phy test pattern dwords control "
+          "                    SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --control=CO|-c CO    phy test pattern dwords control "
           "(def: 0)\n"
-          "         --dwords=<n>|-d <n>  phy test pattern dwords (def:0)\n"
-          "         --expected=<n>|-E <n>  set expected expander change count "
-          "to <n>\n"
-          "         --function=<n>|-f <n>  phy test function (def:0 -> stop)\n"
-          "         --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "    --dwords=DW|-d DW    phy test pattern dwords (def:0)\n"
+          "    --expected=EX|-E EX    set expected expander change count "
+          "to EX\n"
+          "    --function=FN|-f FN    phy test function (def:0 -> stop)\n"
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --linkrate=<n>|-l <n>  physical link rate (def: 9 -> "
+          "    --linkrate=LR|-l LR    physical link rate (def: 9 -> "
           "3 Gbps)\n"
-          "         --pattern=<n>|-P <n>   phy test pattern (def: 2 -> "
+          "    --pattern=PA|-P PA    phy test pattern (def: 2 -> "
           "CJTPAT)\n"
-          "         --phy=<n>|-p <n>     phy identifier (def: 0)\n"
-          "         --raw|-r             output response in binary\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP "
-          "target (use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
+          "    --raw|-r             output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                         or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                         not be needed\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n\n"
           "Performs a SMP PHY TEST FUNCTION function\n"
           );
 
@@ -235,7 +234,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -271,7 +270,8 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -290,9 +290,10 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -328,6 +329,8 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
@@ -386,7 +389,7 @@ int main(int argc, char * argv[])
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, ME "close error: %s\n", safe_strerror(errno));
+        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }

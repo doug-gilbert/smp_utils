@@ -4,9 +4,6 @@ PREFIX=/usr/local
 INSTDIR=$(DESTDIR)/$(PREFIX)/bin
 MANDIR=$(DESTDIR)/$(PREFIX)/share/man
 
-ifndef CC
-CC = gcc
-endif
 LD = $(CC)
 
 EXECS = smp_rep_general smp_rep_manufacturer smp_discover smp_phy_control \
@@ -21,13 +18,13 @@ MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_discover_list.8 smp_conf_general.8
 MAN_PREF = man8
 
-OS_FLAGS = -DSMP_UTILS_LINUX
+OS_FLAGS = -DSMP_UTILS_FREEBSD
 LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
 # CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
-CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
-# CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
+# CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
+CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 CFLAGS_PTHREADS = -D_REENTRANT
 
@@ -38,17 +35,13 @@ LDFLAGS =
 # 	set -e; for i in $(SDIRS); \
 # 	do $(MAKE) -C $$i CFLAGS="$(CFLAGS)" ; done
 
-all: sub_mpt sub_sas_tpl libsmp.a $(EXECS)
+all: sub_mpt libsmp.a $(EXECS)
 
 sub_mpt:
-	cd mpt && $(MAKE)
+	cd mpt && $(MAKE) -f Makefile.freebsd
 
-sub_sas_tpl:
-	cd sas_tpl && $(MAKE)
-
-libsmp.a : smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o sas_tpl/smp_portal_intf.o
-	ar r libsmp.a smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o  \
-	sas_tpl/smp_portal_intf.o
+libsmp.a : smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o
+	ar r libsmp.a smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o
 
 depend dep:
 	cd mpt && $(MAKE) dep
@@ -57,49 +50,48 @@ depend dep:
 	done > .depend
 
 clean:
-	cd mpt && $(MAKE) clean
-	cd sas_tpl && $(MAKE) clean
+	cd mpt && $(MAKE) -f Makefile.freebsd clean
 	/bin/rm -f *.o $(EXECS) core* .depend *.a *.la *.lo
 	/bin/rm -rf .libs
 
 smp_rep_general: smp_rep_general.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_rep_manufacturer: smp_rep_manufacturer.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_discover: smp_discover.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_phy_control: smp_phy_control.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_rep_phy_err_log: smp_rep_phy_err_log.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_rep_phy_sata: smp_rep_phy_sata.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_rep_route_info: smp_rep_route_info.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_read_gpio: smp_read_gpio.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_conf_route_info: smp_conf_route_info.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_write_gpio: smp_write_gpio.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_phy_test: smp_phy_test.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_discover_list: smp_discover_list.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 smp_conf_general: smp_conf_general.o libsmp.a
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $(LDFLAGS) $@.o libsmp.a
 
 install: $(EXECS)
 	install -d $(INSTDIR)
@@ -120,7 +112,3 @@ uninstall:
 	for mp in $(MAN_PGS); do \
 	 rm -f $(MANDIR)/$(MAN_PREF)/$$mp.gz; \
 	done
-
-ifeq (.depend,$(wildcard .depend))
-include .depend
-endif

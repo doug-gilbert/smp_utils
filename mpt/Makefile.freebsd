@@ -4,20 +4,17 @@ PREFIX=/usr/local
 INSTDIR=$(DESTDIR)/$(PREFIX)/bin
 MANDIR=$(DESTDIR)/$(PREFIX)/share/man
 
-ifndef CC
-CC = gcc
-endif
 LD = $(CC)
 
 EXECS = smp_mptctl_io.o
 
-OS_FLAGS = -DSMP_UTILS_LINUX
+OS_FLAGS = -DSMP_UTILS_FREEBSD
 LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
 # CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
-CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
-# CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
+# CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
+CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 LDFLAGS = 
 # LDFLAGS = -v -lm
@@ -51,7 +48,3 @@ uninstall:
 	for mp in $(MAN_PGS); do \
 	 rm -f $(MANDIR)/$(MAN_PREF)/$$mp.gz; \
 	done
-
-ifeq (.depend,$(wildcard .depend))
-include .depend
-endif

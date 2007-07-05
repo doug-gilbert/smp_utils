@@ -45,9 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.07 20060816";
-
-#define ME "smp_rep_general: "
+static char * version_str = "1.09 20061206";    /* sas2r06 */
 
 
 static struct option long_options[] = {
@@ -67,24 +65,25 @@ static void usage()
 {
     fprintf(stderr, "Usage: "
           "smp_rep_general [--change_report] [--help] [--hex]\n"
-          "                [--interface=<params>] [--raw] "
-          "[--sa=<sas_addr>]\n"
-          "                [--verbose] [--version] "
-          "<smp_device>[,<n>]\n"
-          "  where: --change_report|-c   report expander change count "
+          "                       [--interface=PARAMS] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                       [--verbose] [--version] "
+          "SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --change_report|-c   report expander change count "
           "only\n"
-          "         --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --raw|-r             output response in binary\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP "
-          "target (use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --raw|-r             output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                         or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                         not be needed\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT GENERAL function\n"
           );
 
@@ -170,7 +169,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -206,7 +205,8 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -225,9 +225,10 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -253,6 +254,8 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
@@ -321,12 +324,13 @@ int main(int argc, char * argv[])
            (smp_resp[6] << 8) + smp_resp[7]);
     printf("  number of phys: %d\n", smp_resp[9]);
     printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
+    printf("  zone address resolved supported: %d\n", !!(smp_resp[10] & 0x8));
     printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
     printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
     printf("  externally configurable route table: %d\n",
            !!(smp_resp[10] & 0x1));
     if (smp_resp[12]) { /* assume naa-5 present */
-        /* not in SAS-1, in SAS-1.1 and SAS-2 */
+        /* not in SAS-1; in SAS-1.1 and SAS-2 */
         printf("  enclosure logical identifier (hex): ");
         for (k = 0; k < 8; ++k)
             printf("%02x", smp_resp[12 + k]);
@@ -344,12 +348,23 @@ int main(int argc, char * argv[])
            (smp_resp[34] << 8) + smp_resp[35]);
     if (len < 40)
         goto err_out;
+    printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
     printf("  physical presence supported: %d\n", !!(smp_resp[36] & 0x8));
     printf("  physical presence enabled: %d\n", !!(smp_resp[36] & 0x4));
     printf("  zoning supported: %d\n", !!(smp_resp[36] & 0x2));
     printf("  zoning enabled: %d\n", !!(smp_resp[36] & 0x1));
     printf("  maximum number of routed SAS addresses: %d\n",
            (smp_resp[38]  << 8) + smp_resp[39]);
+    if (len < 48)
+        goto err_out;
+    printf("  active zone manager SAS address (hex): ");
+    for (k = 0; k < 8; ++k)
+        printf("%02x", smp_resp[40 + k]);
+    printf("\n");
+    if (len < 50)
+        goto err_out;
+    printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
+           (smp_resp[48]  << 8) + smp_resp[49]);
 
 err_out:
     res = smp_initiator_close(&tobj);

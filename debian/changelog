@@ -1,3 +1,9 @@
+smp-utils (0.92-0.1) unstable; urgency=low
+
+  * sync against sas2r07, add smp_conf_general
+
+ -- Douglas Gilbert <dgilbert@interlog.org>  Fri, 08 Dec 2006 13:00:00 -0500
+
 smp-utils (0.91-0.1) unstable; urgency=low
 
   * add smp_phy_test and smp_discover_list, uniform exit status values

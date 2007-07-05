@@ -46,9 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.02 20060816";
-
-#define ME "smp_conf_route_info: "
+static char * version_str = "1.03 20061206";
 
 
 static struct option long_options[] = {
@@ -70,33 +68,34 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_route_info [--disable] [--expected=<n>] [--help] "
+          "smp_conf_route_info [--disable] [--expected=EX] [--help] "
           "[--hex]\n"
-          "                       [--index=<n>] [--interface=<params>] "
-          "[--phy=<n>]\n"
-          "                       [--raw] [--routed=<sas_addr>] "
-          "[--sa=<sas_addr>]\n"
+          "                       [--index=IN] [--interface=PARAMS] "
+          "[--phy=ID]\n"
+          "                       [--raw] [--routed=R_SAS_ADDR] "
+          "[--sa=SAS_ADDR]\n"
           "                       [--verbose] [--version] "
-          "<smp_device>[,<n>]\n"
-          "  where: --disable|-d         disable expander route entry\n"
-          "         --expected=<n>|-E <n>  set expected expander change "
-          "count to <n>\n"
-          "         --help|-h            print out usage message\n"
-          "         --hex|-H             print response in hexadecimal\n"
-          "         --index=<n>|-i <n>   expander route index (def: 0)\n"
-          "         --interface=<params>|-I <params>   specify or override "
+          "SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --disable|-d         disable expander route entry\n"
+          "    --expected=EX|-E EX    set expected expander change "
+          "count to EX\n"
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --index=IN|-i IN     expander route index (def: 0)\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "         --phy=<n>|-p <n>     phy identifier (def: 0)\n"
-          "         --raw|-r             output response in binary\n"
-          "         --routed=<sas_addr>|-R <sas_addr>  to be placed in "
+          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
+          "    --raw|-r             output response in binary\n"
+          "    --routed=R_SAS_ADDR|-R R_SAS_ADDR    to be placed in "
           "route entry\n"
-          "         --sa=<sas_addr>|-s <sas_addr>   SAS address of SMP "
-          "target (use\n"
-          "                              leading '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                              the interface, may not be needed\n"
-          "         --verbose|-v         increase verbosity\n"
-          "         --version|-V         print version string and exit\n\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading '0x'\n"
+          "                         or trailing 'h'). Depending on "
+          "the interface, may\n"
+          "                         not be needed\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n\n"
           "Performs a SMP CONFIGURE ROUTE INFORMATION function\n"
           );
 
@@ -151,8 +150,8 @@ int main(int argc, char * argv[])
             do_disable = 1;
             break;
         case 'E':
-           expected_cc = smp_get_num(optarg);
-           if ((expected_cc < 0) || (expected_cc > 65535)) {
+            expected_cc = smp_get_num(optarg);
+            if ((expected_cc < 0) || (expected_cc > 65535)) {
                 fprintf(stderr, "bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
@@ -169,15 +168,15 @@ int main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'i':
-           er_ind = smp_get_num(optarg);
-           if ((er_ind < 0) || (er_ind > 65535)) {
+            er_ind = smp_get_num(optarg);
+            if ((er_ind < 0) || (er_ind > 65535)) {
                 fprintf(stderr, "bad argument to '--index'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'p':
-           phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
+            phy_id = smp_get_num(optarg);
+            if ((phy_id < 0) || (phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
@@ -186,16 +185,16 @@ int main(int argc, char * argv[])
             ++do_raw;
             break;
         case 'R':
-           sa_ll = smp_get_llnum(optarg);
-           if (-1LL == sa_ll) {
+            sa_ll = smp_get_llnum(optarg);
+            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad argument to '--routed'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             routed = (unsigned long long)sa_ll;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
-           if (-1LL == sa_ll) {
+            sa_ll = smp_get_llnum(optarg);
+            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
@@ -205,7 +204,7 @@ int main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, ME "version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
@@ -241,7 +240,7 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in <device> name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -260,9 +259,10 @@ int main(int argc, char * argv[])
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use any '--interface=' to continue\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -312,6 +312,8 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        if (0 == verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
@@ -372,7 +374,7 @@ int main(int argc, char * argv[])
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, ME "close error: %s\n", safe_strerror(errno));
+        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }

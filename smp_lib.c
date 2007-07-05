@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.06 20060813";    /* sas-2 rev 05a */
+static char * version_str = "1.10 20061117";    /* sas-2 rev 07 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -51,29 +51,38 @@ struct smp_func_def_rrlen {
                         /*  -2 -> no default; -3 -> implicit length */
     int def_resp_len;   /* if zero in response length field use this, unless */
                         /*  -2 -> no default; -3 -> implicit length */
+    /* N.B. Some recent functions have 0 length request or reponse lengths.
+            This is noted by putting 0 in one of the two above fields. */
 };
 
 struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
+    /* in numerical order by 'func' */
     {SMP_FN_REPORT_GENERAL, 0, 6},
     {SMP_FN_REPORT_MANUFACTURER, 0, 14},
     {SMP_FN_READ_GPIO_REG, -3, -3},     /* not applicable: see SFF-8485 */
     {SMP_FN_REPORT_SELF_CONFIG, -2, -2},
+    {SMP_FN_REPORT_ZONE_PERMISSION_TBL, -2, -2},/* variable length response */
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
     {SMP_FN_REPORT_ROUTE_INFO, 2, 9},
-    {SMP_FN_REPORT_PHY_EVENT_INFO, 2, -2},  /* variable length response */
-    {SMP_FN_REPORT_PHY_BROADCAST, 2, -2},
-    {SMP_FN_DISCOVER_LIST, 6, -2},
+    {SMP_FN_REPORT_PHY_EVENT_INFO, -2, -2},     /* variable length response */
+    {SMP_FN_REPORT_PHY_BROADCAST, -2, -2},
+    {SMP_FN_DISCOVER_LIST, -2, -2},
+    {SMP_FN_REPORT_EXP_ROUTE_TBL, -2, -2},
     {SMP_FN_CONFIG_GENERAL, 3, 0},
     {SMP_FN_ENABLE_DISABLE_ZONING, -2, 0},
     {SMP_FN_WRITE_GPIO_REG, -3, -3},    /* not applicable: see SFF-8485 */
-    {SMP_FN_CONFIG_ZONE_PERMISSION, -2, 0},  /* variable length request */
-    {SMP_FN_ZONED_BROADCAST, -2, 0},    /* variable length request */
+    {SMP_FN_ZONED_BROADCAST, -2, 0},            /* variable length request */
+    {SMP_FN_ZONE_LOCK, -2, -2},
+    {SMP_FN_ZONE_ACTIVATE, -2, 0},
+    {SMP_FN_ZONE_UNLOCK, -2, 0},
+    {SMP_FN_CONFIG_ZONE_PHY_INFO, -2, 0},       /* variable length request */
+    {SMP_FN_CONFIG_ZONE_PERMISSION_TBL, -2, 0}, /* variable length request */
     {SMP_FN_CONFIG_ROUTE_INFO, 9, 0},
     {SMP_FN_PHY_CONTROL, 9, 0},
     {SMP_FN_PHY_TEST_FUNCTION, 9, 0},
-    {SMP_FN_CONFIG_PHY_EVENT_INFO, -2, 0},  /* variable length request */
+    {SMP_FN_CONFIG_PHY_EVENT_INFO, -2, 0},      /* variable length request */
     {-1, -1, -1},
 };
 
@@ -105,6 +114,8 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_UNKNOWN_FUNCTION, "Unknown SMP function"},
     {SMP_FRES_FUNCTION_FAILED, "SMP function failed"},
     {SMP_FRES_INVALID_REQUEST_LEN, "Invalid request frame length"},
+    {SMP_FRES_INVALID_EXP_CHANGE_COUNT, "Invalid expander change count"},
+    {SMP_FRES_BUSY, "Busy"},
     {SMP_FRES_NO_PHY, "Phy does not exist"},
     {SMP_FRES_NO_INDEX, "Index does not exist"},
     {SMP_FRES_NO_SATA_SUPPORT, "Phy does not support SATA"},
@@ -112,9 +123,19 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_UNKNOWN_PHY_TEST_FN, "Unknown phy test function"},
     {SMP_FRES_PHY_TEST_IN_PROGRESS, "Phy test function in progress"},
     {SMP_FRES_PHY_VACANT, "Phy vacant"},
-    {SMP_FRES_PHY_EVENT_INFO_SRC,
-     "Phy event information source not supported"},
-    {SMP_FRES_ZONE_VIOLATION, "SMP zone violation"},
+    {SMP_FRES_UNKNOWN_PHY_EVENT_INFO_SRC,
+     "Unknown phy event information source"},
+    {SMP_FRES_UNKNOWN_DESCRIPTOR_TYPE, "Unknown descriptor type"},
+    {SMP_FRES_UNKNOWN_PHY_FILTER, "Unknown phy filter"},
+    {SMP_FRES_LOGICAL_LINK_RATE, "Logical link rate not supported"},
+    {SMP_FRES_SMP_ZONE_VIOLATION, "SMP zone violation"},
+    {SMP_FRES_NO_MANAGEMENT_ACCESS, "No management access rights"},
+    {SMP_FRES_UNKNOWN_EN_DIS_ZONING_VAL,
+     "Unknown enable disable zoning value"},
+    {SMP_FRES_ZONE_LOCK_VIOLATION, "Zone lock violation"},
+    {SMP_FRES_NOT_ACTIVATED, "Not activated"},
+    {SMP_FRES_UNKNOWN_ZONE_PHY_INFO_VAL,
+     "Unknown zone phy information value"},
     {0x0, NULL},
 };
 

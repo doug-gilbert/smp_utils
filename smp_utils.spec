@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.91
+%define version 0.92
 %define release 1
 
 Summary:        Utilities for SAS management protocol (SMP)
@@ -33,7 +33,7 @@ and the incorrect usage of them may render your system inoperable.
 %build
 
 make \
-     CFLAGS="%{optflags}"
+     CFLAGS="%{optflags} -DSMP_UTILS_LINUX"
 
 %install
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
@@ -54,6 +54,9 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
+* Fri Dec 08 2006 - dgilbert at interlog dot com
+- sync against sas2r07, add smp_conf_general
+  * smp_utils-0.92
 * Tue Aug 22 2006 - dgilbert at interlog dot com
 - add smp_phy_test and smp_discover_list, uniform exit status values
   * smp_utils-0.91
