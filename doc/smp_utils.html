@@ -232,7 +232,12 @@ in the section where the MPT SAS HBA is registered for "ioc" strings
 and
 look at the following number. The SAS address of the target SMP device
 (typically a SAS
-expander) also needs to be given.<br>
+expander) also needs to be given. The <span
+ style="font-family: monospace;">/dev/mptctl</span> device node is
+associated with the mptctl module. Hence a "<span
+ style="font-family: monospace;">modprobe mptctl</span>" command may be
+required. The <span style="font-family: monospace;">/dev/mptctl</span>
+device node is a character device with major 10 and minor 220.<br>
 <br>
 The <span style="font-family: monospace;">smp_portal</span> interface
 is part of the topological representation of a
@@ -640,7 +645,7 @@ the link and select "Save link as ..." to download the file.<br>
 <br>
 <p>Return to <a href="index.html">main</a> page. </p>
 <center>
-<p>Last updated: 8th December 2006<br>
+<p>Last updated: 27th December 2006<br>
 <br>
 </p>
 </center>

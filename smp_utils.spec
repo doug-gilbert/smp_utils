@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.92
+%define version 0.93
 %define release 1
 
 Summary:        Utilities for SAS management protocol (SMP)
@@ -54,6 +54,9 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
+* Mon Apr 23 2007 - dgilbert at interlog dot com
+- add affiliation contexts (new in sas2r08)
+  * smp_utils-0.93
 * Fri Dec 08 2006 - dgilbert at interlog dot com
 - sync against sas2r07, add smp_conf_general
   * smp_utils-0.92

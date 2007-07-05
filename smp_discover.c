@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,21 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.07 20061206";
+static char * version_str = "1.10 20070423";
 
+struct opts_t {
+    int do_brief;
+    int do_hex;
+    int ign_zp;
+    int do_list;
+    int multiple;
+    int do_num;
+    int phy_id;
+    int do_raw;
+    int verbose;
+    int sa_given;
+    unsigned long long sa;
+};
 
 static struct option long_options[] = {
         {"brief", 0, 0, 'b'},
@@ -54,6 +67,7 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"ignore", 0, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"list", 0, 0, 'l'},
         {"multiple", 0, 0, 'm'},
         {"num", 1, 0, 'n'},
         {"phy", 1, 0, 'p'},
@@ -67,12 +81,12 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_discover   [--brief] [--help] [--hex] [--ignore]\n"
-          "                      [--interface=PARAMS] [--multiple] "
-          "[--num=NUM] [--phy=ID]\n"
-          "                      [--raw] [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                      SMP_DEVICE[,N]\n"
+          "smp_discover [--brief] [--help] [--hex] [--ignore] "
+          "[--interface=PARAMS]\n"
+          "                    [--list] [--multiple] [--num=NUM] "
+          "[--phy=ID] [--raw]\n"
+          "                    [--sa=SAS_ADDR] [--verbose] "
+          "[--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --brief|-b           brief decoded output\n"
           "    --help|-h            print out usage message\n"
@@ -80,6 +94,7 @@ static void usage()
           "    --ignore|-i          sets the Ignore Zone Group bit\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --list|-l            output attribute=value, 1 per line\n"
           "    --multiple|-m        query multiple phys, output 1 line "
           "for each\n"
           "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
@@ -155,20 +170,21 @@ static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
     return b;
 }
 
-static char * smp_get_attached_reason(int val, int b_len, char * b)
+static char * smp_get_reason(int val, int b_len, char * b)
 {
     switch (val) {
     case 0: snprintf(b, b_len, "unknown"); break;
     case 1: snprintf(b, b_len, "power on"); break;
     case 2: snprintf(b, b_len, "hard reset");
          break;
-    case 3: snprintf(b, b_len, "link reset");
+    case 3: snprintf(b, b_len, "SMP phy control requested");
          break;
     case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
     case 5: snprintf(b, b_len, "error in multiplexing sequence"); break;
-    case 6: snprintf(b, b_len, "I_T nexus loss"); break;
+    case 6: snprintf(b, b_len, "I_T nexus loss timeout STP/SATA"); break;
     case 7: snprintf(b, b_len, "break timeout timer expired"); break;
     case 8: snprintf(b, b_len, "phy test function stopped"); break;
+    case 9: snprintf(b, b_len, "expander reduced functionality"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
@@ -185,6 +201,8 @@ static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
          break;
     case 4: snprintf(b, b_len, "phy enabled; port selector"); break;
     case 5: snprintf(b, b_len, "phy enabled; reset in progress"); break;
+    case 6: snprintf(b, b_len, "phy enabled; unsupported phy attached");
+         break;
     case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
     case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
@@ -231,6 +249,9 @@ static char * find_sas_connector_type(int conn_type, char * buff,
     case 0x23:
         snprintf(buff, buff_len, "SATA device plug [max 1 phy]");
         break;
+    case 0x2f:
+        snprintf(buff, buff_len, "SAS virtual connector [max 1 phy]");
+        break;
     case 0x3f:
         snprintf(buff, buff_len, "Vendor specific internal connector");
         break;
@@ -261,26 +282,21 @@ static char * find_sas_connector_type(int conn_type, char * buff,
 /* Returns length of response in bytes, excluding the CRC on success,
    -3 (or less) -> SMP_LIB errors negated ('-4 - smp_err),
    -1 for other errors */
-static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
-                       unsigned char * resp, int max_resp_len, int do_hex,
-                       int do_raw, int verbose)
+static int do_discover(struct smp_target_obj * top, int disc_phy_id,
+                       unsigned char * resp, int max_resp_len,
+                       int silence_err_report, const struct opts_t * optsp)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 2,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k, silence_not_exist;
+    int len, res, k;
 
-    if (verbose < 0) {
-        silence_not_exist = 1;
-        verbose = -1 - verbose;
-    } else
-        silence_not_exist = 0;
-    if (ign_zp)
+    if (optsp->ign_zp)
         smp_req[8] |= 0x1;
-    smp_req[9] = phy_id;
-    if (verbose) {
+    smp_req[9] = disc_phy_id;
+    if (optsp->verbose) {
         fprintf(stderr, "    Discover request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
@@ -291,11 +307,11 @@ static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
-    res = smp_send_req(top, &smp_rr, verbose);
+    res = smp_send_req(top, &smp_rr, optsp->verbose);
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == verbose)
+        if (0 == optsp->verbose)
             fprintf(stderr, "    try adding '-v' option for more debug\n");
         return -1;
     }
@@ -314,13 +330,13 @@ static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
-            if (verbose > 1)
+            if (optsp->verbose > 1)
                 fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex || do_raw) {
-        if (do_hex)
+    if (optsp->do_hex || optsp->do_raw) {
+        if (optsp->do_hex)
             dStrHex((const char *)resp, len, 1);
         else
             dStrRaw((const char *)resp, len);
@@ -343,7 +359,7 @@ static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
         return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (resp[2]) {
-        if ((verbose > 0) || (! silence_not_exist)) {
+        if ((optsp->verbose > 0) || (! silence_err_report)) {
             cp = smp_get_func_res_str(resp[2], sizeof(b), b);
             fprintf(stderr, "Discover result: %s\n", cp);
         }
@@ -352,32 +368,108 @@ static int do_discover(struct smp_target_obj * top, int phy_id, int ign_zp,
     return len;
 }
 
-static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
-                     int do_brief, int do_hex, int do_raw, int verbose)
+static int do_single_list(const unsigned char * smp_resp, int len,
+                          int show_exp_cc, int do_brief)
+{
+    int res, j;
+    unsigned long long ull;
+
+    if (show_exp_cc && (! do_brief)) {
+        res = (smp_resp[4] << 8) + smp_resp[5];
+        printf("expander_cc=%d\n", res);
+    }
+    printf("phy_id=%d\n", smp_resp[9]);
+    if (! do_brief) {
+        printf("  att_break_rc=%d\n", !!(0x1 & smp_resp[33]));
+        if (len > 59) {
+            for (ull = 0, j = 0; j < 8; ++j) {
+                if (j > 0)
+                    ull <<= 8;
+                ull |= smp_resp[52 + j];
+            }
+            printf("  att_dev_name=0x%llx\n", ull);
+        }
+    }
+    printf("  att_dev_type=%d\n", (0x70 & smp_resp[12]) >> 4);
+    printf("  att_iport_mask=0x%x\n", smp_resp[14]);
+    if (! do_brief)
+        printf("  att_izp=%d\n", !!(0x4 & smp_resp[33]));
+    printf("  att_phy_id=%d\n", smp_resp[32]);
+    if (! do_brief) {
+        printf("  att_reason=%d\n", (0xf & smp_resp[12]));
+        printf("  att_req_iz=%d\n", !!(0x2 & smp_resp[33]));
+    }
+    for (ull = 0, j = 0; j < 8; ++j) {
+        if (j > 0)
+            ull <<= 8;
+        ull |= smp_resp[24 + j];
+    }
+    printf("  att_sas_addr=0x%llx\n", ull);
+    printf("  att_tport_mask=0x%x\n", smp_resp[15]);
+    if (! do_brief) {
+        printf("  conn_elem_ind=%d\n", smp_resp[46]);
+        printf("  conn_p_link=%d\n", smp_resp[47]);
+        printf("  conn_type=%d\n", (0x7f & smp_resp[45]));
+    }
+    if (! do_brief) {
+        printf("  hw_max_p_lrate=%d\n", (0xf & smp_resp[41]));
+        printf("  hw_min_p_lrate=%d\n", (0xf & smp_resp[40]));
+        if (len > 95)
+            printf("  hw_mux_sup=%d\n", (!! (smp_resp[95] & 0x1)));
+    }
+    if (! do_brief) {
+        printf("  pr_max_p_lrate=%d\n", ((0xf0 & smp_resp[41]) >> 4));
+        printf("  pr_min_p_lrate=%d\n", ((0xf0 & smp_resp[40]) >> 4));
+    }
+
+    printf("  neg_log_lrate=%d\n", (0xf & smp_resp[13]));
+    if (! do_brief) {
+        if (len > 95)
+            printf("  neg_phy_lrate=%d\n", (0xf & smp_resp[94]));
+        printf("  pp_timeout=%d\n", !!(0xf & smp_resp[43]));
+        printf("  phy_cc=%d\n", smp_resp[42]);
+        if (len > 95)
+            printf("  reason=%d\n", (0xf0 & smp_resp[94]) >> 4);
+    }
+    
+    for (ull = 0, j = 0; j < 8; ++j) {
+        if (j > 0)
+            ull <<= 8;
+        ull |= smp_resp[16 + j];
+    }
+    printf("  sas_addr=0x%llx\n", ull);
+
+    printf("  virt_phy=%d\n", !!(0x80 & smp_resp[43]));
+    return 0;
+}
+
+static int do_single(struct smp_target_obj * top,
+                     const struct opts_t * optsp)
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
-    int res, len, j;
-    char b[256];
+    int res, len, j; char b[256];
 
-    len = do_discover(top, phy_id, ign_zp, smp_resp, sizeof(smp_resp),
-                      do_hex, do_raw, verbose);
+    len = do_discover(top, optsp->phy_id, smp_resp, sizeof(smp_resp), 0,
+                      optsp);
     if (len < 0)
         return (len < -2) ? (-4 - len) : len;
-    if (do_hex || do_raw)
+    if (optsp->do_hex || optsp->do_raw)
         return 0;
-    printf("Discover response%s:\n", (do_brief ? " (brief)" : ""));
+    if (optsp->do_list)
+        return do_single_list(smp_resp, len, 1, optsp->do_brief);
+    printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
     res = (smp_resp[4] << 8) + smp_resp[5];
-    if (verbose || (res > 0))
+    if (optsp->verbose || (res > 0))
         printf("  expander change count: %d\n", res);
     printf("  phy identifier: %d\n", smp_resp[9]);
     res = ((0x70 & smp_resp[12]) >> 4);
     if (res < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[res]);
-    if ((do_brief > 1) && (0 == res))
+    if ((optsp->do_brief > 1) && (0 == res))
         return 0;
     printf("  attached reason: %s\n",
-           smp_get_attached_reason(0xf & smp_resp[12], sizeof(b), b));
+           smp_get_reason(0xf & smp_resp[12], sizeof(b), b));
 
     printf("  negotiated logical link rate: %s\n",
            smp_get_neg_xxx_link_rate(0xf & smp_resp[13], sizeof(b), b));
@@ -385,7 +477,7 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !! (smp_resp[14] & 8), !! (smp_resp[14] & 4),
            !! (smp_resp[14] & 2), (smp_resp[14] & 1));
-    if (0 == do_brief)
+    if (0 == optsp->do_brief)
         printf("  attached sata port selector: %d\n",
                !! (smp_resp[15] & 0x80));
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
@@ -407,7 +499,7 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", smp_resp[32]);
-    if (0 == do_brief) {
+    if (0 == optsp->do_brief) {
         printf("  attached inside ZPSDS persistent: %d\n", smp_resp[33] & 4);
         printf("  attached requested inside ZPSDS: %d\n", smp_resp[33] & 2);
         printf("  attached break_reply capable: %d\n", smp_resp[33] & 1);
@@ -435,7 +527,7 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
     default: snprintf(b, sizeof(b), "reserved [%d]", res); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (do_brief)
+    if (optsp->do_brief)
         return 0;
     printf("  connector type: %s\n",
            find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
@@ -453,7 +545,7 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
               !!(smp_resp[60] & 0x40));
         printf("  inside ZPSDS persistent: %d\n", !!(smp_resp[60] & 0x20));
         printf("  requested inside ZPSDS: %d\n", !!(smp_resp[60] & 0x10));
-        printf("  zone address resolved: %d\n", !!(smp_resp[60] & 0x8));
+        /* printf("  zone address resolved: %d\n", !!(smp_resp[60] & 0x8)); */
         printf("  zone group persistent: %d\n", !!(smp_resp[60] & 0x4));
         printf("  zone participating: %d\n", !!(smp_resp[60] & 0x2));
         printf("  zone enabled: %d\n", !!(smp_resp[60] & 0x1));
@@ -471,6 +563,8 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
         printf("  self-configuration sas address: 0x%llx\n", ull);
     }
     if (len > 95) {
+        printf("  reason: %s\n",
+               smp_get_reason((0xf0 & smp_resp[94]) >> 4, sizeof(b), b));
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & smp_resp[94], sizeof(b), b));
         printf("  hardware muxing supported: %d\n", !!(smp_resp[95] & 0x1));
@@ -480,9 +574,8 @@ static int do_single(struct smp_target_obj * top, int phy_id, int ign_zp,
 
 #define MAX_PHY_ID 8192
 
-static int do_multiple(struct smp_target_obj * top, int start_phy_id,
-                       int num_phys, int ign_zp, int do_brief, int do_hex,
-                       int do_raw, int verbose)
+static int do_multiple(struct smp_target_obj * top,
+                       const struct opts_t * optsp)
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
@@ -494,10 +587,9 @@ static int do_multiple(struct smp_target_obj * top, int start_phy_id,
     const char * cp;
 
     expander_sa = 0;
-    num = num_phys ? (start_phy_id + num_phys) : MAX_PHY_ID;
-    for (k = start_phy_id; k < num; ++k) {
-        len = do_discover(top, k, ign_zp, smp_resp, sizeof(smp_resp),
-                          do_hex, do_raw, -1 - verbose);
+    num = optsp->do_num ? (optsp->phy_id + optsp->do_num) : MAX_PHY_ID;
+    for (k = optsp->phy_id; k < num; ++k) {
+        len = do_discover(top, k, smp_resp, sizeof(smp_resp), 1, optsp);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
         if (SMP_FRES_NO_PHY == ret)
@@ -519,17 +611,25 @@ static int do_multiple(struct smp_target_obj * top, int start_phy_id,
                 expander_sa = ull;
             }
         }
-        if (first && (! do_raw)) {
+        if (first && (! optsp->do_raw)) {
             first = 0;
+            if (optsp->sa_given && (optsp->sa != expander_sa))
+                printf("  <<< Warning: reported expander address is not the "
+                       "one requested >>>\n");
             printf("Device <%016llx>, expander%s:\n", expander_sa,
-                   (do_brief ? " (only connected phys shown)" : ""));
+                   (optsp->do_brief ? " (only connected phys shown)" : ""));
         }
-        if (do_hex || do_raw)
+        if (optsp->do_hex || optsp->do_raw)
             continue;
-        negot = smp_resp[13] & 0xf;
         res = ((0x70 & smp_resp[12]) >> 4);
-        if ((do_brief > 0) && (0 == res))
+        if ((optsp->do_brief > 0) && (0 == res))
             continue;
+        if (optsp->do_list) {
+            do_single_list(smp_resp, len, 0, optsp->do_brief);
+            continue;
+        }
+
+        negot = smp_resp[13] & 0xf;
         switch(smp_resp[44] & 0xf) {
         case 0:
             cp = "D";
@@ -558,6 +658,10 @@ static int do_multiple(struct smp_target_obj * top, int start_phy_id,
             continue;
         } else if (5 == negot) {
             printf("  phy %3d:%s:reset in progress\n", smp_resp[9], cp);
+            continue;
+        } else if (6 == negot) {
+            printf("  phy %3d:%s:unsupported phy attached\n", smp_resp[9],
+                   cp);
             continue;
         }
         if (k != smp_resp[9])
@@ -632,7 +736,7 @@ static int do_multiple(struct smp_target_obj * top, int start_phy_id,
             }
             printf("%s)", b);
         }
-        if (do_brief > 1) {
+        if (optsp->do_brief > 1) {
             printf("]\n");
             continue;
         } else
@@ -660,69 +764,65 @@ static int do_multiple(struct smp_target_obj * top, int start_phy_id,
 int main(int argc, char * argv[])
 {
     int res, c;
-    int do_brief = 0;
-    int do_hex = 0;
-    int ign_zp = 0;
-    int do_num = 0;
-    int phy_id = 0;
-    int multiple = 0;
-    int do_raw = 0;
-    int verbose = 0;
     long long sa_ll;
-    unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
     int ret = 0;
+    struct opts_t opts;
 
+    memset(&opts, 0, sizeof(opts));
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHiI:mn:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
         case 'b':
-            ++do_brief;
+            ++opts.do_brief;
             break;
         case 'h':
         case '?':
             usage();
             return 0;
         case 'H':
-            ++do_hex;
+            ++opts.do_hex;
             break;
         case 'i':
-            ++ign_zp;
+            ++opts.ign_zp;
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
             break;
+        case 'l':
+            ++opts.do_list;
+            break;
         case 'm':
-            ++multiple;
+            ++opts.multiple;
             break;
         case 'n':
-           do_num = smp_get_num(optarg);
-           if (do_num < 0) {
+           opts.do_num = smp_get_num(optarg);
+           if (opts.do_num < 0) {
                 fprintf(stderr, "bad argument to '--num'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'p':
-           phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
+           opts.phy_id = smp_get_num(optarg);
+           if ((opts.phy_id < 0) || (opts.phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'r':
-            ++do_raw;
+            ++opts.do_raw;
             break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
@@ -730,10 +830,12 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            opts.sa = (unsigned long long)sa_ll;
+            if (opts.sa > 0)
+                ++opts.sa_given;
             break;
         case 'v':
-            ++verbose;
+            ++opts.verbose;
             break;
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
@@ -776,7 +878,7 @@ int main(int argc, char * argv[])
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
-    if (0 == sa) {
+    if (0 == opts.sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
            sa_ll = smp_get_llnum(cp);
@@ -786,11 +888,11 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            opts.sa = (unsigned long long)sa_ll;
         }
     }
-    if (sa > 0) {
-        if (! smp_is_naa5(sa)) {
+    if (opts.sa > 0) {
+        if (! smp_is_naa5(opts.sa)) {
             fprintf(stderr, "SAS (target) address not in naa-5 format "
                     "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
@@ -800,17 +902,15 @@ int main(int argc, char * argv[])
         }
     }
 
-    res = smp_initiator_open(device_name, subvalue, i_params, sa,
-                             &tobj, verbose);
+    res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
+                             &tobj, opts.verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    if (multiple)
-        ret = do_multiple(&tobj, phy_id, do_num, ign_zp, do_brief, do_hex,
-                          do_raw, verbose);
+    if (opts.multiple)
+        ret = do_multiple(&tobj, &opts);
     else
-        ret = do_single(&tobj, phy_id, ign_zp, do_brief, do_hex, do_raw,
-                        verbose);
+        ret = do_single(&tobj, &opts);
     res = smp_initiator_close(&tobj);
     if (res < 0) {
         if (0 == ret)

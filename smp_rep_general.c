@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.09 20061206";    /* sas2r06 */
+static char * version_str = "1.11 20070324";    /* sas2r09 */
 
 
 static struct option long_options[] = {
@@ -324,7 +324,8 @@ int main(int argc, char * argv[])
            (smp_resp[6] << 8) + smp_resp[7]);
     printf("  number of phys: %d\n", smp_resp[9]);
     printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
-    printf("  zone address resolved supported: %d\n", !!(smp_resp[10] & 0x8));
+    /* printf("  zone address resolved supported: %d\n",
+              !!(smp_resp[10] & 0x8)); */
     printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
     printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
     printf("  externally configurable route table: %d\n",
@@ -350,7 +351,7 @@ int main(int argc, char * argv[])
         goto err_out;
     printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
     printf("  physical presence supported: %d\n", !!(smp_resp[36] & 0x8));
-    printf("  physical presence enabled: %d\n", !!(smp_resp[36] & 0x4));
+    printf("  physical presence asserted: %d\n", !!(smp_resp[36] & 0x4));
     printf("  zoning supported: %d\n", !!(smp_resp[36] & 0x2));
     printf("  zoning enabled: %d\n", !!(smp_resp[36] & 0x1));
     printf("  maximum number of routed SAS addresses: %d\n",
@@ -365,6 +366,20 @@ int main(int argc, char * argv[])
         goto err_out;
     printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
            (smp_resp[48]  << 8) + smp_resp[49]);
+    if (len < 56)
+        goto err_out;
+    printf("  first enclosure connector element index: %d\n", smp_resp[53]);
+    printf("  number of enclosure connector element indexes: %d\n",
+           smp_resp[54]);
+    if (len < 60)
+        goto err_out;
+    printf("  reduced functionality: %d\n", !!(smp_resp[56] & 0x80));
+    printf("  time to reduced functionality: %d (unit: 100ms)\n",
+           smp_resp[57]);
+    printf("  initial time to reduced functionality: %d (unit: 100ms)\n",
+           smp_resp[58]);
+    printf("  maximum reduced functionality time: %d (unit: second)\n",
+           smp_resp[59]);
 
 err_out:
     res = smp_initiator_close(&tobj);

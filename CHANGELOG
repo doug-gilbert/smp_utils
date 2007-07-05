@@ -2,6 +2,13 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
+Changelog for smp_utils-0.93 [20070423]
+  - smp_rep_phy_sata: affiliation contexts, added sas2r08
+  - smp_discover: add '--list' option for attribute=value output
+  - smp_rep_general: sync with sas2r09
+  - smp_discover, smp_discover_list: sync with sas2r09
+    - warn if expander's SAS address is different from requested
+
 Changelog for smp_utils-0.92 [20061208]
   - all: suggest using '-v' if smp_send_req() fails
   - smp_lib: sync function names and results with sas2r07
