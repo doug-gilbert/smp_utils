@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.03 20060530";    /* sas-2 rev 04 */
+static char * version_str = "1.06 20060813";    /* sas-2 rev 05a */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -46,16 +46,18 @@ static char * version_str = "1.03 20060530";    /* sas-2 rev 04 */
    does not need to be set (just space allocated (for some pass
    throughs)). */
 struct smp_func_def_rrlen {
-    int func; 
-    int def_req_len;    /* if zero in request length field use this */
-    int def_resp_len;   /* if zero in response length field use this */
+    int func;           /* '-1' for last entry */
+    int def_req_len;    /* if zero in request length field use this, unless */
+                        /*  -2 -> no default; -3 -> implicit length */
+    int def_resp_len;   /* if zero in response length field use this, unless */
+                        /*  -2 -> no default; -3 -> implicit length */
 };
 
 struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_GENERAL, 0, 6},
     {SMP_FN_REPORT_MANUFACTURER, 0, 14},
     {SMP_FN_READ_GPIO_REG, -3, -3},     /* not applicable: see SFF-8485 */
-    {SMP_FN_REPORT_ZONE_PERMISSION, 1, -2},
+    {SMP_FN_REPORT_SELF_CONFIG, -2, -2},
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
@@ -64,6 +66,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_PHY_BROADCAST, 2, -2},
     {SMP_FN_DISCOVER_LIST, 6, -2},
     {SMP_FN_CONFIG_GENERAL, 3, 0},
+    {SMP_FN_ENABLE_DISABLE_ZONING, -2, 0},
     {SMP_FN_WRITE_GPIO_REG, -3, -3},    /* not applicable: see SFF-8485 */
     {SMP_FN_CONFIG_ZONE_PERMISSION, -2, 0},  /* variable length request */
     {SMP_FN_ZONED_BROADCAST, -2, 0},    /* variable length request */

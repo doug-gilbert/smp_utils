@@ -46,12 +46,13 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.03 20060608";
+static char * version_str = "1.06 20060816";
 
 #define ME "smp_phy_control: "
 
 
 static struct option long_options[] = {
+        {"expected", 1, 0, 'E'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -60,8 +61,8 @@ static struct option long_options[] = {
         {"op", 1, 0, 'o'},
         {"phy", 1, 0, 'p'},
         {"pptv", 1, 0, 'P'},
-        {"sa", 1, 0, 's'},
         {"raw", 0, 0, 'r'},
+        {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -70,14 +71,16 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_phy_control [--help] [--interface=<params>] [--hex] "
-          "[--min=<n>]\n"
-          "                       [--max=<n>] [--op=<op>] [--phy=<n>] "
-          "[pptv=<n>]\n"
-          "                       [--sa=<sas_addr>] [--raw] [--verbose] "
-          "[--version]\n"
-          "                       <smp_device>[,<n>]\n"
-          "  where: --help|-h            print out usage message\n"
+          "smp_phy_control [--expected=<n>] [--help] [--hex] "
+          "[--interface=<params>]\n"
+          "                       [--min=<n>] [--max=<n>] [--op=<op>] "
+          "[--phy=<n>]\n"
+          "                       [pptv=<n>] [--raw] [--sa=<sas_addr>] "
+          "[--verbose]\n"
+          "                       [--version] <smp_device>[,<n>]\n"
+          "  where: --expected=<n>|-E <n>  set expected expander change count "
+          "to <n>\n"
+          "         --help|-h            print out usage message\n"
           "         --hex|-H             print response in hexadecimal\n"
           "         --interface=<params>|-I <params>   specify or override "
           "interface\n"
@@ -127,10 +130,20 @@ static struct smp_val_name op_abbrev[] = {
     {-1, NULL},
 };
 
+static void list_op_abbrevs()
+{
+    struct smp_val_name * vnp;
+
+    fprintf(stderr, "  Valid operation abbreviations are:\n");
+    for (vnp = op_abbrev; vnp->name; ++vnp)
+        fprintf(stderr, "    %s\n", vnp->name);
+}
+
 
 int main(int argc, char * argv[])
 {
     int res, c, k, len;
+    int expected_cc = 0;
     int do_hex = 0;
     int do_min = 0;
     int do_max = 0;
@@ -154,18 +167,25 @@ int main(int argc, char * argv[])
     struct smp_val_name * vnp;
     int subvalue = 0;
     char * cp;
-    int ret = 1;
+    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHI:m:M:o:p:P:rs:vV", long_options,
+        c = getopt_long(argc, argv, "E:hHI:m:M:o:p:P:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'E':
+            expected_cc = smp_get_num(optarg);
+            if ((expected_cc < 0) || (expected_cc > 65535)) {
+                fprintf(stderr, "bad argument to '--expected'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 'h':
         case '?':
             usage();
@@ -178,21 +198,31 @@ int main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'm':
-           do_min = smp_get_num(optarg);
-           if ((do_min < 0) || (do_min > 10) ||
-               ((do_min > 0) && (do_min < 8))) {
+            do_min = smp_get_num(optarg);
+            switch (do_min) {
+            case 0:
+            case 8:
+            case 9:
+            case 10:
+                break;
+            default:
                 fprintf(stderr, "bad argument to '--min', want 0, 8, 9 "
                         "or 10\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'M':
-           do_max = smp_get_num(optarg);
-           if ((do_max < 0) || (do_max > 10) ||
-               ((do_max > 0) && (do_max < 8))) {
+            do_max = smp_get_num(optarg);
+            switch (do_max) {
+            case 0:
+            case 8:
+            case 9:
+            case 10:
+                break;
+            default:
                 fprintf(stderr, "bad argument to '--max', want 0, 8, 9 "
                         "or 10\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'o':
@@ -203,11 +233,16 @@ int main(int argc, char * argv[])
                 }
                 if (vnp->name)
                     op_val = vnp->value;
+                else {
+                    fprintf(stderr, "bad argument to '--op'\n");
+                    list_op_abbrevs();
+                    return SMP_LIB_SYNTAX_ERROR;
+                }
             } else {
                 op_val = smp_get_num(optarg);
                 if ((op_val < 0) || (op_val > 255)) {
                     fprintf(stderr, "bad numeric argument to '--op'\n");
-                    return 1;
+                    return SMP_LIB_SYNTAX_ERROR;
                 }
             }
             break;
@@ -215,7 +250,7 @@ int main(int argc, char * argv[])
            phy_id = smp_get_num(optarg);
            if ((phy_id < 0) || (phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'P':
@@ -223,7 +258,7 @@ int main(int argc, char * argv[])
            if ((pptv < 0) || (pptv > 15)) {
                 fprintf(stderr, "bad argument to '--pptv', want value"
                         "from 0 to 15 inclusive\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'r':
@@ -233,7 +268,7 @@ int main(int argc, char * argv[])
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad argument to '--sa'\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
             break;
@@ -246,7 +281,7 @@ int main(int argc, char * argv[])
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (optind < argc) {
@@ -260,7 +295,7 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "Unexpected extra argument: %s\n",
                         argv[optind]);
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == device_name[0]) {
@@ -271,14 +306,14 @@ int main(int argc, char * argv[])
             fprintf(stderr, "missing device name!\n    [Could use "
                     "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after comma in <device> name\n");
-            return 1;
+            return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if (0 == sa) {
@@ -299,7 +334,7 @@ int main(int argc, char * argv[])
             fprintf(stderr, "SAS (target) address not in naa-5 format\n");
             if ('\0' == i_params[0]) {
                 fprintf(stderr, "    use any '--interface=' to continue\n");
-                return 1;
+                return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
@@ -307,8 +342,10 @@ int main(int argc, char * argv[])
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
-        return 1;
+        return SMP_LIB_FILE_ERROR;
 
+    smp_req[4] = (expected_cc >> 8) & 0xff;
+    smp_req[5] = expected_cc & 0xff;
     smp_req[9] = phy_id;
     smp_req[10] = op_val;
     if (pptv >= 0) {
@@ -333,56 +370,67 @@ int main(int argc, char * argv[])
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
         fprintf(stderr, "smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
+        ret = -1;
         goto err_out;
     }
     if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
         fprintf(stderr, "response too short, len=%d\n", smp_rr.act_response_len);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     len = smp_resp[3];
     if (0 == len) {
         len = smp_get_func_def_resp_len(smp_resp[1]);
         if (len < 0) {
-            fprintf(stderr, "unable to determine reponse length\n");
-            goto err_out;
+            len = 0;
+            if (verbose > 0)
+                fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex) {
-        dStrHex((const char *)smp_resp, len, 1);
-        ret = 0;
-        goto err_out;
-    } else if (do_raw) {
-        dStrRaw((const char *)smp_resp, len);
-        ret = 0;
+    if (do_hex || do_raw) {
+        if (do_hex)
+            dStrHex((const char *)smp_resp, len, 1);
+        else
+            dStrRaw((const char *)smp_resp, len);
+        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[1] != smp_req[1])
+            ret = SMP_LIB_CAT_MALFORMED;
+        if (smp_resp[2])
+            ret = smp_resp[2];
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
         fprintf(stderr, "expected SMP frame response type, got=0x%x\n", smp_resp[0]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
         fprintf(stderr, "Expected function code=0x%x, got=0x%x\n", smp_req[1], smp_resp[1]);
+        ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
 
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
         fprintf(stderr, "Phy control result: %s\n", cp);
+        ret = smp_resp[2];
         goto err_out;
     }
-    ret = 0;
 
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
         fprintf(stderr, ME "close error: %s\n", safe_strerror(errno));
-        return 1;
+        if (0 == ret)
+            return SMP_LIB_FILE_ERROR;
     }
-    return ret;
+    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
 }
