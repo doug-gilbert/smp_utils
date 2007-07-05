@@ -1,0 +1,17 @@
+This interface uses a device node used by various MPT Fusion
+drivers. It is called '/dev/mptctl' and it is a char device.
+Currently a special module needs to loaded called 'mptctl'.
+This can be loaded with 'modprobe mptctl'. If there are multiple
+MPT Fusion HBAs on one computer then the following construction:
+'/dev/mptctl,<n>' can be used for the <smp_device> argument.
+LSI Logic call the <n> a "ioc" number. If not given it defaults
+to 0 .
+
+There is a pass through ioctl defined for the /dev/mptctl
+device which this library uses. Since '/dev/mptctl,<n>' only
+decsribes a (SMP) host, the SAS address of the target device
+must be given  (i.e. therefore the '--sa=<sas_addr>' option
+must be given.
+
+Douglas Gilbert
+29th May 2006
