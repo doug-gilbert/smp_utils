@@ -1,0 +1,109 @@
+.TH SMP_UTILS "8" "June 2006" "smp_utils-0.90" SMP_UTILS
+.SH NAME
+smp_* \- invoke a SMP function
+.SH SYNOPSIS
+.B smp_*
+[\fI--help\fR] [\fI--hex\fR] [\fI--interface=<params>\fR] [\fI--raw\fR]
+[\fI--sa=<sas_addr>\fR] [\fI--verbose\fR] [\fI--version\fR]
+\fI<smp_device>[,<n>]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+smp_utils is a package of utilities. Each utility sends a Serial Attached
+SCSI (SAS) Management Protocol (SMP) request to a <smp_device> (a SMP
+target). If an error occurs then the error message is sent to stderr.
+If no error occurs, the response is decoded (the default), output
+in ASCII hex (when '--hex' is given) or output in binary to
+stdout (when '--raw' is given).
+.PP
+If <smp_device>[,<n>] is not given then the value in the environment
+variable SMP_UTILS_DEVICE is used.
+.SH INTERFACE
+Currently there are multiple interfaces that allow SMP functions to
+be passed through to a SMP target.
+.PP
+One method is to have a <smp_device> which is actually the SMP
+initiator (e.g. '/dev/mptcl,0'). In this case the '--sa=<sas_addr>'
+of the SMP target must be supplied.
+.PP
+Another method is to have a <smp_device> which represents the
+SMP target. In this case no <sas_addr> needs to be given (since it
+is implicit). This method may be simpler but it precludes the
+discovery process.
+.PP
+Each utility in smp_utils attempts to work out which interface it has
+been given by examining the <smp_device> file. There
+are two interfaces supported currently:
+.TP
+.I mpt
+This specifies the MPT fusion SAS passthrough which uses the /dev/mptctl
+device node. If mpt drivers are loaded but /dev/mptctl is not present
+then a 'modprobe mptctl' command may be needed. If there are multiple
+mpt fusion controllers (HBAs) in the computer, then the user may need
+to specify which one to use with the syntax: '/dev/mptcl,<n>' where <n>
+is the "ioc" number. When this interface is used the '--sa=<sas_addr>'
+option must be given to specify the SAS address of the SMP target.
+.TP
+.I tpl (ai)
+This interface is currently used by one adaptec 94xx driver. The "device"
+name will usually be "smp_portal" and it will be found within the sysfs
+file system (typically mounted under "/sys"). The target SMP SAS address
+is implicit (as is the SMP initiator). Either 'tpl' or 'ai' can be used
+to specify this interface.
+.SH ENVIRONMENT VARIABLES
+If the device name is not given then the SMP_UTILS_DEVICE environment
+variable is checked and if present its contents are used as the device name.
+.PP
+If the SAS address (of the SMP target) is not given and it is
+required (i.e. it is not implicit in the device name) then
+the SMP_UTILS_SAS_ADDR environment variable is checked and if present
+its contents are used as the SAS address.
+.SH PROCESS STATUS
+If a utility can form the SMP request, send it to the pass through, fetch
+the response and find the response is well formed and reports no errors
+then the process exits with a status value of 0 . Otherwise the process
+exits with a status value of 1 .
+.SH COMMON OPTIONS
+.TP
+--help | -h
+output the usage message then exit.
+.TP
+--hex | -H
+output the response in hexadecimal.
+.TP
+--interface=<intf>[,force] | -I <intf>[,force]
+interface specific parameters. This option is usually not needed since the
+interface type is guessed by a utility based on the characteristics
+of the given <smp_device> argument. If the guess doesn't work then the
+interface can be specified by giving a <intf> of either 'mpt' or 'tpl'.
+Sanity checks are still performed and a utility may refuse if it doesn't
+agree with the given <intf>. If the user is really sure then adding
+a ',force' will force the utility to assume the given interface.
+.TP
+--raw | -r
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+--sa=<sas_addr> | -s <sas_addr>
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the <smp_device> has the target's
+SAS address within it. The <sas_addr> is in decimal but most SAS addresses
+are shown in hexadecimal. The give a number in hexadecimal either prefix
+it with '0x' or put a trailing 'h' on it. If not given then the value in
+the environment variable SMP_UTILS_SAS_ADDR is used.
+.TP
+--verbose | -v
+increase the verbosity of the output. Can be used multiple times
+.TP
+--version | -V
+print the version string and then exit.
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_discover(smp_utils)
