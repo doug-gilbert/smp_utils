@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,11 @@
  * response.
  */
 
-static char * version_str = "1.07 20061206";
+static char * version_str = "1.08 20070127";
 
 
 static struct option long_options[] = {
+        {"affiliation", 1, 0, 'a'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -64,12 +65,14 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_phy_sata [--help] [--hex] [--interface=PARAMS] "
-          "[--phy=ID]\n"
-          "                        [--raw] [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                        SMP_DEVICE[,N]\n"
+          "smp_rep_phy_sata [--affiliation=AC] [--help] [--hex]\n"
+          "                        [--interface=PARAMS] [--phy=ID] "
+          "[--raw]\n"
+          "                        [--sa=SAS_ADDR] [--verbose] [--version] "
+          "SMP_DEVICE[,N]\n"
           "  where:\n"
+          "    --affiliation=AC|-a AC    affiliation context (field in "
+          "request)\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
@@ -99,6 +102,7 @@ static void dStrRaw(const char* str, int len)
 int main(int argc, char * argv[])
 {
     int res, c, k, j, len;
+    int aff_context = 0;
     int do_hex = 0;
     int phy_id = 0;
     int phy_id_given = 0;
@@ -123,12 +127,19 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHI:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "ahHI:p:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'a':
+           aff_context = smp_get_num(optarg);
+           if ((aff_context < 0) || (aff_context > 255)) {
+                fprintf(stderr, "bad argument to '--affiliation'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 'h':
         case '?':
             usage();
@@ -234,6 +245,7 @@ int main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     smp_req[9] = phy_id;
+    smp_req[10] = aff_context;
     if (verbose) {
         fprintf(stderr, "    Report phy SATA request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
@@ -342,6 +354,11 @@ int main(int argc, char * argv[])
             ull |= smp_resp[56 + j];
         }
         printf("  STP I_T nexus loss SAS address: 0x%llx\n", ull);
+    }
+    if (len > 67) {
+        printf("  affiliation context: %d\n", smp_resp[65]);
+        printf("  current affiliation contexts: %d\n", smp_resp[66]);
+        printf("  maximum affiliation contexts: %d\n", smp_resp[67]);
     }
 
 err_out:

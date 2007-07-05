@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,23 +45,23 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.02 20061206";
+static char * version_str = "1.04 20070423";
 
 
 #define SMP_UTILS_DEBUG
 
 #ifdef SMP_UTILS_DEBUG
 static unsigned char tst1_resp[] = {
-    0x41, 0x16, 0, 41, 0, 0, 0, 0,
-    0x0, 5, 0, 1, 24, 0, 0, 0,
-    0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0x41, 0x16, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
+    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0x0, 0, 0x0, 0x0, 0x0, 0x0, 2, 0, 0, 0, 0, 0,
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0, 0, 0, 0,
 
-    0x1, 0, 0x10, 0x9, 0x0, 0x8, 2, 0, 0, 0, 7, 13,
+    0x1, 0, 0x11, 0x9, 0x0, 0x8, 2, 0x20, 0, 0, 7, 13,
     0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
     0, 0, 0, 0,
 
@@ -80,10 +80,10 @@ static unsigned char tst1_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst2_resp[] = {
-    0x41, 0x16, 0, 23, 0, 0, 0, 0,
-    0x0, 2, 0, 1, 24, 0, 0, 0,
-    0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0x41, 0x16, 0, 23, 0, 0, 0, 0, 0x2, 2, 0, 1,
+    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0x2, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 4, 31,
     0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
@@ -96,10 +96,10 @@ static unsigned char tst2_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst3_resp[] = {
-    0x41, 0x16, 0, 23, 0, 0, 0, 0,
-    0x0, 2, 0, 1, 24, 0, 0, 0,
-    0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0x41, 0x16, 0, 23, 0, 0, 0, 0, 0x0, 2, 0, 1,
+    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0x2, 0x16, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 4, 31,
     0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
@@ -112,30 +112,67 @@ static unsigned char tst3_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst4_resp[] = {
-    0x41, 0x16, 0, 49, 0, 0, 0, 0,
-    0x0, 2, 0, 0, 76, 0, 0, 0,
-    0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0x41, 0x16, 0, 49, 0, 0, 0, 0, 0x0, 2, 0, 0,
+    76, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0x41, 0x10, 0x0, 18, 0, 0, 0, 0,
     0, 0x1, 0, 0, 0x10, 0x9, 0x0, 0x8,
     0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
     0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
     0x7, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 13, 0x87, 0x2, 0, 0, 0,
+    0x88, 0x99, 13, 0x87, 0x2, 0x10, 1, 2,
+    0, 0, 0, 0,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x20,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0x41, 0x10, 0x0, 18, 0, 0, 0, 0,
     0, 0x2, 0, 0, 0x20, 0x9, 0x0, 0x2,
     0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
     0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
     0x4, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 31, 0x7, 0x2, 0, 0, 0,
+    0x88, 0x99, 31, 0x7, 0x2, 0x2, 3, 4,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     0, 0, 0, 0};
+
+static unsigned char tst5_resp[] = {
+    0x41, 0x16, 0, 59, 0, 0, 0, 0, 0x0, 2, 0, 0,
+    96, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+    0x41, 0x10, 0x0, 0x17, 0, 0, 0, 0,
+    0, 0x0, 0, 0, 0x11, 0x9, 0x0, 0x8,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
+    0x7, 0x0, 0, 0, 0, 0, 0, 0,
+    0x88, 0x99, 13, 0x87, 0x2, 0x21, 2, 3,
+    0, 0, 0, 0,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x20,
+    0x77, 0, 0, 0, 0, 0, 0, 0,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x99,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2a, 0x1,
+
+    0x41, 0x10, 0x0, 0x17, 0, 0, 0, 0,
+    0, 0x1, 0, 0, 0x21, 0x9, 0x0, 0x2,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x22,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x33,
+    0x7, 0x0, 0, 0, 0, 0, 0, 0,
+    0x88, 0x99, 13, 0x87, 0x2, 0x21, 2, 3,
+    0, 0, 0, 0,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x20,
+    0x77, 0, 0, 0, 0, 0, 0, 0,
+    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x99,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2a, 0x1,
+
+    0, 0, 0, 0};
+
 #endif
 
 
@@ -148,6 +185,7 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"ignore", 0, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"list", 0, 0, 'l'},
         {"num", 1, 0, 'n'},
         {"one", 0, 0, 'o'},
         {"phy", 1, 0, 'p'},
@@ -161,15 +199,33 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
-static void usage()
+struct opts_t {
+    int do_brief;
+    int desc_type;
+    int filter;
+    int do_list;
+    int do_hex;
+    int ign_zp;
+    int do_num;
+    int do_one;
+    int phy_id;
+    int do_raw;
+    int do_test;
+    int verbose;
+    int sa_given;
+    unsigned long long sa;
+};
+
+static void
+usage()
 {
     fprintf(stderr, "Usage: "
           "smp_discover_list  [--brief] [--descriptor=TY] [--filter=FI] "
           "[--help]\n"
           "                    [--hex] [--ignore] [--interface=PARAMS] "
-          "[--num=NUM]\n"
-          "                    [--one] [--phy=ID] [--raw] "
-          "[--sa=<sas_addr>]\n");
+          "[--list]\n"
+          "                    [--num=NUM] [--one] [--phy=ID] [--raw] "
+          "[--sa=SAS_ADDR]\n");
 #ifdef SMP_UTILS_DEBUG
     fprintf(stderr,
           "                    [--test=TE] [--verbose] [--version] "
@@ -194,6 +250,7 @@ static void usage()
           "    --ignore|-i          sets the Ignore Zone Group bit\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --list|-l            output attribute=value, 1 per line\n"
           "    --num=NUM|-n NUM     number of descriptors to fetch "
           "(def: 1)\n"
           "    --one|-o             one line output per response "
@@ -219,7 +276,8 @@ static void usage()
 
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -249,7 +307,8 @@ static char * smp_short_attached_device_type[] = {
     "res",
 };
 
-static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
+static char *
+smp_get_plink_rate(int val, int prog, int b_len, char * b)
 {
     switch (val) {
     case 0:
@@ -274,26 +333,29 @@ static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
     return b;
 }
 
-static char * smp_get_attached_reason(int val, int b_len, char * b)
+static char *
+smp_get_reason(int val, int b_len, char * b)
 {
     switch (val) {
     case 0: snprintf(b, b_len, "unknown"); break;
     case 1: snprintf(b, b_len, "power on"); break;
     case 2: snprintf(b, b_len, "hard reset");
          break;
-    case 3: snprintf(b, b_len, "link reset");
+    case 3: snprintf(b, b_len, "SMP phy control requested");
          break;
     case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
     case 5: snprintf(b, b_len, "error in multiplexing sequence"); break;
-    case 6: snprintf(b, b_len, "I_T nexus loss"); break;
+    case 6: snprintf(b, b_len, "I_T nexus loss timeout STP/SATA"); break;
     case 7: snprintf(b, b_len, "break timeout timer expired"); break;
     case 8: snprintf(b, b_len, "phy test function stopped"); break;
+    case 9: snprintf(b, b_len, "expander reduced functionality"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
 }
 
-static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
+static char *
+smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
 {
     switch (val) {
     case 0: snprintf(b, b_len, "phy enabled; unknown"); break;
@@ -301,9 +363,11 @@ static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 2: snprintf(b, b_len, "phy enabled; speed negotiation failed");
          break;
     case 3: snprintf(b, b_len, "phy enabled; SATA spinup hold state");
-         break;
+        break;
     case 4: snprintf(b, b_len, "phy enabled; port selector"); break;
     case 5: snprintf(b, b_len, "phy enabled; reset in progress"); break;
+    case 6: snprintf(b, b_len, "phy enabled; unsupported phy attached");
+        break;
     case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
     case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
@@ -312,8 +376,8 @@ static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     return b;
 }
 
-static char * find_sas_connector_type(int conn_type, char * buff,
-                                      int buff_len)
+static char *
+find_sas_connector_type(int conn_type, char * buff, int buff_len)
 {
     switch (conn_type) {
     case 0x0:
@@ -350,6 +414,9 @@ static char * find_sas_connector_type(int conn_type, char * buff,
     case 0x23:
         snprintf(buff, buff_len, "SATA device plug [max 1 phy]");
         break;
+    case 0x2f:
+        snprintf(buff, buff_len, "SAS virtual connector [max 1 phy]");
+        break;
     case 0x3f:
         snprintf(buff, buff_len, "Vendor specific internal connector");
         break;
@@ -379,10 +446,9 @@ static char * find_sas_connector_type(int conn_type, char * buff,
 
 /* Returns 0 when successful, -1 for low level errors and > 0
    for other error categories. */
-static int do_discover_list(struct smp_target_obj * top, int phy_id,
-                            int mnum_desc, int ign_zp, int filter,
-                            int desc, unsigned char * resp, int max_resp_len,
-                            int do_hex, int do_raw, int test, int verbose)
+static int
+do_discover_list(struct smp_target_obj * top, unsigned char * resp,
+                 int max_resp_len, struct opts_t * optsp)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER_LIST, 0, 6,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -393,13 +459,13 @@ static int do_discover_list(struct smp_target_obj * top, int phy_id,
     char * cp;
     int len, res, k;
 
-    smp_req[8] = phy_id;
-    smp_req[9] = mnum_desc;
-    smp_req[10] = filter & 0xf;
-    if (ign_zp)
+    smp_req[8] = optsp->phy_id;
+    smp_req[9] = optsp->do_num;
+    smp_req[10] = optsp->filter & 0xf;
+    if (optsp->ign_zp)
         smp_req[10] |= 0x80;
-    smp_req[11] = desc & 0xf;
-    if (verbose) {
+    smp_req[11] = optsp->desc_type & 0xf;
+    if (optsp->verbose) {
         fprintf(stderr, "    Discover list request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
@@ -410,22 +476,25 @@ static int do_discover_list(struct smp_target_obj * top, int phy_id,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
-    if (0 == test)
-        res = smp_send_req(top, &smp_rr, verbose);
+    if (0 == optsp->do_test)
+        res = smp_send_req(top, &smp_rr, optsp->verbose);
     else {
 #ifdef SMP_UTILS_DEBUG
-        if (1 == test)
+        memset(resp, 0, max_resp_len);
+        if (1 == optsp->do_test)
             memcpy(resp, tst1_resp, sizeof(tst1_resp));
-        else if (2 == test)
+        else if (2 == optsp->do_test)
             memcpy(resp, tst2_resp, sizeof(tst2_resp));
-        else if (3 == test)
+        else if (3 == optsp->do_test)
             memcpy(resp, tst3_resp, sizeof(tst3_resp));
-        else if (4 == test)
+        else if (4 == optsp->do_test)
             memcpy(resp, tst4_resp, sizeof(tst4_resp));
+        else if (5 == optsp->do_test)
+            memcpy(resp, tst5_resp, sizeof(tst5_resp));
         else
-            fprintf(stderr, ">>> test %d not supported\n", test);
+            fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
 #else
-        fprintf(stderr, ">>> test %d not supported\n", test);
+        fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
 #endif
         smp_rr.act_response_len = -1;
         res = 0;
@@ -433,7 +502,7 @@ static int do_discover_list(struct smp_target_obj * top, int phy_id,
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == verbose)
+        if (0 == optsp->verbose)
             fprintf(stderr, "    try adding '-v' option for more debug\n");
         return -1;
     }
@@ -452,13 +521,13 @@ static int do_discover_list(struct smp_target_obj * top, int phy_id,
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
-            if (verbose > 0)
+            if (optsp->verbose > 0)
                 fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex || do_raw) {
-        if (do_hex)
+    if (optsp->do_hex || optsp->do_raw) {
+        if (optsp->do_hex)
             dStrHex((const char *)resp, len, 1);
         else
             dStrRaw((const char *)resp, len);
@@ -488,8 +557,10 @@ static int do_discover_list(struct smp_target_obj * top, int phy_id,
     return 0;
 }
 
-static int decode_desc0_multiline(const unsigned char * resp, int offset,
-                                  int hdr_ecc, int do_brief)
+/* long format: similar to DISCOVER response */
+static int
+decode_desc0_multiline(const unsigned char * resp, int offset,
+                       int hdr_ecc, struct opts_t * optsp)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -513,16 +584,17 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
     adt = ((0x70 & rp[12]) >> 4);
     if (adt < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[adt]);
-    if ((do_brief > 1) && (0 == adt))
+    if ((optsp->do_brief > 1) && (0 == adt))
         return 0;
-    printf("  attached reason: %s\n",
-           smp_get_attached_reason(0xf & rp[12], sizeof(b), b));
+    if (0 == optsp->do_brief)
+        printf("  attached reason: %s\n",
+               smp_get_reason(0xf & rp[12], sizeof(b), b));
 
     printf("  negotiated logical link rate: %s\n",
            smp_get_neg_xxx_link_rate(0xf & rp[13], sizeof(b), b));
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[14] & 8), !!(rp[14] & 4), !!(rp[14] & 2), (rp[14] & 1));
-    if (0 == do_brief)
+    if (0 == optsp->do_brief)
         printf("  attached sata port selector: %d\n", !!(rp[15] & 0x80));
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[15] & 8), !!(rp[15] & 4), !!(rp[15] & 2), (rp[15] & 1));
@@ -542,7 +614,7 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
-    if (0 == do_brief) {
+    if (0 == optsp->do_brief) {
         printf("  attached inside ZPSDS persistent: %d\n", rp[33] & 4);
         printf("  attached requested inside ZPSDS: %d\n", rp[33] & 2);
         printf("  attached break_reply capable: %d\n", rp[33] & 1);
@@ -570,7 +642,7 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (do_brief)
+    if (optsp->do_brief)
         return 0;
     printf("  connector type: %s\n",
            find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
@@ -588,7 +660,7 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
                !!(rp[60] & 0x40));
         printf("  inside ZPSDS persistent: %d\n", !!(rp[60] & 0x20));
         printf("  requested inside ZPSDS: %d\n", !!(rp[60] & 0x10));
-        printf("  zone address resolved: %d\n", !!(rp[60] & 0x8));
+        /* printf("  zone address resolved: %d\n", !!(rp[60] & 0x8)); */
         printf("  zone group persistent: %d\n", !!(rp[60] & 0x4));
         printf("  inside ZPSDS: %d\n", !!(rp[60] & 0x2));
         printf("  zoning enabled: %d\n", !!(rp[60] & 0x1));
@@ -606,6 +678,8 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  self-configuration sas address: 0x%llx\n", ull);
     }
     if (len > 95) {
+        printf("  reason: %s\n",
+               smp_get_reason((0xf0 & rp[94]) >> 4, sizeof(b), b));
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
         printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
@@ -613,8 +687,10 @@ static int decode_desc0_multiline(const unsigned char * resp, int offset,
     return 0;
 }
 
-static int decode_desc1_multiline(const unsigned char * resp, int offset,
-                                  int do_brief)
+/* short format: parts if DISCOVER response compressed into 24 bytes */
+static int
+decode_desc1_multiline(const unsigned char * resp, int offset,
+                       struct opts_t * optsp)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -633,19 +709,23 @@ static int decode_desc1_multiline(const unsigned char * resp, int offset,
     adt = ((0x70 & rp[2]) >> 4);
     if (adt < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[adt]);
-    if ((do_brief > 1) && (0 == adt))
+    if ((optsp->do_brief > 1) && (0 == adt))
         return 0;
+    if (0 == optsp->do_brief)
+        printf("  attached reason: %s\n",
+               smp_get_reason(0xf & rp[2], sizeof(b), b));
     printf("  negotiated logical link rate: %s\n",
            smp_get_neg_xxx_link_rate(0xf & rp[3], sizeof(b), b));
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[4] & 8), !!(rp[4] & 4), !!(rp[4] & 2), (rp[4] & 1));
-    if (0 == do_brief)
+    if (0 == optsp->do_brief)
         printf("  attached sata port selector: %d\n", !!(rp[5] & 0x80));
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[5] & 8), !!(rp[5] & 4), !!(rp[5] & 2), (rp[5] & 1));
 
-    printf("  virtual phy: %d\n", !!(rp[6] & 0x80));
+    if (0 == optsp->do_brief)
+        printf("  virtual phy: %d\n", !!(rp[6] & 0x80));
     ull = 0;
     for (j = 0; j < 8; ++j) {
         if (j > 0)
@@ -654,7 +734,8 @@ static int decode_desc1_multiline(const unsigned char * resp, int offset,
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[10]);
-    printf("  phy change count: %d\n", rp[11]);
+    if (0 == optsp->do_brief)
+        printf("  phy change count: %d\n", rp[11]);
     route_attr = (0xf & rp[6]);
     switch (route_attr) {
     case 0: snprintf(b, sizeof(b), "direct"); break;
@@ -663,18 +744,21 @@ static int decode_desc1_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (do_brief)
+    if (optsp->do_brief)
         return 0;
+    printf("  reason: %s\n", smp_get_reason(0xf & (rp[7] >> 4),
+                                            sizeof(b), b));
     printf("  zone group: %d\n", rp[8]);
     printf("  inside ZPSDS persistent: %d\n", !!(rp[9] & 0x20));
     printf("  requested inside ZPSDS: %d\n", !!(rp[9] & 0x10));
-    printf("  zone address resolved: %d\n", !!(rp[9] & 0x8));
+    /* printf("  zone address resolved: %d\n", !!(rp[9] & 0x8)); */
     printf("  zone group persistent: %d\n", !!(rp[9] & 0x4));
     printf("  inside ZPSDS: %d\n", !!(rp[9] & 0x2));
     return 0;
 }
 
-static int decode_1line(const unsigned char * resp, int offset, int desc)
+static int
+decode_1line(const unsigned char * resp, int offset, int desc)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -835,24 +919,12 @@ static int decode_1line(const unsigned char * resp, int offset, int desc)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, len, hdr_ecc, sphy_id, num_desc, resp_filter, resp_desc_type;
     int desc_len, k, err, off;
-    int do_brief = 0;
-    int desc_type = 0;
-    int filter = 0;
-    int do_hex = 0;
-    int do_list = 0;
-    int ign_zp = 0;
-    int do_num = 0;
-    int do_one = 0;
-    int phy_id = 0;
-    int do_raw = 0;
-    int do_test = 0;
-    int verbose = 0;
     long long sa_ll;
-    unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     unsigned char resp[1024];
@@ -860,7 +932,9 @@ int main(int argc, char * argv[])
     int subvalue = 0;
     char * cp;
     int ret = 0;
+    struct opts_t opts;
 
+    memset(&opts, 0, sizeof(opts));
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
@@ -872,18 +946,18 @@ int main(int argc, char * argv[])
 
         switch (c) {
         case 'b':
-            ++do_brief;
+            ++opts.do_brief;
             break;
         case 'd':
-           desc_type = smp_get_num(optarg);
-           if ((desc_type < 0) || (desc_type > 15)) {
+           opts.desc_type = smp_get_num(optarg);
+           if ((opts.desc_type < 0) || (opts.desc_type > 15)) {
                 fprintf(stderr, "bad argument to '--desc'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'f':
-           filter = smp_get_num(optarg);
-           if ((filter < 0) || (filter > 15)) {
+           opts.filter = smp_get_num(optarg);
+           if ((opts.filter < 0) || (opts.filter > 15)) {
                 fprintf(stderr, "bad argument to '--filter'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
@@ -893,37 +967,37 @@ int main(int argc, char * argv[])
             usage();
             return 0;
         case 'H':
-            ++do_hex;
+            ++opts.do_hex;
             break;
         case 'i':
-            ++ign_zp;
+            ++opts.ign_zp;
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-            ++do_list;
+            ++opts.do_list;
             break;
         case 'n':
-           do_num = smp_get_num(optarg);
-           if (do_num < 0) {
+           opts.do_num = smp_get_num(optarg);
+           if (opts.do_num < 0) {
                 fprintf(stderr, "bad argument to '--num'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'o':
-            ++do_one;
+            ++opts.do_one;
             break;
         case 'p':
-           phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
+           opts.phy_id = smp_get_num(optarg);
+           if ((opts.phy_id < 0) || (opts.phy_id > 127)) {
                 fprintf(stderr, "bad argument to '--phy'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'r':
-            ++do_raw;
+            ++opts.do_raw;
             break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
@@ -931,19 +1005,21 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            opts.sa = (unsigned long long)sa_ll;
+            if (opts.sa > 0)
+                ++opts.sa_given;
             break;
 #ifdef SMP_UTILS_DEBUG
         case 't':
-           do_test = smp_get_num(optarg);
-           if ((do_test < 0) || (do_test > 127)) {
+           opts.do_test = smp_get_num(optarg);
+           if ((opts.do_test < 0) || (opts.do_test > 127)) {
                 fprintf(stderr, "bad argument to '--test'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
 #endif
         case 'v':
-            ++verbose;
+            ++opts.verbose;
             break;
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
@@ -987,7 +1063,7 @@ int main(int argc, char * argv[])
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
-    if (0 == sa) {
+    if (0 == opts.sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
            sa_ll = smp_get_llnum(cp);
@@ -997,11 +1073,11 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            opts.sa = (unsigned long long)sa_ll;
         }
     }
-    if (sa > 0) {
-        if (! smp_is_naa5(sa)) {
+    if (opts.sa > 0) {
+        if (! smp_is_naa5(opts.sa)) {
             fprintf(stderr, "SAS (target) address not in naa-5 format "
                     "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
@@ -1011,39 +1087,37 @@ int main(int argc, char * argv[])
         }
     }
 
-    if (0 == do_test) {
-        res = smp_initiator_open(device_name, subvalue, i_params, sa,
-                                 &tobj, verbose);
+    if (0 == opts.do_test) {
+        res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
+                                 &tobj, opts.verbose);
         if (res < 0)
             return SMP_LIB_FILE_ERROR;
     }
 
-    ret = do_discover_list(&tobj, phy_id, do_num, ign_zp, filter, desc_type,
-                           resp, sizeof(resp), do_hex, do_raw, do_test,
-                           verbose);
+    ret = do_discover_list(&tobj, resp, sizeof(resp), &opts);
     if (ret)
         goto finish;
-    if (do_hex || do_raw)
+    if (opts.do_hex || opts.do_raw)
         goto finish;
     len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
     hdr_ecc = (resp[4] << 8) + resp[5];
     sphy_id = resp[8];
     num_desc = resp[9];
-    if (! do_one) {
+    if (! opts.do_one) {
         printf("Discover list response header:\n");
         printf("  starting phy id: %d\n", sphy_id);
         printf("  number of descriptors: %d\n", num_desc);
     }
     resp_filter = resp[10] & 0xf;
-    if (filter != resp_filter)
-        fprintf(stderr, ">>> Requested filter was %d, got %d\n", filter,
+    if (opts.filter != resp_filter)
+        fprintf(stderr, ">>> Requested filter was %d, got %d\n", opts.filter,
                 resp_filter);
     resp_desc_type = resp[11] & 0xf;
-    if (desc_type != resp_desc_type)
+    if (opts.desc_type != resp_desc_type)
         fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
-                desc_type, resp_desc_type);
+                opts.desc_type, resp_desc_type);
     desc_len = resp[12];
-    if ((! do_one) && (0 == do_brief)) {
+    if ((! opts.do_one) && (0 == opts.do_brief)) {
         printf("  expander change count: %d\n", hdr_ecc);
         printf("  filter: %d\n", resp_filter);
         printf("  descriptor type: %d\n", resp_desc_type);
@@ -1051,7 +1125,8 @@ int main(int argc, char * argv[])
         printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
         printf("  zoning enabled: %d\n", !!(resp[16] & 0x40));
         printf("  configuring: %d\n", !!(resp[16] & 0x2));
-        printf("  configurable route table: %d\n", !!(resp[16] & 0x1));
+        printf("  externally configurable route table: %d\n",
+               !!(resp[16] & 0x1));
     }
     if (len != (48 + (num_desc * desc_len))) {
         fprintf(stderr, ">>> Response length of %d bytes doesn't match "
@@ -1064,16 +1139,16 @@ int main(int argc, char * argv[])
     }
     for (k = 0, err = 0; k < num_desc; ++k) {
         off = 48 + (k * desc_len);
-        if (do_one) {
+        if (opts.do_one) {
             if (decode_1line(resp, off, resp_desc_type))
                 ++err;
         } else {
-            printf(" descriptor %d:\n", k + 1);
+            printf("descriptor %d:\n", k + 1);
             if (0 == resp_desc_type) {
-                if (decode_desc0_multiline(resp, off, hdr_ecc, do_brief))
+                if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
                     ++err;
             } else if (1 == resp_desc_type) {
-                if (decode_desc1_multiline(resp, off, do_brief))
+                if (decode_desc1_multiline(resp, off, &opts))
                     ++err;
             } else
                 ++err;
@@ -1081,7 +1156,7 @@ int main(int argc, char * argv[])
     }
 
 finish:
-    if (0 == do_test) {
+    if (0 == opts.do_test) {
         res = smp_initiator_close(&tobj);
         if (res < 0) {
             if (0 == ret)

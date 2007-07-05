@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.10 20061117";    /* sas-2 rev 07 */
+static char * version_str = "1.11 20070408";    /* sas-2 rev 09 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -108,6 +108,7 @@ int smp_get_func_def_resp_len(int func_code)
     return -1;
 }
 
+
 static struct smp_val_name smp_func_results[] =
 {
     {SMP_FRES_FUNCTION_ACCEPTED, "SMP function accepted"},
@@ -116,6 +117,7 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_INVALID_REQUEST_LEN, "Invalid request frame length"},
     {SMP_FRES_INVALID_EXP_CHANGE_COUNT, "Invalid expander change count"},
     {SMP_FRES_BUSY, "Busy"},
+    {SMP_FRES_INCOMPLETE_DESCRIPTOR_LIST, "Incomplete descriptor list"},
     {SMP_FRES_NO_PHY, "Phy does not exist"},
     {SMP_FRES_NO_INDEX, "Index does not exist"},
     {SMP_FRES_NO_SATA_SUPPORT, "Phy does not support SATA"},

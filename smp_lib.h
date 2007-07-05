@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  */
 
 /*
- * Version 1.09 [20061109]
+ * Version 1.11 [20070408]
  */
 
 
@@ -39,7 +39,7 @@
  * be useful to Linux applications that communicate with devices that
  * use the Serial Attached SCSI (SAS) Management Protocol (SMP).
  * Reference: SCSI: http://www.t10.org and the most recent SAS draft
- * SAS-2 (revision 6).
+ * SAS-2 (revision 9).
  * This header is organised into two parts: part 1 is operating system
  * independent (i.e. may be useful to other OSes) and part 2 is Linux
  * specific (or at least closely related).
@@ -88,6 +88,7 @@ extern "C" {
 #define SMP_FRES_INVALID_REQUEST_LEN 0x3
 #define SMP_FRES_INVALID_EXP_CHANGE_COUNT 0x4
 #define SMP_FRES_BUSY 0x5
+#define SMP_FRES_INCOMPLETE_DESCRIPTOR_LIST 0x6
 #define SMP_FRES_NO_PHY 0x10
 #define SMP_FRES_NO_INDEX 0x11
 #define SMP_FRES_NO_SATA_SUPPORT 0x12
