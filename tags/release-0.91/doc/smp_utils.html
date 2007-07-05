@@ -1,0 +1,648 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>smp_utils package</title>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+  <meta name="keywords"
+ content="smp_utils, Serial Attached SCSI utilities, SMP">
+  <meta name="GENERATOR"
+ content="Mozilla/4.79 [en] (X11; U; Linux 2.5.31 i686) [Netscape]">
+</head>
+<body alink="#ff0000" background="paper.jpg" bgcolor="#ffffff"
+ link="#0000ff" text="#000000" vlink="#000080">
+<center>
+<h1><a class="mozTocH1" name="mozTocId697451"></a> The&nbsp; smp_utils
+package</h1>
+</center>
+<a href="#intro"></a>
+<ol id="mozToc">
+<!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6--><li><a href="#mozTocId697451">
+The&nbsp; smp_utils
+package</a>
+    <ol>
+      <li><a href="#mozTocId746876">Introduction</a></li>
+      <li><a href="#mozTocId131313">Contents of smp_utils</a></li>
+      <li><a href="#mozTocId301018">Interfaces</a></li>
+      <li><a href="#mozTocId585558">Notes</a></li>
+      <li><a href="#mozTocId958107">Examples</a></li>
+      <li><a href="#mozTocId356346">Download</a></li>
+    </ol>
+  </li>
+</ol>
+<h2><a class="mozTocH2" name="mozTocId746876"></a>Introduction</h2>
+The <span style="font-weight: bold;">smp_utils</span> package contains
+utilities for the Serial Attached SCSI (SAS) Management Protocol
+(SMP).&nbsp; Most utilities correspond to a single SMP function,
+sending
+out a request, checking for errors and if all is well processing the
+response. The response is either decoded, printed out in ASCII
+hexadecimal or sent as binary to stdout.<br>
+<br>
+At the lower levels SAS is a point to point interconnect (like SATA).
+SAS has devices called expanders which have a similar role as switches
+do
+in the Fibre Channel protocol and ethernet. The primary role of SMP is
+to monitor and control SAS expanders. Most SAS Host Bus Adapters (HBAs)
+contain a SMP initiator through which SMP requests are sent and
+responses received. SAS expanders contain SMP targets that respond to
+SMP requests. SAS disks do not normally contains SMP targets and SATA
+disks do not contain SMP targets. SAS has two other protocols: SSP for
+transporting SCSI command sets to SAS devices (e.g. SAS disks and tape
+drives) , and STP for tunnelling the ATA command set to SATA disks. and
+S-ATAPI devices.<br>
+<br>
+SAS is a rapidly expanding new technology which already has three
+generations. The first two generations are approved standards: the
+original SAS (SAS
+ANSI INCITS 376-2003) and SAS 1.1 (INCITS 417-2006). New technical work
+is going into SAS-2 and at the time of
+writing the most recent draft is sas2r05a.pdf (see section 10.4.3 for
+SMP functions). Drafts, including those
+just prior to standardization can be found at the <a
+ href="http://www.t10.org">www.t10.org</a>
+site. Two SMP functions for reading and writing to GPIO registers are
+defined in the Small Form Factor document SFF-8485 found at <a
+ href="http://www.sffcommittee.com">www.sffcommittee.com</a> .<br>
+<br>
+The
+<span style="font-weight: bold;">smp_utils</span> package targets the
+linux kernel 2.4 and 2.6 series. It should be reasonably easy to port
+this package to other operating systems.<br>
+<br>
+<h2><a class="mozTocH2" name="mozTocId131313"></a>Contents of smp_utils</h2>
+Here is a listing in alphabetical order of the utilities in the
+<span style="font-weight: bold;">smp_utils</span> package:<br>
+<br>
+<table style="text-align: left; width: 981px; height: 441px;" border="1"
+ cellpadding="2" cellspacing="2">
+  <caption><span style="font-weight: bold;">Table 1. Utilities</span><br>
+  </caption> <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Utility</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">SMP
+function</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Notes</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_conf_route_info<br>
+      </td>
+      <td style="vertical-align: top;">CONFIGURE ROUTE INFORMATION<br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_discover<br>
+      </td>
+      <td style="vertical-align: top;">DISCOVER<br>
+      </td>
+      <td style="vertical-align: top;"> SAS HBA drivers use this
+command to discover the topology<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_discover_list<br>
+      </td>
+      <td style="vertical-align: top;">DISCOVER LIST<br>
+      </td>
+      <td style="vertical-align: top;">added in smp_utils version 0.91
+(recently added to SAS-2)<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_phy_control<br>
+      </td>
+      <td style="vertical-align: top;">PHY CONTROL<br>
+      </td>
+      <td style="vertical-align: top;">amongst other things, can send
+link and hard resets to attached phy<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_phy_test<br>
+      </td>
+      <td style="vertical-align: top;">PHY TEST FUNCTION<br>
+      </td>
+      <td style="vertical-align: top;">added in smp_utils version 0.91 </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_read_gpio<br>
+      </td>
+      <td style="vertical-align: top;">READ GPIO REGISTER<br>
+      </td>
+      <td style="vertical-align: top;">defined in SFF-8485. May also be
+able to read the sideband signals on a HBA's wide internal cables.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_rep_general<br>
+      </td>
+      <td style="vertical-align: top;">REPORT GENERAL<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_rep_manufacturer<br>
+      </td>
+      <td style="vertical-align: top;">REPORT MANUFACTURER INFORMATION<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_rep_phy_err_log<br>
+      </td>
+      <td style="vertical-align: top;">REPORT PHY ERROR LOG<br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_rep_phy_sata </td>
+      <td style="vertical-align: top;">REPORT PHY SATA<br>
+      </td>
+      <td style="vertical-align: top;">for expander phys with a STP to
+SATA bridge<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_rep_route_info<br>
+      </td>
+      <td style="vertical-align: top;">REPORT ROUTE INFORMATION<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">smp_write_gpio<br>
+      </td>
+      <td style="vertical-align: top;">WRITE GPIO REGISTER<br>
+      </td>
+      <td style="vertical-align: top;">defined in SFF-8485. May also be
+able to write to the sideband signals on a HBA's wide internal cables.</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Each utility has its own man page. Information common to all
+utilities can be found in the smp_utils man page.<br>
+<br>
+<h2><a class="mozTocH2" name="mozTocId301018"></a>Interfaces</h2>
+As SMP is a relatively new protocol there are not yet well established
+pass
+through interfaces like there are for the SCSI protocol. SMP is a
+request response protocol with each request and response limited
+currently to 1032 bytes in length (including a 4 byte CRC at the end of
+each request and response).<br>
+<br>
+This package currently supports two interfaces: one based on the MPT
+Fusion <span style="font-family: monospace;">/dev/mptctl</span> device
+and the other based on a read write attribute
+in sysfs called <span style="font-family: monospace;">smp_portal</span>.
+The two interfaces are structurally
+different: the mptctl
+is a single device (per system) that needs a "ioc_num" to identify
+which HBA adapter on the system it is going to send the SMP request
+from. The SAS address of the target SMP device (typically a SAS
+expander) also needs to be given. The "ioc_num" defaults to 0. If
+another value is needed then a syntax like this "<span
+ style="font-family: monospace;">smp_rep_general
+/dev/mptctl,3</span>" can be used.<br>
+<br>
+The <span style="font-family: monospace;">smp_portal</span> interface
+is part of the topological representation of a
+SAS domain in the sysfs file system (only found in the lk 2.6 series).
+SAS devices that identify themselves (during the discover process) as
+an SMP target receive a smp_portal attribute. Hence the SMP target SAS
+address is implicit in a <span style="font-family: monospace;">smp_portal</span>
+attribute.<br>
+<br>
+Each utility attempts to work out at run time which interface it has.
+While there are only two interfaces this is a reasonably simple
+process as their characteristics are quite different. To explicitly set
+the interface type the '--interface=&lt;intf&gt;[,force]' option can be
+given where &lt;intf&gt; is one of "mpt", "tpl" or "ai" (the latter two
+for the <span style="font-family: monospace;">smp_portal</span>
+interface). Checks are also performed that the given
+device name isn't a normal file or worse a block device. A command like
+"<span style="font-family: monospace;">smp_discover /dev/sda</span>"
+makes no sense but if allowed to go ahead,
+would write the SMP request over the disk's boot sector! Normally these
+utilities will reject such an invocation, before doing any damage. If
+the user feels that they know better then checks can be overridden with
+something like this: "<span style="font-family: monospace;">smp_discover
+--interface=mpt,force /dev/xy</span>z" .<br>
+<br>
+If the &lt;smp_device&gt; is not given, then each utility will check if
+the SMP_UTILS_DEVICE environment variable exists. If so its contents
+are used.<br>
+<br>
+If the SMP target SAS address is not given (i.e.
+"--sa=&lt;sas_addr&gt;" is not given) and it is required, then each
+utility will check if the SMP_UTILS_SAS_ADDR environment variable
+exists. If so its contents are used.<br>
+<br>
+<h2><a class="mozTocH2" name="mozTocId585558"></a>Notes</h2>
+The SFF-8485 document ( see <a href="http://www.sffcommittee.com/">www.sffcommittee.com</a>
+) defines the READ GPIO REGISTER and WRITE GPIO
+REGISTER functions for manipulating registers associated with the SGPIO
+interface. The sideband signals found in the wide internal cables
+defined by SAS (SAS 4i and mini SAS 4i) may carry SGPIO signals. Some
+SAS
+HBAs have wide internal connectors and have virtual SMP target ports
+(visible to the HBA driver but not the rest of the attached SAS domain)
+so that the driver or user space programs can control those sideband
+signals. To find out if a virtual SMP target port is present on a HBA
+try something like this: "<span style="font-family: monospace;">smp_rep_manufacturer
+--sa=&lt;sas_addr_of_hba&gt; /dev/mptctl</span>". Notice that is not
+possible
+with the <span style="font-family: monospace;">smp_portal</span>
+interface because the HBA does not flag itself (to
+a SMP DISCOVER) as an STP target.<br>
+<h2><a class="mozTocH2" name="mozTocId958107"></a>Examples</h2>
+Set up environment variables to simplify command line invocations:<br>
+<br>
+<span style="font-family: monospace;"># export
+SMP_UTILS_SAS_ADDR=0x500605b000000af0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"># export
+SMP_UTILS_DEVICE=/dev/mptctl,0</span><br>
+<br>
+For MPT fusion HBAs, the mptctl module may need to be loaded:<br>
+<span style="font-family: monospace;"><br>
+# modprobe mptctl</span><br>
+<br>
+The following indicates that we have a 12 port expander:<br>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"># smp_rep_general</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Report general response:</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; expander change count: 8</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; expander route indexes: 144</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; number of phys: 12</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; configuring: 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; configurable route table: 1</span><br>
+<br>
+Here is a DISCOVER on phy 7 of the expander showing that a SATA disk is
+attached:<br>
+<br>
+<span style="font-family: monospace;"># smp_discover -b -p 7</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Discover response (brief):</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; phy identifier: 7</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached device type: end
+device</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; negotiated physical link
+rate: phy enabled; 1.5 Gbps</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached initiator: ssp=0
+stp=0 smp=0 sata_host=0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached target: ssp=0
+stp=0 smp=0 sata_device=1</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; SAS address:
+0x500605b000000af0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached SAS address:
+0x500605b000000af7</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached phy identifier: 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; routing attribute: table</span><br>
+<br>
+In version 0.91 a '--multiple' option was
+added
+to smp_discover to scan the available phys on an expander. Adding
+'--brief' reduces the amount of output:<br>
+<br>
+<span style="font-family: monospace;"># smp_discover --multiple<br>
+Device &lt;500605b000000af0&gt;, expander:<br>
+&nbsp; phy&nbsp;&nbsp; 0:S:attached:[0000000000000000:00]<br>
+&nbsp; phy&nbsp;&nbsp; 1:S:attached:[0000000000000000:00]<br>
+&nbsp; phy&nbsp;&nbsp; 2:S:attached:[5000c500005208ee:01&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 3:S:attached:[5000c500005208ed:00&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 4:T:attached:[500605b00006f260:02&nbsp;
+i(SSP+STP+SMP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 5:T:attached:[50000d10002dc000:01&nbsp;
+i(SSP+STP+SMP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 6:T:attached:[0000000000000000:00]<br>
+&nbsp; phy&nbsp;&nbsp; 7:T:attached:[0000000000000000:00]<br>
+&nbsp; phy&nbsp;&nbsp; 8:T:attached:[5000c50000520a29:00&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 9:T:attached:[5000c50000520a2a:01&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp; 10:T:attached:[500605b000000afa:00&nbsp;
+t(SATA)]&nbsp; 1.5 Gbps<br>
+&nbsp; phy&nbsp; 11:T:attached:[500605b000000afb:00&nbsp;
+t(SATA)]&nbsp; 1.5 Gbps<br style="font-family: monospace;">
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"># smp_discover --multiple --brief<br>
+Device &lt;500605b000000af0&gt;, expander (only connected phys shown):<br>
+&nbsp; phy&nbsp;&nbsp; 2:S:attached:[5000c500005208ee:01&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 3:S:attached:[5000c500005208ed:00&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 4:T:attached:[500605b00006f260:02&nbsp;
+i(SSP+STP+SMP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 5:T:attached:[50000d10002dc000:01&nbsp;
+i(SSP+STP+SMP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 8:T:attached:[5000c50000520a29:00&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp;&nbsp; 9:T:attached:[5000c50000520a2a:01&nbsp;
+t(SSP)]&nbsp; 3 Gbps<br>
+&nbsp; phy&nbsp; 10:T:attached:[500605b000000afa:00&nbsp;
+t(SATA)]&nbsp; 1.5 Gbps<br>
+&nbsp; phy&nbsp; 11:T:attached:[500605b000000afb:00&nbsp;
+t(SATA)]&nbsp; 1.5 Gbps<br style="font-family: monospace;">
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br>
+More STP to SATA bridge information can be fetched for phy 10 of the
+expander:<br>
+<br>
+<span style="font-family: monospace;"># smp_rep_phy_sata -p 10</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Report phy error sata response:</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; phy identifier: 10</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; STP I_T nexus loss
+occurred: 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; affiliations supported: 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; affiliation valid: 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; STP SAS address:
+0x500605b000000afa</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; register device to host
+FIS:</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; 34 00 50 01 01
+00 00 00 00 00 00 00 01 00 00 00 00 00 00 00</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; affiliated STP initiator
+SAS address: 0x500605b00006f260</span><br>
+<br>
+The first two GPIO configuration registers on the HBA can be read as
+follows. Notice that the SAS address of the expander (in the
+environment variable) needs to be overridden with the SAS address of
+the HBA itself (because that is where the virtual SMP target port is):<br>
+<br>
+<span style="font-family: monospace;"># smp_read_gpio
+--sa=0x500605b00006f260 --count=2</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Read GPIO register response:</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; GPIO_CFG[0]:</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; version: 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; GPIO enable: 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; cfg register
+count: 2</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; gp register
+count: 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; supported
+drive count: 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; GPIO_CFG[1]:</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; blink
+generator rate B: 15</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; blink
+generator rate A: 8</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; force activity
+off: 4</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; maximum
+activity on: 8</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; stretch
+activity off: 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; stretch
+activity on: 1</span><br>
+<br>
+Now for something potentially useful: doing a hard reset (formerly
+called a device reset) on an expander attached SAS disk. To do this,
+the attached phy on
+the expander needs to be instructed to do a hard reset. That can be
+done
+with the PHY CONTROL SMP function. First the SAS address of a
+target port on the SAS disk needs to be found, "sg_vpd" is used for
+that. Then the expander phy connected to the disk is checked with a
+smp_discover, mainly for confirmation. Prior to sending the hard reset,
+the disk state is checked with a test unit ready command (sg_turs). The
+hard reset is then sent to the expander phy (smp_phy_control) and then
+a test unit ready is sent to the disk again. If the hard reset
+succeeded, the disk should report
+that a SCSI bus reset has occurred (old SCSI parallel interface
+messages will take some time to be displaced).<br>
+<br>
+<span style="font-family: monospace;"># sg_vpd --page=di_port --quiet
+/dev/sdc</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">0x5000c50000520a2a</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"># smp_discover --phy=9 --brief</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Discover response (brief):</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; phy identifier: 9</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached device type: end
+device</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; negotiated physical link
+rate: phy enabled; 3 Gbps</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached initiator: ssp=0
+stp=0 smp=0 sata_host=0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached target: ssp=1
+stp=0 smp=0 sata_device=0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; SAS address:
+0x500605b000000af0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached SAS address:
+0x5000c50000520a2a</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; attached phy identifier: 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; routing attribute: table</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;"># sg_turs /dev/sdc</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Completed 1 Test Unit Ready
+commands with 0 errors</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;"># smp_phy_control --phy=9 --op=hr</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;"># sg_turs /dev/sdc</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">test unit ready:&nbsp; Fixed
+format, current;&nbsp; Sense key: Unit Attention</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;Additional sense: SCSI bus
+reset occurred</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Field replaceable unit
+code: 2</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Completed 1 Test Unit Ready
+commands with 1 errors</span><br>
+<br>
+Notice that utilities from <a href="sg3_utils.html">sg3_utils</a> are
+used when communicating with the SAS disk. Those utilities start with
+"sg_". When communicating with the expander, utilities from this
+package are needed, and they start with "smp_".<br>
+<br>
+How do we know phy id 9 is the appropriate phy to send the hard reset
+to? We could send a smp_discover to each phy on the expander. It is
+also possible to ask the SAS disk what it is connected to and
+importantly what the attached phy identifier is. This can be done by
+fetching the protocol (SAS) specific log page from the disk. Notice the
+attached phy number on relative target port 2 (i.e. the secondary port
+on the disk).<br>
+<br>
+<span style="font-family: monospace;">[root@sas ~]# sg_logs -T /dev/sdc</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+SEAGATE&nbsp;&nbsp;
+ST336754SS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0003</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">SAS Protocol Specific page</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">relative target port id = 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;number of phys = 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; phy identifier = 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+device type: no device attached</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; negotiated
+physical link rate: phy enabled; 3 Gbps</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+initiator port: ssp=0 stp=0 smp=0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+target port: ssp=0 stp=0 smp=0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; SAS address =
+0x5000c50000520a29</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached SAS
+address = 0x0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached phy
+identifier = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Invalid DWORD
+count = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Running
+disparity error count = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Loss of DWORD
+synchronization = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Phy reset
+problem = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">relative target port id = 2</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;number of phys = 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; phy identifier = 1</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+device type: edge expander device</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; negotiated
+physical link rate: phy enabled; 3 Gbps</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+initiator port: ssp=0 stp=0 smp=0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached
+target port: ssp=0 stp=0 smp=1</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; SAS address =
+0x5000c50000520a2a</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached SAS
+address = 0x500605b000000af0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; attached phy
+identifier = 9</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Invalid DWORD
+count = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Running
+disparity error count = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Loss of DWORD
+synchronization = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Phy reset
+problem = 0</span><br>
+<br>
+The SMP protocol can also play a role in controlling some special
+features when a SATA disk is connected to an expander phy.<br>
+<br>
+<h2><a class="mozTocH2" name="mozTocId356346"></a>Download</h2>
+<table border="1" width="100%">
+  <caption><b>Table 2. smp_utils tarballs, rpm + deb packages</b></caption>
+  <tbody>
+    <tr>
+      <td><span style="font-weight: bold;">version</span><br>
+      </td>
+      <td valign="top">&nbsp; <b>tarball</b> <br>
+      </td>
+      <td><b>source rpm **<br>
+      </b></td>
+      <td><b>i386 rpm binary **<br>
+      </b></td>
+      <td valign="top">&nbsp;&nbsp; <span style="font-weight: bold;">debian
+package</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">0.90</span><br>
+      </td>
+      <td style="vertical-align: top;"><a href="p/smp_utils-0.90.tgz">smp_utils-0.90.tgz</a><br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="p/smp_utils-0.90-1.src.rpm">smp_utils-0.90-1.src.rpm</a><br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="p/smp_utils-0.90-1.i386.rpm">smp_utils-0.90-1.i386.rpm</a></td>
+      <td style="vertical-align: top;"><a
+ href="p/smp-utils_0.90-0.1_i386.deb">smp-utils_0.90-0.1_i386.deb</a></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">0.91</span><br>
+      </td>
+      <td style="vertical-align: top;"><a href="p/smp_utils-0.91.tgz">smp_utils-0.91.tgz</a></td>
+      <td style="vertical-align: top;"><a
+ href="p/smp_utils-0.91-1.src.rpm">smp_utils-0.91-1.src.rpm</a> </td>
+      <td style="vertical-align: top;"><a
+ href="p/smp_utils-0.91-1.i386.rpm">smp_utils-0.91-1.i386.rpm</a> </td>
+      <td style="vertical-align: top;"><a
+ href="p/smp-utils_0.91-0.1_i386.deb">smp-utils_0.91-0.1_i386.deb</a> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The tarball contains an "rpm" spec file which is used to build source
+rpm and the i386 binary rpm. There is a debian subdirectory with files
+to build a "deb" package. Here
+is
+the <a href="p/smp_utils.CHANGELOG">ChangeLog</a> .<br>
+<br>
+** Some browsers (e.g. firefox) may interpret a file with an extension
+of "rpm" as an audio file. In which case press the right button over
+the link and select "Save link as ..." to download the file.<br>
+<br>
+<p>Return to <a href="index.html">main</a> page. </p>
+<center>
+<p>Last updated: 22nd August 2006<br>
+<br>
+</p>
+</center>
+</body>
+</html>

@@ -1,0 +1,120 @@
+.TH SMP_DISCOVER "8" "August 2006" "smp_utils-0.91" SMP_UTILS
+.SH NAME
+smp_discover \- invoke DISCOVER SMP function
+.SH SYNOPSIS
+.B smp_discover
+[\fI--brief\fR] [\fI--help\fR] [\fI--hex\fR] [\fI--ignore\fR]
+[\fI--interface=<params>\fR] [\fI--multiple\fR] [\fI--num=<n>\fR]
+[\fI--phy=<n>\fR] [\fI--raw\fR] [\fI--sa=<sas_addr>\fR] [\fI--verbose\fR]
+[\fI--version\fR] \fI<smp_device>[,<n>]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) DISCOVER request function to a SMP
+target and decodes or outputs the response. The SMP target is identified by
+the <smp_device> and the <sas_addr>. Depending on the interface,
+the <sas_addr> may be deduced from the <smp_device>. With one interface
+there is one <smp_device> per machine so the '<smp_device>,<n>' syntax is
+needed to differentiate between HBAs if there are multiple present.
+.TP
+--brief | -b
+reduce the decoded response output. If used twice will exit if there is
+no attached device (after outputting that). When used with '--multiple'
+unattached phys are not listed; when used twice, trims attached phys
+output.
+.TP
+--help | -h
+output the usage message then exit.
+.TP
+--hex | -H
+output the response in hexadecimal.
+.TP
+--ignore | -i
+sets the Ignore Zone Group bit in the SMP Discover request.
+.TP
+--interface=<params> | -I <params>
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+--multiple | -m
+loops over multiple phys within SMP target (typically an expander) and
+does a DISCOVER request and outputs a one line summary. Phy 0 is queried
+first, then phy 1, continuing until an error occurs. If '--brief' is given
+then there is no output for phys that indicate there is no attached device;
+when used twice additionally trims the output line of attached phys.
+.TP
+--num=<n> | -n <n>
+number of phys to fetch, starting at '--phy=<n>' when the '--multiple'
+option is given. The default value is 0 which is interpreted
+as "the rest" (i.e. until a "phy does not exist" function result is
+received). This option is ignored in the absence of the '--multiple'
+option.
+.TP
+--phy=<n> | -p <n>
+phy identifier. This is a value between 0 and 127. Default is 0.
+.TP
+--raw | -r
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+--sa=<sas_addr> | -s <sas_addr>
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the <smp_device> has the target's
+SAS address within it. The <sas_addr> is in decimal but most SAS addresses
+are shown in hexadecimal. To give a number in hexadecimal either prefix
+it with '0x' or put a trailing 'h' on it.
+.TP
+--verbose | -v
+increase the verbosity of the output. Can be used multiple times
+.TP
+--version | -V
+print the version string and then exit.
+.SH SINGLE LINE FORMAT
+The '--multiple' option causes SMP DISCOVER responses to be compressed to
+a header followed by one line per phy. To save space SAS addresses are shown
+in hex without a '0x' prefix or 'h' suffix. The header line gives the SAS
+address of the SMP target itself and assumes it is an expander.
+.PP
+Each line starts with "  phy  <n>:" where <n> is the phy
+identifier (and they are origin zero). That is followed by the routing
+attribute represented by a single letter which is either "D" for direct
+routing, "S" to subtractive routing and "T" for table routing. Then comes
+the negotiated physical link rate which is either "disabled", "reset
+problem" or "spinup hold". Other states are mapped to "attached". This
+includes enabled phys with nothing connected which appear
+as "attached:[0000000000000000:00]".
+.PP
+Information shown between the brackets is for the attached device.
+Phys that are connected display something
+like: "attached:[5000c50000520a2a:01 " where the first number is the
+attached SAS address (in hex) and the second number is the attached
+device's phy identifier. If the attached device type is other
+than an end device then one of these abbreviations is
+output: "exp" (for expander), "fex" (for fanout
+expander) or "res" (for unknown attached device type). If a phy is
+flagged as "virtual" then the letter "V" appears next. Next are the
+protocols supported by the attached device which are
+shown as "i(<list>)" for initiator protocols and/or "t(<list>)" for
+target protocols. The <list> is made up
+of "PORT_SEL", "SSP", "STP", "SMP" and "SATA" with "+" used as a
+separator. For example a SAS host adapter with most likely appear
+as: "i(SSP+STP+SMP)". This completes the information about the
+attached phy, hence the closing right bracket.
+.PP
+Finally, if appropriate, the negotiated physical link rate is shown in
+gigabits per second. Here is an example of a line for expander
+phy identifier 11 connected to a SATA target (or SATA "device" to use
+the t13.org term):
+.PP
+  phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_discover_list, smp_phy_control

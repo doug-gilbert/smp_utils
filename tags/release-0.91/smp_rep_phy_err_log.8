@@ -1,0 +1,55 @@
+.TH SMP_REP_PHY_ERR_LOG "8" "August 2006" "smp_utils-0.91" SMP_UTILS
+.SH NAME
+smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
+.SH SYNOPSIS
+.B smp_rep_phy_err_log
+[\fI--help\fR] [\fI--hex\fR] [\fI--interface=<params>\fR] [\fI--raw\fR]
+[\fI--sa=<sas_addr>\fR] [\fI--verbose\fR] [\fI--version\fR]
+\fI<smp_device>[,<n>]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) REPORT PHY ERROR LOG
+request function to a SMP target. The SMP target is identified by
+the <smp_device> and the <sas_addr>. Depending on the interface,
+the <sas_addr> may be deduced from the <smp_device>. With one interface
+there is one <smp_device> per machine so the '<smp_device>,<n>' syntax is
+needed to differentiate between HBAs if there are multiple present.
+.TP
+--help | -h
+output the usage message then exit.
+.TP
+--hex | -H
+output the response in hexadecimal.
+.TP
+--interface=<params> | -I <params>
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+--raw | -r
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+--sa=<sas_addr> | -s <sas_addr>
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the <smp_device> has the target's
+SAS address within it. The <sas_addr> is in decimal but most SAS addresses
+are shown in hexadecimal. To give a number in hexadecimal either prefix
+it with '0x' or put a trailing 'h' on it.
+.TP
+--verbose | -v
+increase the verbosity of the output. Can be used multiple times
+.TP
+--version | -V
+print the version string and then exit.
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_phy_control(smp_utils)
