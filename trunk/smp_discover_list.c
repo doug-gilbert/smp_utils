@@ -45,12 +45,12 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.04 20070423";
+static char * version_str = "1.04 20070707";
 
 
-#define SMP_UTILS_DEBUG
+#define SMP_UTILS_TEST
 
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
 static unsigned char tst1_resp[] = {
     0x41, 0x16, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
     24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
@@ -191,7 +191,7 @@ static struct option long_options[] = {
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
         {"raw", 0, 0, 'r'},
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
         {"test", 1, 0, 't'},
 #endif
         {"verbose", 0, 0, 'v'},
@@ -226,7 +226,7 @@ usage()
           "[--list]\n"
           "                    [--num=NUM] [--one] [--phy=ID] [--raw] "
           "[--sa=SAS_ADDR]\n");
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
     fprintf(stderr,
           "                    [--test=TE] [--verbose] [--version] "
           "<smp_device>[,<n>]\n");
@@ -251,7 +251,7 @@ usage()
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --list|-l            output attribute=value, 1 per line\n"
-          "    --num=NUM|-n NUM     number of descriptors to fetch "
+          "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
           "(def: 1)\n"
           "    --one|-o             one line output per response "
           "descriptor\n"
@@ -263,7 +263,7 @@ usage()
           "                         or trailing 'h'). Depending on "
           "the interface, may\n"
           "                         not be needed\n");
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
     fprintf(stderr,
           "    --test=TE|-t TE      test responses (def: 0 (non-test "
           "mode))\n");
@@ -479,7 +479,7 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     if (0 == optsp->do_test)
         res = smp_send_req(top, &smp_rr, optsp->verbose);
     else {
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
         memset(resp, 0, max_resp_len);
         if (1 == optsp->do_test)
             memcpy(resp, tst1_resp, sizeof(tst1_resp));
@@ -1009,7 +1009,7 @@ main(int argc, char * argv[])
             if (opts.sa > 0)
                 ++opts.sa_given;
             break;
-#ifdef SMP_UTILS_DEBUG
+#ifdef SMP_UTILS_TEST
         case 't':
            opts.do_test = smp_get_num(optarg);
            if ((opts.do_test < 0) || (opts.do_test > 127)) {

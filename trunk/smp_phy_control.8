@@ -1,13 +1,13 @@
-.TH SMP_PHY_CONTROL "8" "December 2006" "smp_utils\-0.92" SMP_UTILS
+.TH SMP_PHY_CONTROL "8" "July 2007" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_phy_control \- invoke PHY CONTROL SMP function
 .SH SYNOPSIS
 .B smp_phy_control
-[\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR] [\fI\-\-min=MI\fR]
-[\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-attached=ADN\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
+[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR]
+[\fI\-\-min=MI\fR] [\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR]
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -32,6 +32,12 @@ phy's state is only changed when either \fI\-\-max=MA\fR, \fI\-\-min=MI\fR,
 \fI\-\-op=OP\fR or \fI\-\-pptv=TI\fR is given with a non default value.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-a\fR, \fB\-\-attached\fR=\fIADN\fR
+specifies the attached device name (\fIADN\fR). The default value is 0 .
+The \fIADN\fR is in decimal but is likely to be a SAS address which is
+typically shown in hexadecimal. To specify a number in hexadecimal either
+prefix it with '0x' or put a trailing 'h' on it.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.
@@ -69,8 +75,9 @@ into the 'phy operation' field of the request. Allowable strings are
 abbreviations of which only the first two characters need to match. The
 supported strings are: 'nop' (no operation), 'lr' (link reset), 'hr' (hard
 reset), 'dis' (disable phy), 'cel' (clear error log), 'ca' (clear
-affiliation), 'tspss' (transmit SATA port selection signal) and 'citnl' (clear
-STP I_T nexus loss (bit)).  The default value is 0 (no operation).
+affiliation), 'tspss' (transmit SATA port selection signal), 'citnl' (clear
+STP I_T nexus loss (bit)), and 'sadn' (set attached device name).  The
+default value is 0 (no operation).
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
@@ -100,7 +107,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006 Douglas Gilbert
+Copyright \(co 2006\-2007 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

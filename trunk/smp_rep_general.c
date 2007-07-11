@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.11 20070324";    /* sas2r09 */
+static char * version_str = "1.12 20070707";    /* sas2r10 */
 
 
 static struct option long_options[] = {
@@ -349,6 +349,8 @@ int main(int argc, char * argv[])
            (smp_resp[34] << 8) + smp_resp[35]);
     if (len < 40)
         goto err_out;
+    printf("  number of zone groups: %d (0->128, 1->256)\n",
+           ((smp_resp[36] & 0xc0) >> 6));
     printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
     printf("  physical presence supported: %d\n", !!(smp_resp[36] & 0x8));
     printf("  physical presence asserted: %d\n", !!(smp_resp[36] & 0x4));
