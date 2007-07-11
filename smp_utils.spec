@@ -54,7 +54,7 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Mon Apr 23 2007 - dgilbert at interlog dot com
+* Thu Jul 12 2007 - dgilbert at interlog dot com
 - add affiliation contexts (new in sas2r08)
   * smp_utils-0.93
 * Fri Dec 08 2006 - dgilbert at interlog dot com

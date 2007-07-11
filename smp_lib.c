@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.11 20070408";    /* sas-2 rev 09 */
+static char * version_str = "1.12 20070707";    /* sas-2 rev 10 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -62,6 +62,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_READ_GPIO_REG, -3, -3},     /* not applicable: see SFF-8485 */
     {SMP_FN_REPORT_SELF_CONFIG, -2, -2},
     {SMP_FN_REPORT_ZONE_PERMISSION_TBL, -2, -2},/* variable length response */
+    {SMP_FN_REPORT_ZONE_MANAGER_PASS, -2, -2},
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
@@ -77,6 +78,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_ZONE_LOCK, -2, -2},
     {SMP_FN_ZONE_ACTIVATE, -2, 0},
     {SMP_FN_ZONE_UNLOCK, -2, 0},
+    {SMP_FN_CONFIG_ZONE_MANAGER_PASS, -2, 0},
     {SMP_FN_CONFIG_ZONE_PHY_INFO, -2, 0},       /* variable length request */
     {SMP_FN_CONFIG_ZONE_PERMISSION_TBL, -2, 0}, /* variable length request */
     {SMP_FN_CONFIG_ROUTE_INFO, 9, 0},
@@ -136,8 +138,8 @@ static struct smp_val_name smp_func_results[] =
      "Unknown enable disable zoning value"},
     {SMP_FRES_ZONE_LOCK_VIOLATION, "Zone lock violation"},
     {SMP_FRES_NOT_ACTIVATED, "Not activated"},
-    {SMP_FRES_UNKNOWN_ZONE_PHY_INFO_VAL,
-     "Unknown zone phy information value"},
+    {SMP_FRES_ZONE_GROUP_OUT_OF_RANGE, "Zone group out of range"},
+    {SMP_FRES_NO_PHYSICAL_PRESENCE, "No physical presence"},
     {0x0, NULL},
 };
 

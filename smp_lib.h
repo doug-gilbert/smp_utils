@@ -31,7 +31,7 @@
  */
 
 /*
- * Version 1.11 [20070408]
+ * Version 1.12 [20070707]
  */
 
 
@@ -59,6 +59,7 @@ extern "C" {
 #define SMP_FN_READ_GPIO_REG 0x2
 #define SMP_FN_REPORT_SELF_CONFIG 0x3
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL 0x4
+#define SMP_FN_REPORT_ZONE_MANAGER_PASS 0x5
 #define SMP_FN_DISCOVER 0x10
 #define SMP_FN_REPORT_PHY_ERR_LOG 0x11
 #define SMP_FN_REPORT_PHY_SATA 0x12
@@ -74,6 +75,7 @@ extern "C" {
 #define SMP_FN_ZONE_LOCK 0x86
 #define SMP_FN_ZONE_ACTIVATE 0x87
 #define SMP_FN_ZONE_UNLOCK 0x88
+#define SMP_FN_CONFIG_ZONE_MANAGER_PASS 0x89
 #define SMP_FN_CONFIG_ZONE_PHY_INFO 0x8a
 #define SMP_FN_CONFIG_ZONE_PERMISSION_TBL 0x8b
 #define SMP_FN_CONFIG_ROUTE_INFO 0x90
@@ -105,7 +107,8 @@ extern "C" {
 #define SMP_FRES_UNKNOWN_EN_DIS_ZONING_VAL 0x22
 #define SMP_FRES_ZONE_LOCK_VIOLATION 0x23
 #define SMP_FRES_NOT_ACTIVATED 0x24
-#define SMP_FRES_UNKNOWN_ZONE_PHY_INFO_VAL 0x25
+#define SMP_FRES_ZONE_GROUP_OUT_OF_RANGE 0x25
+#define SMP_FRES_NO_PHYSICAL_PRESENCE 0x26
 
 /* Utilities can use these process status values for syntax errors and
    file (device node) problems (e.g. not found or permissions). Numbers
