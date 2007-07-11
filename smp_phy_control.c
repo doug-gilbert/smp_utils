@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,11 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.07 20061206";
+static char * version_str = "1.08 20070707";
 
 
 static struct option long_options[] = {
+        {"attached", 1, 0, 'a'},
         {"expected", 1, 0, 'E'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
@@ -69,15 +70,17 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_phy_control [--expected=EX] [--help] [--hex] "
-          "[--interface=PARAMS]\n"
-          "                       [--max=MA] [--min=MI] [--op=OP] "
-          "[--phy=ID]\n"
-          "                       [pptv=TI] [--raw] [--sa=SAS_ADDR] "
-          "[--verbose]\n"
-          "                       [--version] SMP_DEVICE[,N]\n"
+          "smp_phy_control [--attached=ADN] [--expected=EX] [--help] "
+          "[--hex]\n"
+          "                       [--interface=PARAMS] [--max=MA] "
+          "[--min=MI] [--op=OP]\n"
+          "                       [--phy=ID] [pptv=TI] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                       [--verbose] [--version] "
+          "SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --expected=EX|-E EX   set expected expander change count "
+          "    --attached=ADN|-a ADN    attached device name\n"
+          "    --expected=EX|-E EX    set expected expander change count "
           "to EX\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
@@ -85,13 +88,14 @@ static void usage()
           "interface\n"
           "    --max=MA|-M MA       programmable maximum physical link "
           "speed\n"
-          "                         (8->1.5 Gbps, 9->3 Gbps)\n"
+          "                         (8->1.5 Gbps, 9->3 Gbps, "
+          "10->6 Gbps)\n"
           "    --min=MI|-m MI       programmable minimum physical link "
           "speed\n"
           "    --op=OP|-o OP        OP (operation) is a number or "
           "abbreviation (from:\n"
           "                         nop, lr, hr, dis, cel, ca, tspss, "
-          "citnl)\n"
+          "citnl, sadn)\n"
           "    --phy=ID|-p ID       phy identifier (def: 0)\n"
           "    --pptv=TI|-P TI      partial pathway timeout value "
           "(microseconds)\n"
@@ -126,6 +130,7 @@ static struct smp_val_name op_abbrev[] = {
     {6, "ca"},          /* clear affiliation */
     {7, "tspss"},       /* transmit SATA port selection signal */
     {8, "citnl"},       /* clear STP I_T nexus loss */
+    {9, "sadn"},        /* set attached device name */
     {-1, NULL},
 };
 
@@ -141,7 +146,7 @@ static void list_op_abbrevs()
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len;
+    int res, c, k, j, len;
     int expected_cc = 0;
     int do_hex = 0;
     int do_min = 0;
@@ -153,6 +158,7 @@ int main(int argc, char * argv[])
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
+    unsigned long long adn = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -172,12 +178,20 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "E:hHI:m:M:o:p:P:rs:vV", long_options,
+        c = getopt_long(argc, argv, "a:E:hHI:m:M:o:p:P:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'a':
+           sa_ll = smp_get_llnum(optarg);
+           if (-1LL == sa_ll) {
+                fprintf(stderr, "bad argument to '--attached'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            adn = (unsigned long long)sa_ll;
+            break;
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
@@ -352,6 +366,10 @@ int main(int argc, char * argv[])
     if (pptv >= 0) {
         smp_req[11] |= 1;
         smp_req[36] |= (pptv & 0xf);
+    }
+    if (adn) {
+        for (j = 0; j < 8; ++j, (adn >>= 8))
+            smp_req[24 + 7 - j] = (adn & 0xff);
     }
     smp_req[32] |= (do_min << 4);
     smp_req[33] |= (do_max << 4);
