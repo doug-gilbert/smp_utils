@@ -62,7 +62,7 @@ binary-arch: build install
 	dh_installdocs -a
 	dh_installexamples -a 
 	dh_installmenu -a
-	dh_installchangelogs CHANGELOG -a
+	dh_installchangelogs ChangeLog -a
 	dh_strip -a
 	dh_link -a
 	dh_compress -a -X archive -X .c -X .h
