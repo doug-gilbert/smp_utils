@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.04 20070707";
+static char * version_str = "1.05 20070918";
 
 
 #define SMP_UTILS_TEST
@@ -1127,6 +1127,10 @@ main(int argc, char * argv[])
         printf("  configuring: %d\n", !!(resp[16] & 0x2));
         printf("  externally configurable route table: %d\n",
                !!(resp[16] & 0x1));
+        printf("  last self-configuration status descriptor index: %d\n",
+               (resp[18] << 8) + resp[19]);    /* sas2r11 + 07-401r0 */
+        printf("  last phy event information descriptor index: %d\n",
+               (resp[20] << 8) + resp[21]);
     }
     if (len != (48 + (num_desc * desc_len))) {
         fprintf(stderr, ">>> Response length of %d bytes doesn't match "
