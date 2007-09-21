@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.12 20070707";    /* sas2r10 */
+static char * version_str = "1.13 20070920";    /* sas2r11 */
 
 
 static struct option long_options[] = {
@@ -382,6 +382,16 @@ int main(int argc, char * argv[])
            smp_resp[58]);
     printf("  maximum reduced functionality time: %d (unit: second)\n",
            smp_resp[59]);
+    if (len < 68)
+        goto err_out;
+    printf("  last self-configuarion status descriptor index: %d\n",
+           (smp_resp[60] << 8) + smp_resp[61]);
+    printf("  maximum number of stored self-configuarion status "
+           "descriptors: %d\n", (smp_resp[62] << 8) + smp_resp[63]);
+    printf("  last phy event information descriptor index: %d\n",
+           (smp_resp[64] << 8) + smp_resp[65]);
+    printf("  maximum number of stored phy event information "
+           "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
 
 err_out:
     res = smp_initiator_close(&tobj);
