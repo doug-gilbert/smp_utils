@@ -20,7 +20,7 @@ ENABLE DISABLE ZONING                 2
 PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO                             SFF-8485         smp_read_gpio
-REPORT EXPANDER ROUTE TABLE           2    
+REPORT EXPANDER ROUTE TABLE           2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
 REPORT PHY BROADCAST COUNTS           2    
@@ -51,4 +51,4 @@ introduced function in SAS-2.
 
 
 Doug Gilbert
-20th November 2006
+20th September 2007

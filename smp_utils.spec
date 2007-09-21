@@ -49,7 +49,7 @@ make install \
 
 %files
 %defattr(-,root,root)
-%doc CHANGELOG COPYING COVERAGE CREDITS INSTALL README
+%doc ChangeLog COPYING COVERAGE CREDITS INSTALL README
 %attr(0755,root,root) %{_bindir}/*
 %{_mandir}/man8/*
 

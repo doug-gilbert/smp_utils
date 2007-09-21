@@ -10,6 +10,7 @@ Changelog for smp_utils-0.93 [20070920]
   - smp_discover, smp_discover_list: sync with sas2r09
     - warn if expander's SAS address is different from requested
   - add smp_rep_exp_route_tbl utility
+  - rename this file from CHANGELOG to ChangeLog
 
 Changelog for smp_utils-0.92 [20061208]
   - all: suggest using '-v' if smp_send_req() fails
