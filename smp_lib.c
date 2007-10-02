@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.12 20070707";    /* sas-2 rev 10 */
+static char * version_str = "1.13 20070929";    /* sas-2 rev 12 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -63,14 +63,16 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_SELF_CONFIG, -2, -2},
     {SMP_FN_REPORT_ZONE_PERMISSION_TBL, -2, -2},/* variable length response */
     {SMP_FN_REPORT_ZONE_MANAGER_PASS, -2, -2},
+    {SMP_FN_REPORT_BROADCAST, -2, -2},
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
     {SMP_FN_REPORT_ROUTE_INFO, 2, 9},
-    {SMP_FN_REPORT_PHY_EVENT_INFO, -2, -2},     /* variable length response */
+    {SMP_FN_REPORT_PHY_EVENT, -2, -2},     /* variable length response */
     {SMP_FN_REPORT_PHY_BROADCAST, -2, -2},
     {SMP_FN_DISCOVER_LIST, -2, -2},
-    {SMP_FN_REPORT_EXP_ROUTE_TBL, -2, -2},
+    {SMP_FN_REPORT_PHY_EVENT_LIST, -2, -2},
+    {SMP_FN_REPORT_EXP_ROUTE_TBL_LIST, -2, -2},
     {SMP_FN_CONFIG_GENERAL, 3, 0},
     {SMP_FN_ENABLE_DISABLE_ZONING, -2, 0},
     {SMP_FN_WRITE_GPIO_REG, -3, -3},    /* not applicable: see SFF-8485 */
@@ -84,7 +86,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_CONFIG_ROUTE_INFO, 9, 0},
     {SMP_FN_PHY_CONTROL, 9, 0},
     {SMP_FN_PHY_TEST_FUNCTION, 9, 0},
-    {SMP_FN_CONFIG_PHY_EVENT_INFO, -2, 0},      /* variable length request */
+    {SMP_FN_CONFIG_PHY_EVENT, -2, 0},      /* variable length request */
     {-1, -1, -1},
 };
 
@@ -127,11 +129,11 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_UNKNOWN_PHY_TEST_FN, "Unknown phy test function"},
     {SMP_FRES_PHY_TEST_IN_PROGRESS, "Phy test function in progress"},
     {SMP_FRES_PHY_VACANT, "Phy vacant"},
-    {SMP_FRES_UNKNOWN_PHY_EVENT_INFO_SRC,
-     "Unknown phy event information source"},
+    {SMP_FRES_UNKNOWN_PHY_EVENT_SRC,
+     "Unknown phy event source"},
     {SMP_FRES_UNKNOWN_DESCRIPTOR_TYPE, "Unknown descriptor type"},
     {SMP_FRES_UNKNOWN_PHY_FILTER, "Unknown phy filter"},
-    {SMP_FRES_LOGICAL_LINK_RATE, "Logical link rate not supported"},
+    {SMP_FRES_AFFILIATION_VIOLATION, "Affiliation violation"},
     {SMP_FRES_SMP_ZONE_VIOLATION, "SMP zone violation"},
     {SMP_FRES_NO_MANAGEMENT_ACCESS, "No management access rights"},
     {SMP_FRES_UNKNOWN_EN_DIS_ZONING_VAL,
@@ -140,6 +142,8 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_NOT_ACTIVATED, "Not activated"},
     {SMP_FRES_ZONE_GROUP_OUT_OF_RANGE, "Zone group out of range"},
     {SMP_FRES_NO_PHYSICAL_PRESENCE, "No physical presence"},
+    {SMP_FRES_SAVING_NOT_SUPPORTED, "Saving not supported"},
+    {SMP_FRES_SOURCE_ZONE_GROUP, "Source zone group does not exist"},
     {0x0, NULL},
 };
 

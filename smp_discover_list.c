@@ -45,14 +45,14 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.05 20070918";
+static char * version_str = "1.06 20071001";
 
 
 #define SMP_UTILS_TEST
 
 #ifdef SMP_UTILS_TEST
 static unsigned char tst1_resp[] = {
-    0x41, 0x16, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
+    0x41, 0x20, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
     24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -80,7 +80,7 @@ static unsigned char tst1_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst2_resp[] = {
-    0x41, 0x16, 0, 23, 0, 0, 0, 0, 0x2, 2, 0, 1,
+    0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x2, 2, 0, 1,
     24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -96,7 +96,7 @@ static unsigned char tst2_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst3_resp[] = {
-    0x41, 0x16, 0, 23, 0, 0, 0, 0, 0x0, 2, 0, 1,
+    0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x0, 2, 0, 1,
     24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -112,7 +112,7 @@ static unsigned char tst3_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst4_resp[] = {
-    0x41, 0x16, 0, 49, 0, 0, 0, 0, 0x0, 2, 0, 0,
+    0x41, 0x20, 0, 49, 0, 0, 0, 0, 0x0, 2, 0, 0,
     76, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -140,7 +140,7 @@ static unsigned char tst4_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst5_resp[] = {
-    0x41, 0x16, 0, 59, 0, 0, 0, 0, 0x0, 2, 0, 0,
+    0x41, 0x20, 0, 59, 0, 0, 0, 0, 0x0, 2, 0, 0,
     96, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -684,6 +684,22 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
         printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
     }
+    if (len > 107) {
+        printf("  default inside ZPSDS persistent: %d\n", !!(rp[96] & 0x20));
+        printf("  default requested inside ZPSDS: %d\n", !!(rp[96] & 0x10));
+        printf("  default zone group persistent: %d\n", !!(rp[96] & 0x4));
+        printf("  default zoning enabled: %d\n", !!(rp[96] & 0x1));
+        printf("  default zone group: %d\n", rp[99]);
+        printf("  saved inside ZPSDS persistent: %d\n", !!(rp[100] & 0x20));
+        printf("  saved requested inside ZPSDS: %d\n", !!(rp[100] & 0x10));
+        printf("  saved zone group persistent: %d\n", !!(rp[100] & 0x4));
+        printf("  saved zoning enabled: %d\n", !!(rp[100] & 0x1));
+        printf("  saved zone group: %d\n", rp[103]);
+        printf("  shadow inside ZPSDS persistent: %d\n", !!(rp[104] & 0x20));
+        printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
+        printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
+        printf("  shadow zone group: %d\n", rp[107]);
+    }
     return 0;
 }
 
@@ -1128,8 +1144,8 @@ main(int argc, char * argv[])
         printf("  externally configurable route table: %d\n",
                !!(resp[16] & 0x1));
         printf("  last self-configuration status descriptor index: %d\n",
-               (resp[18] << 8) + resp[19]);    /* sas2r11 + 07-401r0 */
-        printf("  last phy event information descriptor index: %d\n",
+               (resp[18] << 8) + resp[19]);    /* sas2r12 */
+        printf("  last phy event list descriptor index: %d\n",
                (resp[20] << 8) + resp[21]);
     }
     if (len != (48 + (num_desc * desc_len))) {
