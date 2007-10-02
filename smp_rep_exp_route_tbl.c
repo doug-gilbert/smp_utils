@@ -42,11 +42,11 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a REPORT EXPANDER ROUTE TABLE request and outputs
+ * This utility issues a REPORT EXPANDER ROUTE TABLE LIST request and outputs
  * its response.
  */
 
-static char * version_str = "1.00 20070711";
+static char * version_str = "1.02 20071001";
 
 
 #define SMP_UTILS_TEST
@@ -155,7 +155,7 @@ usage()
     fprintf(stderr,
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP REPORT EXPANDER ROUTE TABLE function\n"
+          "Performs a SMP REPORT EXPANDER ROUTE TABLE LIST function\n"
           );
 
 }
@@ -176,7 +176,7 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
                    int max_resp_len, struct opts_t * optsp)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ,
-                               SMP_FN_REPORT_EXP_ROUTE_TBL, 0, 6,
+                               SMP_FN_REPORT_EXP_ROUTE_TBL_LIST, 0, 6,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, };

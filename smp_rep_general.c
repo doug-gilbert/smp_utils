@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.13 20070920";    /* sas2r11 */
+static char * version_str = "1.14 20071001";    /* sas2r12 */
 
 
 static struct option long_options[] = {
@@ -356,6 +356,15 @@ int main(int argc, char * argv[])
     printf("  physical presence asserted: %d\n", !!(smp_resp[36] & 0x4));
     printf("  zoning supported: %d\n", !!(smp_resp[36] & 0x2));
     printf("  zoning enabled: %d\n", !!(smp_resp[36] & 0x1));
+    printf("  saving: %d\n", !!(smp_resp[37] & 0x10));
+    printf("  saving zone manager password supported: %d\n",
+           !!(smp_resp[37] & 0x8));
+    printf("  saving zone phy information supported: %d\n",
+           !!(smp_resp[37] & 0x4));
+    printf("  saving zone permission table supported: %d\n",
+           !!(smp_resp[37] & 0x2));
+    printf("  saving zoning enabled supported: %d\n",
+           !!(smp_resp[37] & 0x1));
     printf("  maximum number of routed SAS addresses: %d\n",
            (smp_resp[38]  << 8) + smp_resp[39]);
     if (len < 48)
@@ -388,9 +397,9 @@ int main(int argc, char * argv[])
            (smp_resp[60] << 8) + smp_resp[61]);
     printf("  maximum number of stored self-configuarion status "
            "descriptors: %d\n", (smp_resp[62] << 8) + smp_resp[63]);
-    printf("  last phy event information descriptor index: %d\n",
+    printf("  last phy event list descriptor index: %d\n",
            (smp_resp[64] << 8) + smp_resp[65]);
-    printf("  maximum number of stored phy event information "
+    printf("  maximum number of stored phy event list "
            "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
 
 err_out:
