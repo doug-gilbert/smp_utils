@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.10 20070423";
+static char * version_str = "1.11 20071001";
 
 struct opts_t {
     int do_brief;
@@ -568,6 +568,31 @@ static int do_single(struct smp_target_obj * top,
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & smp_resp[94], sizeof(b), b));
         printf("  hardware muxing supported: %d\n", !!(smp_resp[95] & 0x1));
+    }
+    if (len > 107) {
+        printf("  default inside ZPSDS persistent: %d\n",
+               !!(smp_resp[96] & 0x20));
+        printf("  default requested inside ZPSDS: %d\n",
+               !!(smp_resp[96] & 0x10));
+        printf("  default zone group persistent: %d\n",
+               !!(smp_resp[96] & 0x4));
+        printf("  default zoning enabled: %d\n", !!(smp_resp[96] & 0x1));
+        printf("  default zone group: %d\n", smp_resp[99]);
+        printf("  saved inside ZPSDS persistent: %d\n",
+               !!(smp_resp[100] & 0x20));
+        printf("  saved requested inside ZPSDS: %d\n",
+               !!(smp_resp[100] & 0x10));
+        printf("  saved zone group persistent: %d\n",
+               !!(smp_resp[100] & 0x4));
+        printf("  saved zoning enabled: %d\n", !!(smp_resp[100] & 0x1));
+        printf("  saved zone group: %d\n", smp_resp[103]);
+        printf("  shadow inside ZPSDS persistent: %d\n",
+               !!(smp_resp[104] & 0x20));
+        printf("  shadow requested inside ZPSDS: %d\n",
+               !!(smp_resp[104] & 0x10));
+        printf("  shadow zone group persistent: %d\n",
+               !!(smp_resp[104] & 0x4));
+        printf("  shadow zone group: %d\n", smp_resp[107]);
     }
     return 0;
 }
