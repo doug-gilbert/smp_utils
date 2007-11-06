@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.06 20071001";
+static char * version_str = "1.06 20071001";    /* sas2r12 */
 
 
 #define SMP_UTILS_TEST
