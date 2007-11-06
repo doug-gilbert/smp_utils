@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.11 20071001";
+static char * version_str = "1.11 20071001";    /* sas2r12 */
 
 struct opts_t {
     int do_brief;
