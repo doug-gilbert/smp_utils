@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.13 20070929";    /* sas-2 rev 12 */
+static char * version_str = "1.14 20071117";    /* sas-2 rev 13 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -69,7 +69,6 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
     {SMP_FN_REPORT_ROUTE_INFO, 2, 9},
     {SMP_FN_REPORT_PHY_EVENT, -2, -2},     /* variable length response */
-    {SMP_FN_REPORT_PHY_BROADCAST, -2, -2},
     {SMP_FN_DISCOVER_LIST, -2, -2},
     {SMP_FN_REPORT_PHY_EVENT_LIST, -2, -2},
     {SMP_FN_REPORT_EXP_ROUTE_TBL_LIST, -2, -2},

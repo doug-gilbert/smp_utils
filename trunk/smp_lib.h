@@ -66,7 +66,7 @@ extern "C" {
 #define SMP_FN_REPORT_PHY_SATA 0x12
 #define SMP_FN_REPORT_ROUTE_INFO 0x13
 #define SMP_FN_REPORT_PHY_EVENT 0x14
-#define SMP_FN_REPORT_PHY_BROADCAST 0x15
+/* #define SMP_FN_REPORT_PHY_BROADCAST 0x15  removed in sas2r13 */
 #define SMP_FN_DISCOVER_LIST 0x20       /* was 0x16 in sas2r10 */
 #define SMP_FN_REPORT_PHY_EVENT_LIST 0x21
 #define SMP_FN_REPORT_EXP_ROUTE_TBL_LIST 0x22  /* was 0x17 in sas2r10 */
