@@ -25,7 +25,7 @@ REPORT BROADCAST                      2
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
-REPORT PHY BROADCAST COUNTS           2    
+/* REPORT PHY BROADCAST COUNTS           2             removed in sas2r13 */
 REPORT PHY ERROR LOG                  1, 2             smp_rep_phy_err_log
 REPORT PHY EVENT                      2    
 REPORT PHY EVENT LIST                 2    
@@ -40,7 +40,7 @@ ZONE LOCK                             2
 ZONE UNLOCK                           2    
 ZONED BROADCAST                       2    
 
-There are 28 SMP functions defined in sas2r12.pdf (plus 2 in SFF-8485)
+There are 27 SMP functions defined in sas2r13.pdf (plus 2 in SFF-8485)
 of which smp_utils currently implements 14.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
@@ -55,4 +55,4 @@ corresponding to a newly introduced function in SAS-2.
 
 
 Doug Gilbert
-29th September 2007
+8th December 2007
