@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.93 [20071029]
+Changelog for smp_utils-0.93 [20071209]
   - smp_phy_control: sync with sas2r10
   - smp_rep_phy_sata: affiliation contexts, added sas2r08
   - smp_discover: add '--list' option for attribute=value output
@@ -12,6 +12,7 @@ Changelog for smp_utils-0.93 [20071029]
   - add smp_rep_exp_route_tbl utility
   - rename this file from CHANGELOG to ChangeLog
   - place code in subversion repository
+  - move smp_lib.h into include directory
 
 Changelog for smp_utils-0.92 [20061208]
   - all: suggest using '-v' if smp_send_req() fails

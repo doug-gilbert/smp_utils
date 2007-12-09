@@ -25,9 +25,9 @@ OS_FLAGS = -DSMP_UTILS_LINUX
 LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
-# CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
-CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
-# CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
+# CFLAGS = -I include -O2 -Wall -W $(EXTRA_FLAGS)
+CFLAGS = -I include -g -O2 -Wall -W $(EXTRA_FLAGS)
+# CFLAGS = -I include -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 CFLAGS_PTHREADS = -D_REENTRANT
 
