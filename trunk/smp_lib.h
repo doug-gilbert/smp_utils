@@ -31,7 +31,7 @@
  */
 
 /*
- * Version 1.13 [20070929]
+ * Version: see version_str in smp_lib.c
  */
 
 
