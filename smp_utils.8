@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "January 2007" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_UTILS "8" "December 2007" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_* \- invoke a SMP function
 .SH SYNOPSIS
@@ -51,6 +51,18 @@ the SAS address of the SMP target. When the mptctl driver is loaded in
 Linux there should be a character device node at '/dev/mptctl' with
 major 10 and minor 220.
 .TP
+\fBsgv4\fR (\fBsg\fR)
+This interface is more generic and supported in the linux 2.6.24 kernel
+and beyond. The SMP functions are passed to the kernel using a format
+known as "SCSI Generic Version 4" which gives this interface its
+name: "sgv4" or just "sg". The SAS transport layer within the SCSI
+sub-system unpacks the SMP requests and forwards them to SAS low level
+drivers that support this interface. The \fISMP_DEVICE\fR is either a
+member of the '/sys/class/bsg' directory or a device node made by the
+bsg driver. Such device nodes are dynamic (i.e. they don't have a fixed
+major number) and should correspond to the major and minor numbers
+found in the 'sys/class/bsg/<smp_target_device>/dev' file.
+.TP
 \fBtpl\fR (\fBai\fR)
 This interface is currently used by one adaptec 94xx driver. The "device"
 name will usually be "smp_portal" and it will be found within the sysfs
@@ -96,8 +108,8 @@ interface specific parameters. This option is usually not needed since the
 interface type is guessed by a utility based on the characteristics of the
 given \fISMP_DEVICE\fR argument or what is in the corresponding environment
 variables. \fIPARAMS\fR is of the form: \fIINTF[,force]\fR.
-If the guess doesn't work then the interface can be specified by
-giving a \fIINTF\fR of either 'mpt' or 'tpl' ( with 'ai' being a synonym
+If the guess doesn't work then the interface can be specified by giving
+a \fIINTF\fR of either 'mpt', 'sgv4' or 'tpl' ( with 'ai' being a synonym
 for 'tpl'). Sanity checks are still performed and a utility may refuse if
 it doesn't agree with the given \fIINTF\fR. If the user is really sure then
 adding a ',force' will force the utility to use the given interface.

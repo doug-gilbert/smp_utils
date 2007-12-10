@@ -1,4 +1,6 @@
 SHELL = /bin/sh
+KERNELRELEASE ?= $(shell uname -r)
+KSRC ?= /lib/modules/$(KERNELRELEASE)/build
 
 PREFIX=/usr/local
 INSTDIR=$(DESTDIR)/$(PREFIX)/bin
@@ -9,15 +11,15 @@ CC = gcc
 endif
 LD = $(CC)
 
-EXECS = smp_portal_intf.o expander_conf
+EXECS = smp_sgv4_io.o
 
 OS_FLAGS = -DSMP_UTILS_LINUX
 LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
-# CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
-CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
-# CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
+# CFLAGS = -I ../include -idirafter ../include/dummy -O2 -Wall -W $(EXTRA_FLAGS)
+CFLAGS = -I ../include -I $(KSRC)/include -idirafter ../include/dummy -g -O2 -Wall -W $(EXTRA_FLAGS)
+# CFLAGS = -I ../include -idirafter ../include/dummy -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 LDFLAGS = 
 # LDFLAGS = -v -lm
