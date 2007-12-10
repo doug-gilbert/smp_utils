@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,10 +38,12 @@
 
 #include "sas_tpl/smp_portal_intf.h"
 #include "mpt/smp_mptctl_io.h"
+#include "sgv4/smp_sgv4_io.h"
 
 
 #define I_SAS_TPL 1
 #define I_MPT 2
+#define I_SGV4 4
 
 int smp_initiator_open(const char * device_name, int subvalue,
                        const char * i_params, unsigned long long sa,
@@ -73,6 +75,8 @@ int smp_initiator_open(const char * device_name, int subvalue,
             tobj->interface_selector = I_SAS_TPL;
         else if (0 == strncmp("mpt", i_params, 3))
             tobj->interface_selector = I_MPT;
+        else if (0 == strncmp("sgv4", i_params, 2))
+            tobj->interface_selector = I_SGV4;
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
         else if (verbose)
@@ -83,6 +87,25 @@ int smp_initiator_open(const char * device_name, int subvalue,
                 (0 == strncmp("for", cp + 1, 3)))
                 force = 1;
         }
+    }
+    if ((I_SGV4 == tobj->interface_selector) ||
+        (0 == tobj->interface_selector)) { 
+        res = chk_sgv4_device(device_name, verbose);
+        if (res || force) {
+            if (0 == tobj->interface_selector)
+                tobj->interface_selector = I_SGV4;
+            if ((0 == res) && force)
+                fprintf(stderr, "... overriding failed check due "
+                        "to 'force'\n");
+            res = open_sgv4_device(device_name, verbose);
+            if (res < 0)
+                goto err_out;
+            tobj->fd = res;
+            tobj->subvalue = subvalue;
+            tobj->opened = 1;
+            return 0;
+        } else if (verbose > 2)
+            fprintf(stderr, "chk_sgv4_device: failed\n");
     }
     if ((I_MPT == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) { 
@@ -131,10 +154,12 @@ int smp_send_req(const struct smp_target_obj * tobj,
             fprintf(stderr, "smp_send_req: nothing open??\n");
         return -1;
     }
-    if (I_MPT == tobj->interface_selector) {
+    if (I_SGV4 == tobj->interface_selector)
+        return send_req_sgv4(tobj->fd, tobj->subvalue, rresp, verbose);
+    else if (I_MPT == tobj->interface_selector)
         return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr,
                             rresp, verbose);
-    } else if (I_SAS_TPL == tobj->interface_selector) {
+    else if (I_SAS_TPL == tobj->interface_selector) {
             int res;
             rresp->act_response_len = -1;
             res = do_smp_portal_func(tobj->device_name,

@@ -1,7 +1,7 @@
 #ifndef SMP_MPTCTL_IO_H
 #define SMP_MPTCTL_IO_H
 
-#include "../smp_lib.h"
+#include "smp_lib.h"
 
 extern int chk_mpt_device(const char * dev_name, int verbose);
 

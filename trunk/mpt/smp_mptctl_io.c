@@ -41,7 +41,7 @@ int chk_mpt_device(const char * dev_name, int verbose)
 
     if (stat(dev_name, &st) < 0) {
         if (verbose)
-            perror("chk_mpt_dev_file: stat failed");
+            perror("chk_mpt_device: stat failed");
         return 0;
     }
     if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
@@ -50,11 +50,11 @@ int chk_mpt_device(const char * dev_name, int verbose)
     else {
         if (verbose) {
             if (S_ISCHR(st.st_mode))
-                fprintf(stderr, "chk_mpt_dev_file: wanted char device "
+                fprintf(stderr, "chk_mpt_device: wanted char device "
                         "major,minor=%d,%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
                         MPT_DEV_MINOR, major(st.st_rdev), minor(st.st_rdev));
             else
-                fprintf(stderr, "chk_mpt_dev_file: wanted char device "
+                fprintf(stderr, "chk_mpt_device: wanted char device "
                         "major,minor=%d,%d\n    didn't get char device\n",
                         MPT_DEV_MAJOR, MPT_DEV_MINOR);
         }
