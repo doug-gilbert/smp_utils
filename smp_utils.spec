@@ -55,7 +55,7 @@ make install \
 
 %changelog
 * Sun Dec 09 2007 - dgilbert at interlog dot com
-- add affiliation contexts (new in sas2r08), sync to sas2r12
+- sync with sas2r13, add 'sgv4' interface
   * smp_utils-0.93
 * Fri Dec 08 2006 - dgilbert at interlog dot com
 - sync against sas2r07, add smp_conf_general

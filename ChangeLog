@@ -3,6 +3,7 @@ some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
 Changelog for smp_utils-0.93 [20071209]
+  - sgv4: add new interface
   - smp_phy_control: sync with sas2r10
   - smp_rep_phy_sata: affiliation contexts, added sas2r08
   - smp_discover: add '--list' option for attribute=value output
