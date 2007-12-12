@@ -121,7 +121,7 @@ install: $(EXECS)
 	done
 	install -d $(MANDIR)/$(MAN_PREF)
 	for mp in $(MAN_PGS); \
-	 do install -o root -g root -m 644 $$mp $(MANDIR)/$(MAN_PREF); \
+	 do install -o root -g root -m 644 doc/$$mp $(MANDIR)/$(MAN_PREF); \
 	 gzip -9f $(MANDIR)/$(MAN_PREF)/$$mp; \
 	done
 
