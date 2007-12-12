@@ -216,12 +216,12 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     if (verbose) {
         fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
 		"%u\n", hdr.driver_status, hdr.transport_status);
-        fprintf(stderr, "    device_status=%u, duration=%u, response_len=%u\n",
-	        hdr.device_status, hdr.duration, hdr.response_len);
-        fprintf(stderr, "    din_resid=%d, dout_resid=%d, info=%u\n",
-	        hdr.din_resid, hdr.dout_resid, hdr.info);
+        fprintf(stderr, "    device_status=%u, duration=%u, info=%u\n",
+	        hdr.device_status, hdr.duration, hdr.info);
+        fprintf(stderr, "    din_resid=%d, dout_resid=%d\n",
+	        hdr.din_resid, hdr.dout_resid);
     }
-    rresp->act_response_len = -1;	/* expected hdr.response_len */
+    rresp->act_response_len = -1;  /* hdr.din_xfer_len - hdr.din_resid */
     if (hdr.driver_status)
     	rresp->transport_err = hdr.driver_status;
     else if (hdr.transport_status)
