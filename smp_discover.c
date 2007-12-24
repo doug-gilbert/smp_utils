@@ -45,7 +45,9 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.11 20071001";    /* sas2r12 */
+static char * version_str = "1.12 20071223";    /* sas2r12 */
+
+#define SAS2_OVERRIDE 0
 
 struct opts_t {
     int do_brief;
@@ -371,16 +373,18 @@ static int do_discover(struct smp_target_obj * top, int disc_phy_id,
 static int do_single_list(const unsigned char * smp_resp, int len,
                           int show_exp_cc, int do_brief)
 {
-    int res, j;
+    int res, j, sas2;
     unsigned long long ull;
 
-    if (show_exp_cc && (! do_brief)) {
+    sas2 = smp_resp[3] ? 1 : SAS2_OVERRIDE;
+    if (sas2 && show_exp_cc && (! do_brief)) {
         res = (smp_resp[4] << 8) + smp_resp[5];
         printf("expander_cc=%d\n", res);
     }
     printf("phy_id=%d\n", smp_resp[9]);
     if (! do_brief) {
-        printf("  att_break_rc=%d\n", !!(0x1 & smp_resp[33]));
+        if (sas2)
+            printf("  att_break_rc=%d\n", !!(0x1 & smp_resp[33]));
         if (len > 59) {
             for (ull = 0, j = 0; j < 8; ++j) {
                 if (j > 0)
@@ -392,10 +396,10 @@ static int do_single_list(const unsigned char * smp_resp, int len,
     }
     printf("  att_dev_type=%d\n", (0x70 & smp_resp[12]) >> 4);
     printf("  att_iport_mask=0x%x\n", smp_resp[14]);
-    if (! do_brief)
+    if (sas2 && (! do_brief))
         printf("  att_izp=%d\n", !!(0x4 & smp_resp[33]));
     printf("  att_phy_id=%d\n", smp_resp[32]);
-    if (! do_brief) {
+    if (sas2 && (! do_brief)) {
         printf("  att_reason=%d\n", (0xf & smp_resp[12]));
         printf("  att_req_iz=%d\n", !!(0x2 & smp_resp[33]));
     }
@@ -407,9 +411,11 @@ static int do_single_list(const unsigned char * smp_resp, int len,
     printf("  att_sas_addr=0x%llx\n", ull);
     printf("  att_tport_mask=0x%x\n", smp_resp[15]);
     if (! do_brief) {
-        printf("  conn_elem_ind=%d\n", smp_resp[46]);
-        printf("  conn_p_link=%d\n", smp_resp[47]);
-        printf("  conn_type=%d\n", (0x7f & smp_resp[45]));
+        if (sas2 || (smp_resp[45] & 0x7f)) {
+            printf("  conn_elem_ind=%d\n", smp_resp[46]);
+            printf("  conn_p_link=%d\n", smp_resp[47]);
+            printf("  conn_type=%d\n", (0x7f & smp_resp[45]));
+        }
     }
     if (! do_brief) {
         printf("  hw_max_p_lrate=%d\n", (0xf & smp_resp[41]));
@@ -448,7 +454,8 @@ static int do_single(struct smp_target_obj * top,
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
-    int res, len, j; char b[256];
+    int res, len, j, sas2;
+    char b[256];
 
     len = do_discover(top, optsp->phy_id, smp_resp, sizeof(smp_resp), 0,
                       optsp);
@@ -459,17 +466,21 @@ static int do_single(struct smp_target_obj * top,
     if (optsp->do_list)
         return do_single_list(smp_resp, len, 1, optsp->do_brief);
     printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
+    sas2 = smp_resp[3] ? 1 : SAS2_OVERRIDE;
     res = (smp_resp[4] << 8) + smp_resp[5];
-    if (optsp->verbose || (res > 0))
-        printf("  expander change count: %d\n", res);
+    if (sas2 || (optsp->verbose > 3)) {
+        if (optsp->verbose || (res > 0))
+            printf("  expander change count: %d\n", res);
+    }
     printf("  phy identifier: %d\n", smp_resp[9]);
     res = ((0x70 & smp_resp[12]) >> 4);
     if (res < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[res]);
     if ((optsp->do_brief > 1) && (0 == res))
         return 0;
-    printf("  attached reason: %s\n",
-           smp_get_reason(0xf & smp_resp[12], sizeof(b), b));
+    if (sas2 || (optsp->verbose > 3))
+        printf("  attached reason: %s\n",
+               smp_get_reason(0xf & smp_resp[12], sizeof(b), b));
 
     printf("  negotiated logical link rate: %s\n",
            smp_get_neg_xxx_link_rate(0xf & smp_resp[13], sizeof(b), b));
@@ -500,9 +511,13 @@ static int do_single(struct smp_target_obj * top,
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", smp_resp[32]);
     if (0 == optsp->do_brief) {
-        printf("  attached inside ZPSDS persistent: %d\n", smp_resp[33] & 4);
-        printf("  attached requested inside ZPSDS: %d\n", smp_resp[33] & 2);
-        printf("  attached break_reply capable: %d\n", smp_resp[33] & 1);
+        if (sas2 || (optsp->verbose > 3)) {
+            printf("  attached inside ZPSDS persistent: %d\n",
+                   smp_resp[33] & 4);
+            printf("  attached requested inside ZPSDS: %d\n",
+                   smp_resp[33] & 2);
+            printf("  attached break_reply capable: %d\n", smp_resp[33] & 1);
+        }
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((smp_resp[40] >> 4) & 0xf), 1,
                                   sizeof(b), b));
@@ -529,10 +544,12 @@ static int do_single(struct smp_target_obj * top,
     printf("  routing attribute: %s\n", b);
     if (optsp->do_brief)
         return 0;
-    printf("  connector type: %s\n",
-           find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
-    printf("  connector element index: %d\n", smp_resp[46]);
-    printf("  connector physical link: %d\n", smp_resp[47]);
+    if (sas2 || (smp_resp[45] & 0x7f)) {
+        printf("  connector type: %s\n",
+               find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
+        printf("  connector element index: %d\n", smp_resp[46]);
+        printf("  connector physical link: %d\n", smp_resp[47]);
+    }
     if (len > 59) {
         ull = 0;
         for (j = 0; j < 8; ++j) {
