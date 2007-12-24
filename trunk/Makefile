@@ -54,7 +54,7 @@ sub_sas_tpl:
 sub_sgv4:
 	cd sgv4 && $(MAKE)
 
-libsmp.a : smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o sas_tpl/smp_portal_intf.o sgv4/smp_sgv4_io.o
+libsmp.a : sub_mpt sub_sas_tpl sub_sgv4 smp_lib.o smp_interface_sel.o
 	ar r libsmp.a smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o  \
 	sas_tpl/smp_portal_intf.o sgv4/smp_sgv4_io.o
 
