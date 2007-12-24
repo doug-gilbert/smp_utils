@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.93 [20071211]
+Changelog for smp_utils-0.93 [20071223]
   - sgv4: add new interface
   - smp_phy_control: sync with sas2r10
   - smp_rep_phy_sata: affiliation contexts, added sas2r08
@@ -11,6 +11,7 @@ Changelog for smp_utils-0.93 [20071211]
   - smp_discover, smp_discover_list: sync with sas2r09..12
     - warn if expander's SAS address is different from requested
   - add smp_rep_exp_route_tbl utility
+  - abridge output from responses when prior to SAS-2
   - rename this file from CHANGELOG to ChangeLog
   - place code in subversion repository
   - move smp_lib.h into include directory

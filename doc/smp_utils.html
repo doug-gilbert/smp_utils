@@ -51,13 +51,15 @@ transporting SCSI command sets to SAS devices (e.g. SAS disks and tape
 drives) , and STP for tunnelling the ATA command set to SATA disks. and
 S-ATAPI devices.<br>
 <br>
-SAS is a relatively new technology which already has three
+SAS already has three
 generations. The first two generations are approved standards: the
 original SAS (SAS
-ANSI INCITS 376-2003) and SAS 1.1 (INCITS 417-2006). New technical work
-is going into SAS-2 and at the time of
+ANSI INCITS 376-2003) and SAS 1.1 (INCITS 417-2006). SAS-2 technical
+work
+is ongoing and at the time of
 writing the most recent draft is sas2r13.pdf (see section 10.4.3 for
-SMP functions). Drafts, including those
+SMP functions). To avoid confusion, the three generations of SAS will
+be referred to here as 1, 1.1 and 2 . Drafts, including those
 just prior to standardization can be found at the <a
  href="http://www.t10.org">www.t10.org</a>
 site. Two SMP functions for reading and writing to GPIO registers are
@@ -85,6 +87,10 @@ Here is a list in alphabetical order of the utilities in the
       <td style="vertical-align: top;"><span style="font-weight: bold;">SMP
 function</span><br>
       </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">SAS</span><br
+ style="font-weight: bold;">
+      <span style="font-weight: bold;">version</span><br>
+      </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Notes</span><br>
       </td>
     </tr>
@@ -93,12 +99,16 @@ function</span><br>
       </td>
       <td style="vertical-align: top;">CONFIGURE GENERAL<br>
       </td>
+      <td style="vertical-align: top;">2<br>
+      </td>
       <td style="vertical-align: top;">added in smp_utils version 0.92</td>
     </tr>
     <tr>
       <td style="vertical-align: top;">smp_conf_route_info<br>
       </td>
       <td style="vertical-align: top;">CONFIGURE ROUTE INFORMATION<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;"><br>
       </td>
@@ -107,6 +117,8 @@ function</span><br>
       <td style="vertical-align: top;">smp_discover<br>
       </td>
       <td style="vertical-align: top;">DISCOVER<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;"> SAS HBA drivers use this
 command to discover the topology<br>
@@ -117,6 +129,8 @@ command to discover the topology<br>
       </td>
       <td style="vertical-align: top;">DISCOVER LIST<br>
       </td>
+      <td style="vertical-align: top;"><br>
+      </td>
       <td style="vertical-align: top;">added in smp_utils version 0.91
 (recently added to SAS-2)<br>
       </td>
@@ -125,6 +139,8 @@ command to discover the topology<br>
       <td style="vertical-align: top;">smp_phy_control<br>
       </td>
       <td style="vertical-align: top;">PHY CONTROL<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;">amongst other things, can send
 link and hard resets to attached phy<br>
@@ -135,12 +151,16 @@ link and hard resets to attached phy<br>
       </td>
       <td style="vertical-align: top;">PHY TEST FUNCTION<br>
       </td>
+      <td style="vertical-align: top;">1.1<br>
+      </td>
       <td style="vertical-align: top;">added in smp_utils version 0.91 </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">smp_read_gpio<br>
       </td>
       <td style="vertical-align: top;">READ GPIO REGISTER<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;">defined in SFF-8485. May also be
 able to read the sideband signals on a HBA's wide internal cables.<br>
@@ -151,12 +171,16 @@ able to read the sideband signals on a HBA's wide internal cables.<br>
       </td>
       <td style="vertical-align: top;">REPORT EXPANDER ROUTE TABLE LIST<br>
       </td>
+      <td style="vertical-align: top;">2<br>
+      </td>
       <td style="vertical-align: top;">added in smp_utils version 0.93</td>
     </tr>
     <tr>
       <td style="vertical-align: top;">smp_rep_general<br>
       </td>
       <td style="vertical-align: top;">REPORT GENERAL<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;">&nbsp;<br>
       </td>
@@ -165,6 +189,8 @@ able to read the sideband signals on a HBA's wide internal cables.<br>
       <td style="vertical-align: top;">smp_rep_manufacturer<br>
       </td>
       <td style="vertical-align: top;">REPORT MANUFACTURER INFORMATION<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;">Response contains device
 identification string somewhat like the response to a SCSI INQUIRY
@@ -176,12 +202,16 @@ command.<br>
       </td>
       <td style="vertical-align: top;">REPORT PHY ERROR LOG<br>
       </td>
+      <td style="vertical-align: top;">1<br>
+      </td>
       <td style="vertical-align: top;"><br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">smp_rep_phy_sata </td>
       <td style="vertical-align: top;">REPORT PHY SATA<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="vertical-align: top;">for expander phys with a STP to
 SATA bridge<br>
@@ -192,6 +222,8 @@ SATA bridge<br>
       </td>
       <td style="vertical-align: top;">REPORT ROUTE INFORMATION<br>
       </td>
+      <td style="vertical-align: top;">1<br>
+      </td>
       <td style="vertical-align: top;">&nbsp;<br>
       </td>
     </tr>
@@ -200,11 +232,19 @@ SATA bridge<br>
       </td>
       <td style="vertical-align: top;">WRITE GPIO REGISTER<br>
       </td>
+      <td style="vertical-align: top;">1<br>
+      </td>
       <td style="vertical-align: top;">defined in SFF-8485. May also be
 able to write to the sideband signals on a HBA's wide internal cables.</td>
     </tr>
   </tbody>
 </table>
+<br>
+As can be seen, the utility name is closely related to the SMP function
+name. The "SAS version" column indicates the first SAS version in which
+the SMP function appeared. For more information see one of the SAS
+drafts (i.e. SAS 1, SAS 1.1 or SAS 2), in the "Application layer"
+section within which the SMP functions are described.<br>
 <br>
 Each utility has its own man page. Information common to all
 utilities can be found in the smp_utils man page.<br>
@@ -223,8 +263,9 @@ This package currently supports three interfaces: <br>
 Fusion <span style="font-family: monospace;">/dev/mptctl</span> device</li>
   <li><span style="font-weight: bold;">sgv4</span>: (also <span
  style="font-weight: bold;">sg</span>) uses the SCSI generic version 4
-interface and the SAS transport layer (available from linux kernel
-2.6.24)</li>
+interface and the SAS transport layer (added in version 0.93 and
+requires linux kernel
+2.6.24 or later)</li>
   <li><span style="font-weight: bold;">tpl</span>: (also <span
  style="font-weight: bold;">ai</span>) based on a read write attribute
 in sysfs called <span style="font-family: monospace;">smp_portal</span>.
@@ -255,18 +296,19 @@ associated with the mptctl module. Hence a "<span
 required. The <span style="font-family: monospace;">/dev/mptctl</span>
 device node is a character device with major 10 and minor 220.<br>
 <br>
-The sgv4 interfaces uses the SG_IO ioctl, the bsg driver and the SCSI
+The sgv4 interface uses the SG_IO ioctl, the bsg driver and the SCSI
 generic version 4 (hence "sgv4" which can be shortened to "sg")
 structure. From linux kernel 2.6.24 the SAS transport layer within the
 SCSI subsystem accepts SMP requests and forwards them on to those SAS
-low level (HBA) drivers that accept them. At this time the LSI MPT SAS
-Fusion driver accepts SMP requests issued via this interface. The SMP
+low level (HBA) drivers that accept them. At this time the MPT SAS
+Fusion driver and the aic94xx driver accept SMP requests issued via
+this interface. The SMP
 target device is identified in one of two possible ways: via a sysfs
 directory name (e.g. <span style="font-family: monospace;">/sys/class/bsg/expander-4:0</span>
 ) or via a device node created dynamically by the bsg driver (e.g. <span
  style="font-family: monospace;">/dev/expander-4:0</span> ). The SMP
-target device SAS address is implicit (and this design makes this
-interface useless for user space SAS topology discovery).<br>
+target device SAS address is implicit (and this design limits the
+usefulness of "sgv4" for user space SAS topology discovery).<br>
 <br>
 The tpl interface&nbsp; uses the sysfs <span
  style="font-family: monospace;">smp_portal</span> attribute which
@@ -281,12 +323,11 @@ will help in finding the interface file. An alternate aic94xx driver
 uses this interface.<br>
 <br>
 Each utility attempts to work out at run time which interface it has.
-While there are only two interfaces this is a reasonably simple
+While there are three interfaces this is a reasonably simple
 process as their characteristics are quite different. To explicitly set
 the interface type the '--interface=&lt;intf&gt;[,force]' option can be
-given where &lt;intf&gt; is one of "mpt", "tpl" or "ai" (the latter two
-for the <span style="font-family: monospace;">smp_portal</span>
-interface). Checks are also performed that the given
+given where &lt;intf&gt; is one of "mpt", "tpl" or "sgv4" (or
+alternatives "ai" or "sg"). Checks are also performed that the given
 device name isn't a normal file or worse a block device. A command like
 "<span style="font-family: monospace;">smp_discover /dev/sda</span>"
 makes no sense but if allowed to go ahead,
@@ -320,11 +361,9 @@ so that the driver or user space programs can access or control those
 sideband
 signals. To find out if a virtual SMP target port is present on a HBA
 try something like this: "<span style="font-family: monospace;">smp_rep_manufacturer
---sa=&lt;sas_addr_of_hba&gt; /dev/mptctl</span>". Notice that is not
-possible
-with the <span style="font-family: monospace;">smp_portal</span>
-interface because the HBA does not flag itself (to
-a SMP DISCOVER) as an STP target.<br>
+--sa=&lt;sas_addr_of_hba&gt; /dev/mptctl</span>". Some enclosures have
+monitoring logic that present a SES-2 target type device on a SGPIO
+interface.<br>
 <h2><a class="mozTocH2" name="mozTocId958107"></a>Examples</h2>
 The command line interface can get cluttered if the SAS address of the
 expander and the OS device node through which the SMP functions travel,
@@ -687,7 +726,7 @@ the link and select "Save link as ..." to download the file.<br>
 <br>
 <p>Return to <a href="index.html">main</a> page. </p>
 <center>
-<p>Last updated: 10th December 2007<br>
+<p>Last updated: 23rd December 2007<br>
 <br>
 </p>
 </center>
