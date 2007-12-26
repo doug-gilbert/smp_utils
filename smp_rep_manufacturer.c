@@ -46,7 +46,9 @@
  * outputs its response.
  */
 
-static char * version_str = "1.05 20061206";
+static char * version_str = "1.06 20071225";
+
+#define OVERRIDE_TO_SAS2 0
 
 
 static struct option long_options[] = {
@@ -97,7 +99,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len;
+    int res, c, k, len, sas1_1, sas2;
     int do_hex = 0;
     int phy_id = 0;
     int do_raw = 0;
@@ -305,21 +307,29 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
+    sas1_1 = smp_resp[8] & 1;
+    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
+
     printf("Report manufacturer response:\n");
-    res = (smp_resp[4] << 8) + smp_resp[5];
-    if (verbose || res)
-        printf("  Expander change count: %d\n", res);
-    printf("  SAS-1.1 format: %d\n", smp_resp[8] & 1);
+    if (sas2 || (verbose > 3)) {
+        res = (smp_resp[4] << 8) + smp_resp[5];
+        if (verbose || res)
+            printf("  Expander change count: %d\n", res);
+    }
+    printf("  SAS-1.1 format: %d\n", sas1_1);
     printf("  vendor identification: %.8s\n", smp_resp + 12);
     printf("  product identification: %.16s\n", smp_resp + 20);
     printf("  product revision level: %.4s\n", smp_resp + 36);
-    if (smp_resp[40])
-        printf("  component vendor identification: %.8s\n", smp_resp + 40);
-    res = (smp_resp[48] << 8) + smp_resp[49];
-    if (res)
-        printf("  component id: %d\n", res);
-    if (smp_resp[50])
-        printf("  component revision level: %d\n", smp_resp[50]);
+    if (sas1_1) {
+        if (smp_resp[40])
+            printf("  component vendor identification: %.8s\n",
+                   smp_resp + 40);
+        res = (smp_resp[48] << 8) + smp_resp[49];
+        if (res)
+            printf("  component id: %d\n", res);
+        if (smp_resp[50])
+            printf("  component revision level: %d\n", smp_resp[50]);
+    }
 
 err_out:
     res = smp_initiator_close(&tobj);

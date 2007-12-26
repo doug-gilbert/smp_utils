@@ -45,9 +45,9 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.12 20071223";    /* sas2r12 */
+static char * version_str = "1.12 20071225";    /* sas2r12 */
 
-#define SAS2_OVERRIDE 0
+#define OVERRIDE_TO_SAS2 0
 
 struct opts_t {
     int do_brief;
@@ -376,7 +376,7 @@ static int do_single_list(const unsigned char * smp_resp, int len,
     int res, j, sas2;
     unsigned long long ull;
 
-    sas2 = smp_resp[3] ? 1 : SAS2_OVERRIDE;
+    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
     if (sas2 && show_exp_cc && (! do_brief)) {
         res = (smp_resp[4] << 8) + smp_resp[5];
         printf("expander_cc=%d\n", res);
@@ -466,7 +466,7 @@ static int do_single(struct smp_target_obj * top,
     if (optsp->do_list)
         return do_single_list(smp_resp, len, 1, optsp->do_brief);
     printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
-    sas2 = smp_resp[3] ? 1 : SAS2_OVERRIDE;
+    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (sas2 || (optsp->verbose > 3)) {
         if (optsp->verbose || (res > 0))

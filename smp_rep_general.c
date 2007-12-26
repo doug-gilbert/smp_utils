@@ -45,7 +45,9 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.14 20071001";    /* sas2r12 */
+static char * version_str = "1.14 20071225";    /* sas2r12 */
+
+#define OVERRIDE_TO_SAS2 0
 
 
 static struct option long_options[] = {
@@ -99,7 +101,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len;
+    int res, c, k, len, sas2;
     int do_change = 0;
     int do_hex = 0;
     int phy_id = 0;
@@ -313,6 +315,7 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
+    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
     if (do_change) {
         printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
         goto err_out;
@@ -323,11 +326,14 @@ int main(int argc, char * argv[])
     printf("  expander route indexes: %d\n",
            (smp_resp[6] << 8) + smp_resp[7]);
     printf("  number of phys: %d\n", smp_resp[9]);
-    printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
-    /* printf("  zone address resolved supported: %d\n",
-              !!(smp_resp[10] & 0x8)); */
-    printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
+    if (sas2 || (verbose > 3)) {
+        printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
+        /* printf("  zone address resolved supported: %d\n",
+                  !!(smp_resp[10] & 0x8)); */
+        printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
+    }
     printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
+    /* following "externally" word added in SAS-2 */
     printf("  externally configurable route table: %d\n",
            !!(smp_resp[10] & 0x1));
     if (smp_resp[12]) { /* assume naa-5 present */
