@@ -2,7 +2,7 @@ smp-utils (0.93-0.1) unstable; urgency=low
 
   * add affiliation contexts (new in sas2r08), sync to sas2r12
 
- -- Douglas Gilbert <dgilbert@interlog.org>  Sun, 23 Dec 2007 21:00:00 -0500
+ -- Douglas Gilbert <dgilbert@interlog.org>  Mon, 31 Dec 2007 01:00:00 -0500
 
 smp-utils (0.92-0.1) unstable; urgency=low
 

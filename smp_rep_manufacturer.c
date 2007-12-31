@@ -46,9 +46,11 @@
  * outputs its response.
  */
 
-static char * version_str = "1.06 20071225";
+static char * version_str = "1.06 20071231";
 
+#ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
+#endif
 
 
 static struct option long_options[] = {
