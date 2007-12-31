@@ -46,7 +46,11 @@
  * response.
  */
 
-static char * version_str = "1.08 20070127";
+static char * version_str = "1.09 20071231";
+
+#ifndef OVERRIDE_TO_SAS2
+#define OVERRIDE_TO_SAS2 0
+#endif
 
 
 static struct option long_options[] = {
@@ -101,7 +105,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len;
+    int res, c, k, j, len, sas2;
     int aff_context = 0;
     int do_hex = 0;
     int phy_id = 0;
@@ -123,6 +127,7 @@ int main(int argc, char * argv[])
     char * cp;
     int ret = 0;
 
+    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
@@ -325,7 +330,8 @@ int main(int argc, char * argv[])
     if (verbose || (res > 0))
         printf("  expander change count: %d\n", res);
     printf("  phy identifier: %d\n", smp_resp[9]);
-    printf("  STP I_T nexus loss occurred: %d\n", !!(smp_resp[11] & 0x4));
+    if (sas2)
+        printf("  STP I_T nexus loss occurred: %d\n", !!(smp_resp[11] & 0x4));
     printf("  affiliations supported: %d\n", !!(smp_resp[11] & 0x2));
     printf("  affiliation valid: %d\n", !!(smp_resp[11] & 0x1));
     ull = 0;
