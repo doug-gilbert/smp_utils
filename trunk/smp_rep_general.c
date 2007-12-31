@@ -45,9 +45,11 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.14 20071225";    /* sas2r12 */
+static char * version_str = "1.14 20071231";    /* sas2r12 */
 
+#ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
+#endif
 
 
 static struct option long_options[] = {

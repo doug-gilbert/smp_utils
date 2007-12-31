@@ -45,9 +45,11 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.12 20071225";    /* sas2r12 */
+static char * version_str = "1.12 20071231";    /* sas2r12 */
 
+#ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
+#endif
 
 struct opts_t {
     int do_brief;
