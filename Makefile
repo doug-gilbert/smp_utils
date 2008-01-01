@@ -71,6 +71,8 @@ clean:
 	cd sgv4 && $(MAKE) clean
 	/bin/rm -f *.o $(EXECS) core* .depend *.a *.la *.lo
 	/bin/rm -rf .libs
+	/bin/rm -f build-stamp configure-stamp debian/files debian/smp-utils.substvars
+	/bin/rm -rf debian/tmp debian/smp-utils
 
 smp_rep_general: smp_rep_general.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
