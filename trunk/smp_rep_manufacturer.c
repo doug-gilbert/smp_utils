@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Douglas Gilbert.
+ * Copyright (c) 2006-2008 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.06 20071231";
+static char * version_str = "1.06 20080101";
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -193,8 +193,8 @@ int main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name!\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+            fprintf(stderr, "missing device name on command line\n    [Could "
+                    "use environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
