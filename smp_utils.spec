@@ -54,7 +54,7 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Tue Jan 01 2008 - dgilbert at interlog dot com
+* Wed Jan 02 2008 - dgilbert at interlog dot com
 - sync with sas2r13, add 'sgv4' interface
   * smp_utils-0.93
 * Fri Dec 08 2006 - dgilbert at interlog dot com
