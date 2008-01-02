@@ -1,6 +1,6 @@
 .TH SMP_UTILS "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
-smp_* \- invoke a SMP function
+smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH SYNOPSIS
 .B smp_*
 [\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
@@ -27,13 +27,13 @@ initiator (e.g. '/dev/mptcl,0'). In this case the SMP target's
 SAS address must be supplied with \fI\-\-sa=SAS_ADDR\fR.
 .PP
 Another method is to have a \fISMP_DEVICE\fR which represents the SMP target.
-In this case no \fISMP_DEVICE\fR needs to be given (since it is implicit).
+In this case no \fISAS_ADDRESS\fR needs to be given (since it is implicit).
 This method may be simpler but it has some limitations (e.g. it assumes the
 SMP target has already been discovered which may not be the case for the
 initial discovery process).
 .PP
 Each utility in smp_utils attempts to work out which interface it has been
-given by examining the \fISMP_DEVICE\fR file. There are two interfaces
+given by examining the \fISMP_DEVICE\fR file. There are three interfaces
 supported currently:
 .TP
 \fBmpt\fR
@@ -79,7 +79,7 @@ the SMP_UTILS_SAS_ADDR environment variable is checked and if present
 its contents are used as the SAS address. SAS addresses are usually given
 in hex indicated by a leading '0x' or trailing 'h'.
 .PP
-In all cases command line options override the corresponding
+In both cases command line options override the corresponding
 environment variable.
 .SH COMMON OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
@@ -189,7 +189,7 @@ standards: the original SAS (SAS ANSI INCITS 376-2003) and SAS 1.1 (INCITS
 417-2006). SAS-2 technical work is ongoing and at the time of writing the
 most recent draft is sas2r13.pdf (see section 10.4.3 for SMP functions).
 To avoid confusion, the three generations of SAS will be referred to in
-these man pages as 1, 1.1 and 2 . Drafts, including those just prior to
+these man pages as SAS 1, 1.1 and 2 . Drafts, including those just prior to
 standardization can be found at the http://www.t10.org site.
 .PP
 The two utilities for reading and writing to GPIO registers, smp_read_gpio
@@ -202,9 +202,9 @@ additions in later standards.
 .PP
 The COVERAGE file in the smp_utils source tarball shows the mapping between
 all SMP function names defined in the standards, the versions of those
-standards in which those SMP functions are defined and the utility names.
-A lot of extra SMP functions have been added in SAS-2 and many do not have
-corresponding utilities at this time.
+standards in which those SMP functions are defined and the corresponding
+smp_utils utility names. A lot of extra SMP functions have been added in
+SAS-2 and many do not have corresponding utilities at this time.
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
@@ -216,6 +216,6 @@ This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
 .B smp_conf_general, smp_conf_route_info, smp_discover, smp_discover_list,
-.B smp_phy_control, smp_phy_test, smp_read_gpio, smp_rep_general,
-.B smp_rep_manufacturer, smp_rep_phy_err_log, smp_rep_phy_sata,
-.B smp_rep_route_info, smp_write_gpio, sg_logs(sg3_utils)
+.B smp_phy_control, smp_phy_test, smp_read_gpio, smp_rep_exp_route_tbl,
+.B smp_rep_general, smp_rep_manufacturer, smp_rep_phy_err_log,
+.B smp_rep_phy_sata, smp_rep_route_info, smp_write_gpio, sg_logs(sg3_utils)
