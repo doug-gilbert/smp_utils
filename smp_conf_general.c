@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Douglas Gilbert.
+ * Copyright (c) 2006-2008 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.00 20061206";
+static char * version_str = "1.01 20080101";
 
 
 static struct option long_options[] = {
@@ -229,8 +229,8 @@ int main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name!\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+            fprintf(stderr, "missing device name on command line\n    [Could "
+                    "use environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
