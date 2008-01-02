@@ -1,8 +1,8 @@
-.TH SMP_REP_PHY_ERR_LOG "8" "January 2007" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_REP_PHY_SATA "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
-smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
+smp_rep_phy_sata \- invoke REPORT PHY SATA SMP function
 .SH SYNOPSIS
-.B smp_rep_phy_err_log
+.B smp_rep_phy_sata
 [\fI\-\-affiliation=AC\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR]
 [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
@@ -10,7 +10,7 @@ smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) REPORT PHY ERROR LOG request function
+Sends a SAS Management Protocol (SMP) REPORT PHY SATA request function
 to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
 the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
 deduced from the \fISMP_DEVICE\fR. With one interface there is one
@@ -50,12 +50,16 @@ increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.SH CONFORMING TO
+The SMP REPORT PHY SATA function was introduced in SAS-1 .
+The "Expander change count", "STP I_T nexus loss occurred" and several other
+fields were added in SAS-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2007 Douglas Gilbert
+Copyright \(co 2006\-2008 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
