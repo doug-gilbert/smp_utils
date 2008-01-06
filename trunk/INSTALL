@@ -1,11 +1,14 @@
-Summary
--------
-To build and install using the tarball, extract the file from
+Linux
+-----
+To build and install using the tarball, extract the files from
 the tarball, change directory to the top level within the
 extracted tree, and then:
   # make
   # make install
 The second command will most likely require root privileges.
+
+To clean up after a build use the following command:
+  # make clean
 
 A "spec" file is included for building rpm packages. It is called
 smp_utils.spec . To build binary and source rpms place a copy of the
@@ -26,5 +29,20 @@ The binary deb packages will be placed in the parent directory (of
 the smp_utils source directory) if all goes well. The
 build_debian.sh script contains the above commands.
 
+
+FreeBSD
+-------
+This is an experimental port at this stage and only supports the MPT
+interface. To build and install, extract the files from
+the tarball, change directory to the top level within the
+extracted tree, and then:
+  # make -f Makefile.freebsd
+  # make -f Makefile.freebsd install
+The second command will most likely require root privileges.
+
+To clean up after a build use the following command:
+  # make -f Makefile.freebsd clean
+
+
 Douglas Gilbert
-16th August 2006
+6th January 2008

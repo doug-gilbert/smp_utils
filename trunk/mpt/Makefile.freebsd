@@ -12,12 +12,17 @@ OS_FLAGS = -DSMP_UTILS_FREEBSD
 LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
+INCLUDES = -I ../include
+
 # CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
 # CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
 CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 LDFLAGS = 
 # LDFLAGS = -v -lm
+
+.c.o:
+	$(CC) $(INCLUDES) $(CFLAGS) -c -o $@ $<
 
 all: $(EXECS)
 
