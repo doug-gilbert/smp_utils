@@ -1,0 +1,128 @@
+.TH SMP_DISCOVER "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.SH NAME
+smp_discover \- invoke DISCOVER SMP function
+.SH SYNOPSIS
+.B smp_discover
+[\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-list\fR] [\fI\-\-multiple\fR]
+[\fI\-\-num=NUM\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) DISCOVER request function to a SMP
+target and decodes or outputs the response. The SMP target is identified by
+the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface,
+the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. With one
+interface there is one \fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR
+syntax is needed to differentiate between HBAs if there are multiple present.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-b\fR, \fB\-\-brief\fR
+reduce the decoded response output. If used twice will exit if there is no
+attached device (after outputting that). When used with \fI\-\-multiple\fR,
+unattached phys are not listed; when used twice, trims attached phys
+output.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-i\fR, \fB\-\-ignore\fR
+sets the Ignore Zone Group bit in the SMP Discover request.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-l\fR, \fB\-\-list\fR
+list attributes in "name=value" form, one entry per line.
+.TP
+\fB\-m\fR, \fB\-\-multiple\fR
+loops over multiple phys within SMP target (typically an expander) and
+does a DISCOVER request and outputs a one line summary. Phy 0 is queried
+first, then phy 1, continuing until an error occurs. If \fI\-\-brief\fR is
+given then there is no output for phys that indicate there is no attached
+device; when used twice additionally trims the output line of attached phys.
+.TP
+\fB\-n\fR, \fB\-\-num\fR=\fINUM\fR
+number of phys to fetch, starting at \fI\-\-phy=ID\fR when the
+\fI\-\-multiple\fR option is given. The default value is 0 which is
+interpreted as "the rest" (i.e. until a "phy does not exist" function
+result is received). This option is ignored in the absence of the
+\fI\-\-multiple\fR option.
+.TP
+\fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
+phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
+SAS addresses are shown in hexadecimal. To give a number in hexadecimal
+either prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH SINGLE LINE FORMAT
+The \fI\-\-multiple\fR option causes SMP DISCOVER responses to be compressed
+to a header followed by one line per phy. To save space SAS addresses are
+shown in hex without a '0x' prefix or 'h' suffix. The header line gives the
+SAS address of the SMP target itself and assumes it is an expander.
+.PP
+Each line starts with "  phy  <n>:" where <n> is the phy
+identifier (and they are origin zero). That is followed by the routing
+attribute represented by a single letter which is either "D" for direct
+routing, "S" to subtractive routing or "T" for table routing. Then comes
+the negotiated physical link rate which is either "disabled", "reset
+problem" or "spinup hold". Other states are mapped to "attached". This
+includes enabled phys with nothing connected which appear
+as "attached:[0000000000000000:00]".
+.PP
+Information shown between the brackets is for the attached device.
+Phys that are connected display something
+like: "attached:[5000c50000520a2a:01 " where the first number is the
+attached SAS address (in hex) and the second number is the attached
+device's phy identifier. If the attached device type is other
+than an end device then one of these abbreviations is
+output: "exp" (for expander), "fex" (for fanout
+expander) or "res" (for unknown attached device type). If a phy is
+flagged as "virtual" then the letter "V" appears next. Next are the
+protocols supported by the attached device which are
+shown as "i(<list>)" for initiator protocols and/or "t(<list>)" for
+target protocols. The <list> is made up
+of "PORT_SEL", "SSP", "STP", "SMP" and "SATA" with "+" used as a
+separator. For example a SAS host adapter wi11 most likely appear
+as: "i(SSP+STP+SMP)". This completes the information about the
+attached phy, hence the closing right bracket.
+.PP
+Finally, if appropriate, the negotiated physical link rate is shown in
+gigabits per second. Here is an example of a line for expander
+phy identifier 11 connected to a SATA target (or SATA "device" to use
+the t13.org term):
+.PP
+  phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
+.SH CONFORMING TO
+The SMP DISCOVER function was introduced in SAS-1, with small additions
+in SAS-1.1 . There have been a large number of additions in SAS-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006\-2008 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_discover_list, smp_phy_control

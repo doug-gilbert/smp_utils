@@ -1,0 +1,63 @@
+.TH SMP_REP_PHY_ERR_LOG "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.SH NAME
+smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
+.SH SYNOPSIS
+.B smp_rep_phy_err_log
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) REPORT PHY ERROR LOG request function
+to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. With one interface there is one
+\fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
+differentiate between HBAs if there are multiple present.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
+phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
+SAS addresses are shown in hexadecimal. To give a number in hexadecimal
+either prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH CONFORMING TO
+The SMP REPORT PHY ERROR LOG function was introduced in SAS-1 .
+The "Expander change count" field was added in SAS-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006\-2008 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_phy_control(smp_utils)
