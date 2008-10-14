@@ -13,7 +13,8 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include <scsi/scsi.h>
+//#include <scsi/scsi.h>
+#include <linux/types.h>
 #include <scsi/sg.h>
 #include <linux/bsg.h>
 
