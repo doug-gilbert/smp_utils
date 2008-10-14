@@ -1,8 +1,6 @@
 #ifndef BSG_H
 #define BSG_H
 
-#include <linux/types.h>
-
 #define BSG_PROTOCOL_SCSI		0
 
 #define BSG_SUB_PROTOCOL_SCSI_CMD	0
@@ -57,20 +55,26 @@ struct sg_io_v4 {
 
 #if defined(CONFIG_BLK_DEV_BSG)
 struct bsg_class_device {
-	struct class_device *class_dev;
-	struct device *dev;
+	struct device *class_dev;
+	struct device *parent;
 	int minor;
 	struct request_queue *queue;
+	struct kref ref;
+	void (*release)(struct device *);
 };
 
-extern int bsg_register_queue(struct request_queue *, struct device *, const char *);
+extern int bsg_register_queue(struct request_queue *q,
+			      struct device *parent, const char *name,
+			      void (*release)(struct device *));
 extern void bsg_unregister_queue(struct request_queue *);
 #else
-static inline int bsg_register_queue(struct request_queue * rq, struct device *dev, const char *name)
+static inline int bsg_register_queue(struct request_queue *q,
+				     struct device *parent, const char *name,
+				     void (*release)(struct device *))
 {
 	return 0;
 }
-static inline void bsg_unregister_queue(struct request_queue *rq)
+static inline void bsg_unregister_queue(struct request_queue *q)
 {
 }
 #endif

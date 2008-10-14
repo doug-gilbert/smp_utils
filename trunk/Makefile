@@ -27,9 +27,12 @@ EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
 INCLUDES = -I include
 
-# CFLAGS = -O2 -Wall -W $(EXTRA_FLAGS)
-CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)
-# CFLAGS = -g -O2 -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
+# may be overridden by 'make -e'
+CFLAGS = -g -O2
+
+# MY_CFLAGS = -Wall -W $(EXTRA_FLAGS)
+MY_CFLAGS = -Wall -W $(EXTRA_FLAGS)
+# MY_CFLAGS = -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 
 CFLAGS_PTHREADS = -D_REENTRANT
 
@@ -41,7 +44,7 @@ LDFLAGS =
 # 	do $(MAKE) -C $$i CFLAGS="$(CFLAGS)" ; done
 
 .c.o:
-	$(CC) $(INCLUDES) $(CFLAGS) -c -o $@ $<
+	$(CC) $(INCLUDES) $(CFLAGS) $(MY_CFLAGS) -c -o $@ $<
 
 all: sub_mpt sub_sas_tpl sub_sgv4 libsmp.a $(EXECS)
 
