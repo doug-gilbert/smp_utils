@@ -34,6 +34,7 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 
 #define MPT_DEV_MAJOR 10
 #define MPT_DEV_MINOR 220
+#define MPT2_DEV_MINOR 221
 
 int chk_mpt_device(const char * dev_name, int verbose)
 {
@@ -44,22 +45,23 @@ int chk_mpt_device(const char * dev_name, int verbose)
             perror("chk_mpt_device: stat failed");
         return 0;
     }
-    if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
-        (MPT_DEV_MINOR == minor(st.st_rdev)))
-        return 1;
-    else {
-        if (verbose) {
-            if (S_ISCHR(st.st_mode))
-                fprintf(stderr, "chk_mpt_device: wanted char device "
-                        "major,minor=%d,%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
-                        MPT_DEV_MINOR, major(st.st_rdev), minor(st.st_rdev));
-            else
-                fprintf(stderr, "chk_mpt_device: wanted char device "
-                        "major,minor=%d,%d\n    didn't get char device\n",
-                        MPT_DEV_MAJOR, MPT_DEV_MINOR);
-        }
-        return 0;
+    if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev))) {
+        if ((MPT_DEV_MINOR == minor(st.st_rdev)) ||
+            (MPT2_DEV_MINOR == minor(st.st_rdev)))
+            return 1;
     }
+    if (verbose) {
+        if (S_ISCHR(st.st_mode))
+            fprintf(stderr, "chk_mpt_device: wanted char device "
+                    "major,minor=%d,%d-%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
+                    MPT_DEV_MINOR, MPT2_DEV_MINOR, major(st.st_rdev),
+                    minor(st.st_rdev));
+        else
+            fprintf(stderr, "chk_mpt_device: wanted char device "
+                    "major,minor=%d,%d-%d\n    but didn't get char device\n",
+                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR);
+    }
+    return 0;
 }
 
 int open_mpt_device(const char * dev_name, int verbose)
