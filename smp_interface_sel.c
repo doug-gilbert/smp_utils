@@ -80,7 +80,7 @@ int smp_initiator_open(const char * device_name, int subvalue,
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
         else if (verbose)
-            fprintf(stderr, "chk_mpt_device: interface not recognized\n");
+            fprintf(stderr, "smp_initiator_open: interface not recognized\n");
         cp = strchr(i_params, ',');
         if (cp) {
             if ((tobj->interface_selector > 0) &&
@@ -124,7 +124,7 @@ int smp_initiator_open(const char * device_name, int subvalue,
             tobj->opened = 1;
             return 0;
         } else if (verbose > 2)
-            fprintf(stderr, "chk_mpt_device: failed\n");
+            fprintf(stderr, "smp_initiator_open: chk_mpt_device failed\n");
     }
     if ((I_SAS_TPL == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) {
