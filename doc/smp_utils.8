@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_UTILS "8" "October 2008" "smp_utils\-0.94" SMP_UTILS
 .SH NAME
 smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH SYNOPSIS
@@ -23,7 +23,7 @@ Currently there are multiple interfaces that allow SMP functions to
 be passed through to a SMP target.
 .PP
 One method is to have a \fISMP_DEVICE\fR which is actually the SMP
-initiator (e.g. '/dev/mptcl,0'). In this case the SMP target's
+initiator (e.g. '/dev/mptctl,0'). In this case the SMP target's
 SAS address must be supplied with \fI\-\-sa=SAS_ADDR\fR.
 .PP
 Another method is to have a \fISMP_DEVICE\fR which represents the SMP target.
@@ -38,18 +38,19 @@ supported currently:
 .TP
 \fBmpt\fR
 This specifies the MPT fusion SAS pass\-through which uses the '/dev/mptctl'
-device node. If mpt drivers are loaded but '/dev/mptctl' is not present then
-a 'modprobe mptctl' command may be needed in Linux. If there are multiple
-mpt fusion controllers (HBAs) in the computer, then the user will need
-to specify which one to use with the syntax: '/dev/mptcl,<n>' where <n>
-is the "ioc_num". This number can be found in the log where the mptsas
-driver is registered. In Linux it can be found
+or '/dev/mpt2ctl' device node. If mpt drivers are loaded but '/dev/mptctl'
+or '/dev/mpt2ctl' are not present then a 'modprobe mptctl' command may be
+needed in Linux. If there are multiple mpt fusion controllers (HBAs) in the
+computer, then the user will need to specify which one to use with the
+syntax: '/dev/mptctl,<n>' where <n> is the "ioc_num". This number can be found
+in the log where the mptsas driver is registered. In Linux it can be found
 in '/proc/scsi/mptsas/<host_no>' in the 2.4 series and additionally
 in '/sys/class/scsi_host/host<n>/unique_id' in the 2.6 series. When this
 interface is used the \fI\-\-sa=SAS_ADDR\fR option must be given to specify
 the SAS address of the SMP target. When the mptctl driver is loaded in
 Linux there should be a character device node at '/dev/mptctl' with
-major 10 and minor 220.
+major 10 and minor 220. Alternatively there may be a character device node
+at '/dev/mpt2ctl' with major 10 and minor 221.
 .TP
 \fBsgv4\fR (\fBsg\fR)
 This interface is more generic and supported in the linux 2.6.24 kernel
