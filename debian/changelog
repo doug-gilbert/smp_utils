@@ -1,6 +1,6 @@
 smp-utils (0.94-0.1) unstable; urgency=low
 
-  * xxxxxxxxxxx
+  * make sgv4 includes more robust for lk 2.6.27
 
  -- Douglas Gilbert <dgilbert@interlog.org>  Sun, 06 Jan 2008 11:00:00 -0500
 
