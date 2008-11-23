@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.15 20080101";    /* sas2r13 */
+static char * version_str = "1.16 20081121";    /* sas2r15 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -327,11 +327,14 @@ int main(int argc, char * argv[])
            (smp_resp[4] << 8) + smp_resp[5]);
     printf("  expander route indexes: %d\n",
            (smp_resp[6] << 8) + smp_resp[7]);
+    printf("  long response: %d\n", !!(smp_resp[8] & 0x80));
     printf("  number of phys: %d\n", smp_resp[9]);
     if (sas2 || (verbose > 3)) {
         printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
-        /* printf("  zone address resolved supported: %d\n",
-                  !!(smp_resp[10] & 0x8)); */
+        printf("  zone configuring: %d\n", !!(smp_resp[10] & 0x40));
+        printf("  self configuring: %d\n", !!(smp_resp[10] & 0x20));
+        printf("  STP continue AWT: %d\n", !!(smp_resp[10] & 0x10));
+        printf("  open reject retry supported: %d\n", !!(smp_resp[10] & 0x8));
         printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
     }
     printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
@@ -409,6 +412,8 @@ int main(int argc, char * argv[])
            (smp_resp[64] << 8) + smp_resp[65]);
     printf("  maximum number of stored phy event list "
            "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
+    printf("  STP reject to open limit: %d\n",
+           (smp_resp[68] << 8) + smp_resp[69]);
 
 err_out:
     res = smp_initiator_close(&tobj);

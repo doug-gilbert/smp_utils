@@ -54,8 +54,8 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Tue Oct 14 2008 - dgilbert at interlog dot com
-- make sgv4 includes more robust for lk 2.6.27
+* Sat Nov 21 2008 - dgilbert at interlog dot com
+- adjust sgv4 for lk 2.6.27, sync with sas2r15
   * smp_utils-0.94
 * Sun Jan 06 2008 - dgilbert at interlog dot com
 - sync with sas2r13, add 'sgv4' interface
