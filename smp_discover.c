@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.13 20080101";    /* sas2r13 */
+static char * version_str = "1.14 20081122";    /* sas2r15 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -456,6 +456,7 @@ static int do_single(struct smp_target_obj * top,
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
+    unsigned int ui;
     int res, len, j, sas2;
     char b[256];
 
@@ -572,7 +573,7 @@ static int do_single(struct smp_target_obj * top,
         if (len < 76)
             return 0;
         printf("  self-configuration status: %d\n", smp_resp[64]);
-        printf("  self-configuration level completed: %d\n", smp_resp[65]);
+        printf("  self-configuration levels completed: %d\n", smp_resp[65]);
         ull = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
@@ -580,12 +581,34 @@ static int do_single(struct smp_target_obj * top,
             ull |= smp_resp[68 + j];
         }
         printf("  self-configuration sas address: 0x%llx\n", ull);
+        ui = 0;
+        for (j = 0; j < 4; ++j) {
+            if (j > 0)
+                ui <<= 8;
+            ui |= smp_resp[76 + j];
+        }
+        printf("  programmed phy capabilities: 0x%x\n", ui);
+        ui = 0;
+        for (j = 0; j < 4; ++j) {
+            if (j > 0)
+                ui <<= 8;
+            ui |= smp_resp[80 + j];
+        }
+        printf("  current phy capabilities: 0x%x\n", ui);
+        ui = 0;
+        for (j = 0; j < 4; ++j) {
+            if (j > 0)
+                ui <<= 8;
+            ui |= smp_resp[84 + j];
+        }
+        printf("  attached phy capabilities: 0x%x\n", ui);
     }
     if (len > 95) {
         printf("  reason: %s\n",
                smp_get_reason((0xf0 & smp_resp[94]) >> 4, sizeof(b), b));
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & smp_resp[94], sizeof(b), b));
+        printf("  negotiated SSC: %d\n", !!(smp_resp[95] & 0x2));
         printf("  hardware muxing supported: %d\n", !!(smp_resp[95] & 0x1));
     }
     if (len > 107) {
@@ -612,6 +635,11 @@ static int do_single(struct smp_target_obj * top,
         printf("  shadow zone group persistent: %d\n",
                !!(smp_resp[104] & 0x4));
         printf("  shadow zone group: %d\n", smp_resp[107]);
+    }
+    if (len > 115) {
+        printf("  device slot number: %d\n", smp_resp[108]);
+        printf("  device slot group number: %d\n", smp_resp[109]);
+        printf("  device slot group output connector: %.6s\n", smp_resp + 110);
     }
     return 0;
 }
