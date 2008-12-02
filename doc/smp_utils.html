@@ -57,7 +57,7 @@ original SAS (SAS
 ANSI INCITS 376-2003) and SAS 1.1 (INCITS 417-2006). SAS-2 technical
 work
 is ongoing and at the time of
-writing the most recent draft is sas2r13.pdf (see section 10.4.3 for
+writing the most recent draft is sas2r15.pdf (see section 10.4.3 for
 SMP functions). To avoid confusion, the three generations of SAS will
 be referred to here as 1, 1.1 and 2 . Drafts, including those
 just prior to standardization can be found at the <a
@@ -69,7 +69,7 @@ defined in the Small Form Factor document SFF-8485 found at <a
 The
 <span style="font-weight: bold;">smp_utils</span> package targets the
 linux kernel 2.4 and 2.6 series. Preliminary work has been done in
-version 0.93 to support FreeBSD and it should be reasonably easy to
+version 0.94 to support FreeBSD and it should be reasonably easy to
 port
 this package to other operating systems.<br>
 <br>
@@ -260,7 +260,8 @@ each request and response).<br>
 This package currently supports three interfaces: <br>
 <ul>
   <li><span style="font-weight: bold;">mpt</span>: based on the MPT
-Fusion <span style="font-family: monospace;">/dev/mptctl</span> device</li>
+Fusion <span style="font-family: monospace;">/dev/mptctl</span> or <span
+ style="font-family: monospace;">/dev/mpt2ctl</span> device</li>
   <li><span style="font-weight: bold;">sgv4</span>: (also <span
  style="font-weight: bold;">sg</span>) uses the SCSI generic version 4
 interface and the SAS transport layer (added in version 0.93 and
@@ -710,6 +711,17 @@ package</span><br>
       </table>
       </td>
     </tr>
+    <tr>
+      <td style="vertical-align: top;">0.94 beta<br>
+      </td>
+      <td style="vertical-align: top;"><a href="p/smp_utils-0.94.tgz">smp_utils-0.94.tgz</a></td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
   </tbody>
 </table>
 <br>
@@ -725,7 +737,7 @@ the link and select "Save link as ..." to download the file.<br>
 <br>
 <p>Return to <a href="index.html">main</a> page. </p>
 <center>
-<p>Last updated: 6th January 2008<br>
+<p>Last updated: 2nd December 2008<br>
 <br>
 </p>
 </center>
