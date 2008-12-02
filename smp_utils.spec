@@ -54,7 +54,7 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Sat Nov 21 2008 - dgilbert at interlog dot com
+* Tue Dec 02 2008 - dgilbert at interlog dot com
 - adjust sgv4 for lk 2.6.27, sync with sas2r15
   * smp_utils-0.94
 * Sun Jan 06 2008 - dgilbert at interlog dot com
