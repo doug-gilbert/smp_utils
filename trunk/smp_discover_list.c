@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.07 20080101";    /* sas2r13 */
+static char * version_str = "1.08 20081202";    /* sas2r15 */
 
 
 #define SMP_UTILS_TEST
@@ -764,6 +764,8 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
         return 0;
     printf("  reason: %s\n", smp_get_reason(0xf & (rp[7] >> 4),
                                             sizeof(b), b));
+    printf("  negotiated physical link rate: %s\n",
+           smp_get_neg_xxx_link_rate(0xf & rp[7], sizeof(b), b));
     printf("  zone group: %d\n", rp[8]);
     printf("  inside ZPSDS persistent: %d\n", !!(rp[9] & 0x20));
     printf("  requested inside ZPSDS: %d\n", !!(rp[9] & 0x10));
@@ -1122,12 +1124,12 @@ main(int argc, char * argv[])
     if (! opts.do_one) {
         printf("Discover list response header:\n");
         printf("  starting phy id: %d\n", sphy_id);
-        printf("  number of descriptors: %d\n", num_desc);
+        printf("  number of discover list descriptors: %d\n", num_desc);
     }
     resp_filter = resp[10] & 0xf;
     if (opts.filter != resp_filter)
-        fprintf(stderr, ">>> Requested filter was %d, got %d\n", opts.filter,
-                resp_filter);
+        fprintf(stderr, ">>> Requested phy filter was %d, got %d\n",
+                opts.filter, resp_filter);
     resp_desc_type = resp[11] & 0xf;
     if (opts.desc_type != resp_desc_type)
         fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
@@ -1137,9 +1139,11 @@ main(int argc, char * argv[])
         printf("  expander change count: %d\n", hdr_ecc);
         printf("  filter: %d\n", resp_filter);
         printf("  descriptor type: %d\n", resp_desc_type);
-        printf("  descriptor length (each, in bytes): %d\n", desc_len);
+        printf("  discover list descriptor length: %d\n", desc_len);
         printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
         printf("  zoning enabled: %d\n", !!(resp[16] & 0x40));
+        printf("  self configuring: %d\n", !!(resp[16] & 0x8));
+        printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
         printf("  configuring: %d\n", !!(resp[16] & 0x2));
         printf("  externally configurable route table: %d\n",
                !!(resp[16] & 0x1));
