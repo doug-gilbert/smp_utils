@@ -1,6 +1,5 @@
 This interface uses a device node used by various MPT Fusion
-drivers. It is called '/dev/mptctl' or '/dev/mpt2ctl' and it
-is a char device (major: 10, minor: 220 or 221).
+drivers. It is called '/dev/mptctl' and it is a char device.
 Currently a special module needs to loaded called 'mptctl'.
 This can be loaded with 'modprobe mptctl'. If there are multiple
 MPT Fusion HBAs on one computer then the following construction:
@@ -20,4 +19,4 @@ To save typing, the SMP host (i.e. '/dev/mptctl,<n>') can be
 placed in the SMP_UTILS_DEVICE environment variable
 
 Douglas Gilbert
-29th December 2008
+16th August 2006

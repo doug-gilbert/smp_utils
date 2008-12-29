@@ -61,7 +61,6 @@ extern "C" {
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL 0x4
 #define SMP_FN_REPORT_ZONE_MANAGER_PASS 0x5
 #define SMP_FN_REPORT_BROADCAST 0x6
-#define SMP_FN_READ_GPIO_REG_ENH 0x7
 #define SMP_FN_DISCOVER 0x10
 #define SMP_FN_REPORT_PHY_ERR_LOG 0x11
 #define SMP_FN_REPORT_PHY_SATA 0x12
@@ -74,7 +73,6 @@ extern "C" {
 #define SMP_FN_CONFIG_GENERAL 0x80
 #define SMP_FN_ENABLE_DISABLE_ZONING 0x81
 #define SMP_FN_WRITE_GPIO_REG 0x82
-#define SMP_FN_WRITE_GPIO_REG_ENH 0x83
 #define SMP_FN_ZONED_BROADCAST 0x85
 #define SMP_FN_ZONE_LOCK 0x86
 #define SMP_FN_ZONE_ACTIVATE 0x87
@@ -86,7 +84,6 @@ extern "C" {
 #define SMP_FN_PHY_CONTROL 0x91
 #define SMP_FN_PHY_TEST_FUNCTION 0x92
 #define SMP_FN_CONFIG_PHY_EVENT 0x93
-
 
 /* SMP function result values */
 #define SMP_FRES_FUNCTION_ACCEPTED 0x0
@@ -116,7 +113,6 @@ extern "C" {
 #define SMP_FRES_NO_PHYSICAL_PRESENCE 0x26
 #define SMP_FRES_SAVING_NOT_SUPPORTED 0x27
 #define SMP_FRES_SOURCE_ZONE_GROUP 0x28
-#define SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED 0x29
 
 /* Utilities can use these process status values for syntax errors and
    file (device node) problems (e.g. not found or permissions). Numbers

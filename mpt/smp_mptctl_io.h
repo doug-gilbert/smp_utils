@@ -3,8 +3,6 @@
 
 #include "smp_lib.h"
 
-/* These functions are the interface to upper level. */
-
 extern int chk_mpt_device(const char * dev_name, int verbose);
 
 extern int open_mpt_device(const char * dev_name, int verbose);

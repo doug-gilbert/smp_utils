@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "December 2008" "smp_utils\-0.94" SMP_UTILS
+.TH SMP_UTILS "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH SYNOPSIS
@@ -23,7 +23,7 @@ Currently there are multiple interfaces that allow SMP functions to
 be passed through to a SMP target.
 .PP
 One method is to have a \fISMP_DEVICE\fR which is actually the SMP
-initiator (e.g. '/dev/mptctl,0'). In this case the SMP target's
+initiator (e.g. '/dev/mptcl,0'). In this case the SMP target's
 SAS address must be supplied with \fI\-\-sa=SAS_ADDR\fR.
 .PP
 Another method is to have a \fISMP_DEVICE\fR which represents the SMP target.
@@ -38,19 +38,18 @@ supported currently:
 .TP
 \fBmpt\fR
 This specifies the MPT fusion SAS pass\-through which uses the '/dev/mptctl'
-or '/dev/mpt2ctl' device node. If mpt drivers are loaded but '/dev/mptctl'
-or '/dev/mpt2ctl' are not present then a 'modprobe mptctl' command may be
-needed in Linux. If there are multiple mpt fusion controllers (HBAs) in the
-computer, then the user will need to specify which one to use with the
-syntax: '/dev/mptctl,<n>' where <n> is the "ioc_num". This number can be found
-in the log where the mptsas driver is registered. In Linux it can be found
+device node. If mpt drivers are loaded but '/dev/mptctl' is not present then
+a 'modprobe mptctl' command may be needed in Linux. If there are multiple
+mpt fusion controllers (HBAs) in the computer, then the user will need
+to specify which one to use with the syntax: '/dev/mptcl,<n>' where <n>
+is the "ioc_num". This number can be found in the log where the mptsas
+driver is registered. In Linux it can be found
 in '/proc/scsi/mptsas/<host_no>' in the 2.4 series and additionally
 in '/sys/class/scsi_host/host<n>/unique_id' in the 2.6 series. When this
 interface is used the \fI\-\-sa=SAS_ADDR\fR option must be given to specify
 the SAS address of the SMP target. When the mptctl driver is loaded in
 Linux there should be a character device node at '/dev/mptctl' with
-major 10 and minor 220. Alternatively there may be a character device node
-at '/dev/mpt2ctl' with major 10 and minor 221.
+major 10 and minor 220.
 .TP
 \fBsgv4\fR (\fBsg\fR)
 This interface is more generic and supported in the linux 2.6.24 kernel
@@ -188,7 +187,7 @@ indicating that port is not connected.
 To date SAS has three generations. The first two generations are approved
 standards: the original SAS (SAS ANSI INCITS 376-2003) and SAS 1.1 (INCITS
 417-2006). SAS-2 technical work is ongoing and at the time of writing the
-most recent draft is sas2r15.pdf (see section 10.4.3 for SMP functions).
+most recent draft is sas2r13.pdf (see section 10.4.3 for SMP functions).
 To avoid confusion, the three generations of SAS will be referred to in
 these man pages as SAS 1, 1.1 and 2 . Drafts, including those just prior to
 standardization can be found at the http://www.t10.org site.

@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.94
+%define version 0.93
 %define release 1
 
 Summary:        Utilities for SAS management protocol (SMP)
@@ -8,8 +8,8 @@ Version:        %{version}
 Release:        %{release}
 License:        FreeBSD
 Group:          Utilities/System
-URL:            http://sg.danny.cz/sg/smp_utils.html
-Source0:        http://sg.danny.cz/sg/p/%{name}-%{version}.tgz
+URL:            http://www.torque.net/sg/smp_utils.html
+Source0:        http://www.torque.net/sg/p/%{name}-%{version}.tgz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
 Packager:       Douglas Gilbert <dgilbert at interlog dot com>
 
@@ -54,9 +54,6 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Mon Dec 29 2008 - dgilbert at interlog dot com
-- adjust sgv4 for lk 2.6.27, sync with sas2r15
-  * smp_utils-0.94
 * Sun Jan 06 2008 - dgilbert at interlog dot com
 - sync with sas2r13, add 'sgv4' interface
   * smp_utils-0.93

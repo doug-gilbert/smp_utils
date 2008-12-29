@@ -13,14 +13,13 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-//#include <scsi/scsi.h>
-#include <linux/types.h>
+#include <scsi/scsi.h>
 #include <scsi/sg.h>
 #include <linux/bsg.h>
 
 #include "smp_sgv4_io.h"
 
-#define DEF_TIMEOUT_MS 20000    /* 20 seconds */
+#define DEF_TIMEOUT_MS 20000	/* 20 seconds */
 
 
 int
@@ -57,11 +56,8 @@ chk_sgv4_device(const char * dev_name, int verbose)
     if (0 == strncmp(buff, "/sys/", 5)) {
         if (strstr(buff, "/bsg/")) {
             if (stat(buff, &st) < 0) {
-                if (verbose > 1) {
-                    fprintf(stderr, "chk_sgv4_device: stat() on %s "
-                            "failed: ", buff);
-                    perror("");
-                }
+                if (verbose > 1)
+                    perror("chk_sgv4_device: stat failed");
                 return 0;
             }
             return 1;
@@ -72,11 +68,8 @@ chk_sgv4_device(const char * dev_name, int verbose)
         cp = strrchr(buff, '/');
         snprintf(sysfs_nm, sizeof(sysfs_nm), "/sys/class/bsg/%s/dev", cp + 1);
         if (stat(sysfs_nm, &st) < 0) {
-            if (verbose > 1) {
-                fprintf(stderr, "chk_sgv4_device: stat() on redirected %s "
-                        "failed: ", sysfs_nm);
-                perror("");
-            }
+            if (verbose > 1)
+                perror("chk_sgv4_device: stat failed");
             return 0;
         }
         return 1;
@@ -191,11 +184,11 @@ int
 send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
 {
     struct sg_io_v4 hdr;
-    unsigned char cmd[16];      /* unused */
+    unsigned char cmd[16];	/* unused */
     int res;
 
     if (verbose > 2)
-        fprintf(stderr, "send_req_sgv4: fd=%d,  subvalue=%d\n", fd, subvalue);
+	fprintf(stderr, "send_req_sgv4: fd=%d,  subvalue=%d\n", fd, subvalue);
 
     memset(&hdr, 0, sizeof(hdr));
     memset(cmd, 0, sizeof(cmd));
@@ -204,7 +197,7 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     hdr.protocol = BSG_PROTOCOL_SCSI;
     hdr.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
     
-    hdr.request_len = sizeof(cmd);      /* unused */
+    hdr.request_len = sizeof(cmd);	/* unused */
     hdr.request = (uintptr_t) cmd;
 
     hdr.dout_xfer_len = rresp->request_len;
@@ -222,18 +215,18 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     }
     if (verbose) {
         fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
-                "%u\n", hdr.driver_status, hdr.transport_status);
+		"%u\n", hdr.driver_status, hdr.transport_status);
         fprintf(stderr, "    device_status=%u, duration=%u, info=%u\n",
-                hdr.device_status, hdr.duration, hdr.info);
+	        hdr.device_status, hdr.duration, hdr.info);
         fprintf(stderr, "    din_resid=%d, dout_resid=%d\n",
-                hdr.din_resid, hdr.dout_resid);
+	        hdr.din_resid, hdr.dout_resid);
     }
     rresp->act_response_len = -1;  /* hdr.din_xfer_len - hdr.din_resid */
     if (hdr.driver_status)
-        rresp->transport_err = hdr.driver_status;
+    	rresp->transport_err = hdr.driver_status;
     else if (hdr.transport_status)
-        rresp->transport_err = hdr.transport_status;
+    	rresp->transport_err = hdr.transport_status;
     else if (hdr.device_status)
-        rresp->transport_err = hdr.device_status;
+    	rresp->transport_err = hdr.device_status;
     return 0;
 }

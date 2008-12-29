@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.16 20081229";    /* sas-2 rev 15 */
+static char * version_str = "1.14 20080106";    /* sas-2 rev 13 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -59,12 +59,11 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     /* in numerical order by 'func' */
     {SMP_FN_REPORT_GENERAL, 0, 6},
     {SMP_FN_REPORT_MANUFACTURER, 0, 14},
-    {SMP_FN_READ_GPIO_REG, -3, -3}, /* obsolete, not applicable: SFF-8485 */
+    {SMP_FN_READ_GPIO_REG, -3, -3},     /* not applicable: see SFF-8485 */
     {SMP_FN_REPORT_SELF_CONFIG, -2, -2},
     {SMP_FN_REPORT_ZONE_PERMISSION_TBL, -2, -2},/* variable length response */
     {SMP_FN_REPORT_ZONE_MANAGER_PASS, -2, -2},
     {SMP_FN_REPORT_BROADCAST, -2, -2},
-    {SMP_FN_READ_GPIO_REG_ENH, -3, -3}, /* not applicable: SFF-8485 */
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
@@ -75,8 +74,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_EXP_ROUTE_TBL_LIST, -2, -2},
     {SMP_FN_CONFIG_GENERAL, 3, 0},
     {SMP_FN_ENABLE_DISABLE_ZONING, -2, 0},
-    {SMP_FN_WRITE_GPIO_REG, -3, -3}, /* obsolete, not applicable: SFF-8485 */
-    {SMP_FN_WRITE_GPIO_REG_ENH, -3, -3}, /* not applicable: SFF-8485 */
+    {SMP_FN_WRITE_GPIO_REG, -3, -3},    /* not applicable: see SFF-8485 */
     {SMP_FN_ZONED_BROADCAST, -2, 0},            /* variable length request */
     {SMP_FN_ZONE_LOCK, -2, -2},
     {SMP_FN_ZONE_ACTIVATE, -2, 0},
@@ -91,8 +89,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {-1, -1, -1},
 };
 
-int
-smp_get_func_def_req_len(int func_code)
+int smp_get_func_def_req_len(int func_code)
 {
     struct smp_func_def_rrlen * drlp;
 
@@ -103,8 +100,7 @@ smp_get_func_def_req_len(int func_code)
     return -1;
 }
 
-int
-smp_get_func_def_resp_len(int func_code)
+int smp_get_func_def_resp_len(int func_code)
 {
     struct smp_func_def_rrlen * drlp;
 
@@ -147,12 +143,10 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_NO_PHYSICAL_PRESENCE, "No physical presence"},
     {SMP_FRES_SAVING_NOT_SUPPORTED, "Saving not supported"},
     {SMP_FRES_SOURCE_ZONE_GROUP, "Source zone group does not exist"},
-    {SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED, "Disable password not supported"},
     {0x0, NULL},
 };
 
-char *
-smp_get_func_res_str(int func_res, int buff_len, char * buff)
+char * smp_get_func_res_str(int func_res, int buff_len, char * buff)
 {
     struct smp_val_name * vnp;
 
@@ -180,8 +174,7 @@ int smp_is_naa5(unsigned long long addr)
 static char safe_errbuf[64] = {'u', 'n', 'k', 'n', 'o', 'w', 'n', ' ',
                                'e', 'r', 'r', 'n', 'o', ':', ' ', 0};
 
-char *
-safe_strerror(int errnum)
+char * safe_strerror(int errnum)
 {
     size_t len;
     char * errstr;
@@ -203,8 +196,7 @@ safe_strerror(int errnum)
        > 0     each line has address then up to 16 ASCII-hex bytes
        = 0     in addition, the bytes are listed in ASCII to the right
        < 0     only the ASCII-hex bytes are listed (i.e. without address) */
-void
-dStrHex(const char* str, int len, int no_ascii)
+void dStrHex(const char* str, int len, int no_ascii)
 {
     const char* p = str;
     unsigned char c;
@@ -274,8 +266,7 @@ dStrHex(const char* str, int len, int no_ascii)
    then -1 is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
    Main (SI) multipliers supported: K, M, G. */
-int
-smp_get_num(const char * buf)
+int smp_get_num(const char * buf)
 {
     int res, num, n, len;
     unsigned int unum;
@@ -355,8 +346,7 @@ smp_get_num(const char * buf)
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
    Main (SI) multipliers supported: K, M, G, T, P. */
-long long
-smp_get_llnum(const char * buf)
+long long smp_get_llnum(const char * buf)
 {
     int res, len;
     long long num, ll;
@@ -449,8 +439,7 @@ smp_get_llnum(const char * buf)
     }
 }
 
-const char *
-smp_lib_version()
+const char * smp_lib_version()
 {
         return version_str;
 }

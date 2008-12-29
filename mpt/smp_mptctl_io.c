@@ -34,14 +34,8 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 
 #define MPT_DEV_MAJOR 10
 #define MPT_DEV_MINOR 220
-#define MPT2_DEV_MINOR 221
 
-static const char null_sas_addr[8];
-
-
-/* Part of interface to upper level. */
-int
-chk_mpt_device(const char * dev_name, int verbose)
+int chk_mpt_device(const char * dev_name, int verbose)
 {
     struct stat st;
 
@@ -50,28 +44,25 @@ chk_mpt_device(const char * dev_name, int verbose)
             perror("chk_mpt_device: stat failed");
         return 0;
     }
-    if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev))) {
-        if ((MPT_DEV_MINOR == minor(st.st_rdev)) ||
-            (MPT2_DEV_MINOR == minor(st.st_rdev)))
-            return 1;
+    if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
+        (MPT_DEV_MINOR == minor(st.st_rdev)))
+        return 1;
+    else {
+        if (verbose) {
+            if (S_ISCHR(st.st_mode))
+                fprintf(stderr, "chk_mpt_device: wanted char device "
+                        "major,minor=%d,%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
+                        MPT_DEV_MINOR, major(st.st_rdev), minor(st.st_rdev));
+            else
+                fprintf(stderr, "chk_mpt_device: wanted char device "
+                        "major,minor=%d,%d\n    didn't get char device\n",
+                        MPT_DEV_MAJOR, MPT_DEV_MINOR);
+        }
+        return 0;
     }
-    if (verbose) {
-        if (S_ISCHR(st.st_mode))
-            fprintf(stderr, "chk_mpt_device: wanted char device "
-                    "major,minor=%d,%d-%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
-                    MPT_DEV_MINOR, MPT2_DEV_MINOR, major(st.st_rdev),
-                    minor(st.st_rdev));
-        else
-            fprintf(stderr, "chk_mpt_device: wanted char device "
-                    "major,minor=%d,%d-%d\n    but didn't get char device\n",
-                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR);
-    }
-    return 0;
 }
 
-/* Part of interface to upper level. */
-int
-open_mpt_device(const char * dev_name, int verbose)
+int open_mpt_device(const char * dev_name, int verbose)
 {
     int res;
 
@@ -83,9 +74,7 @@ open_mpt_device(const char * dev_name, int verbose)
     return res;
 }
 
-/* Part of interface to upper level. */
-int
-close_mpt_device(int fd)
+int close_mpt_device(int fd)
 {
     return close(fd);
 }
@@ -110,8 +99,7 @@ void SmpImmediateIoctl(int fd, int ioc_num);
  * Generic command to issue the MPT command using the special
  * SDI_IOC | 0x01 Ioctl Function.
  *****************************************************************/
-int
-issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
+int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 {
         int CmdBlkSize;
         int status = -1;
@@ -153,10 +141,8 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
         return status;
 }
 
-/* Part of interface to upper level. */
-int
-send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
-             struct smp_req_resp * rresp, int verbose)
+int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
+                 struct smp_req_resp * rresp, int verbose)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
@@ -168,12 +154,6 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         unsigned char * ucp;
         int ret = -1;
 
-        if (verbose && (0 == memcmp(target_sa, null_sas_addr, 8))) {
-                fprintf(stderr, "The MPT interface typically needs SAS "
-                        "address of target (e.g. expander).\n");
-                fprintf(stderr, "A '--sa=SAS_ADDR' command line option "
-                        "may be required. See man page.\n");
-        }
         if (verbose > 2) {
                 fprintf(stderr, "send_req_mpt: subvalue=%d  ", subvalue);
                 fprintf(stderr, "SAS address=0x");
@@ -321,8 +301,7 @@ err_out:
  * ConfigIoctl
  *
  *****************************************************************/
-void
-SmpTwoSGLsIoctl(int fd, int ioc_num)
+void SmpTwoSGLsIoctl(int fd, int ioc_num)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
@@ -406,8 +385,7 @@ err_out:
         return;
 }
 
-void
-SmpImmediateIoctl(int fd, int ioc_num)
+void SmpImmediateIoctl(int fd, int ioc_num)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;

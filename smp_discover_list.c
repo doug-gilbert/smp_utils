@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  */
 
-static char * version_str = "1.09 20081216";    /* sas2r15 */
+static char * version_str = "1.07 20080101";    /* sas2r13 */
 
 
 #define SMP_UTILS_TEST
@@ -557,14 +557,13 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     return 0;
 }
 
-/* long format: as described in (full, single) DISCOVER response */
+/* long format: similar to DISCOVER response */
 static int
 decode_desc0_multiline(const unsigned char * resp, int offset,
                        int hdr_ecc, struct opts_t * optsp)
 {
     const unsigned char *rp;
     unsigned long long ull;
-    unsigned int ui;
     int func_res, phy_id, ecc, adt, route_attr, len, j;
     char b[256];
 
@@ -677,27 +676,6 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
             ull |= rp[68 + j];
         }
         printf("  self-configuration sas address: 0x%llx\n", ull);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[76 + j];
-        }
-        printf("  programmed phy capabilities: 0x%x\n", ui);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[80 + j];
-        }
-        printf("  current phy capabilities: 0x%x\n", ui);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[84 + j];
-        }
-        printf("  attached phy capabilities: 0x%x\n", ui);
     }
     if (len > 95) {
         printf("  reason: %s\n",
@@ -705,7 +683,6 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
         printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
-        printf("  negotiated SSC: %d\n", !!(rp[95] & 0x2));
     }
     if (len > 107) {
         printf("  default inside ZPSDS persistent: %d\n", !!(rp[96] & 0x20));
@@ -722,12 +699,6 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
         printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
         printf("  shadow zone group: %d\n", rp[107]);
-    }
-    if (len > 115) {
-        printf("  device slot number: %d\n", rp[108]);
-        printf("  device slot group number: %d\n", rp[109]);
-        printf("  device slot group output connector: %.6s\n", rp + 110);
-
     }
     return 0;
 }
@@ -793,8 +764,6 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
         return 0;
     printf("  reason: %s\n", smp_get_reason(0xf & (rp[7] >> 4),
                                             sizeof(b), b));
-    printf("  negotiated physical link rate: %s\n",
-           smp_get_neg_xxx_link_rate(0xf & rp[7], sizeof(b), b));
     printf("  zone group: %d\n", rp[8]);
     printf("  inside ZPSDS persistent: %d\n", !!(rp[9] & 0x20));
     printf("  requested inside ZPSDS: %d\n", !!(rp[9] & 0x10));
@@ -1153,12 +1122,12 @@ main(int argc, char * argv[])
     if (! opts.do_one) {
         printf("Discover list response header:\n");
         printf("  starting phy id: %d\n", sphy_id);
-        printf("  number of discover list descriptors: %d\n", num_desc);
+        printf("  number of descriptors: %d\n", num_desc);
     }
     resp_filter = resp[10] & 0xf;
     if (opts.filter != resp_filter)
-        fprintf(stderr, ">>> Requested phy filter was %d, got %d\n",
-                opts.filter, resp_filter);
+        fprintf(stderr, ">>> Requested filter was %d, got %d\n", opts.filter,
+                resp_filter);
     resp_desc_type = resp[11] & 0xf;
     if (opts.desc_type != resp_desc_type)
         fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
@@ -1168,11 +1137,9 @@ main(int argc, char * argv[])
         printf("  expander change count: %d\n", hdr_ecc);
         printf("  filter: %d\n", resp_filter);
         printf("  descriptor type: %d\n", resp_desc_type);
-        printf("  discover list descriptor length: %d\n", desc_len);
+        printf("  descriptor length (each, in bytes): %d\n", desc_len);
         printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
         printf("  zoning enabled: %d\n", !!(resp[16] & 0x40));
-        printf("  self configuring: %d\n", !!(resp[16] & 0x8));
-        printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
         printf("  configuring: %d\n", !!(resp[16] & 0x2));
         printf("  externally configurable route table: %d\n",
                !!(resp[16] & 0x1));

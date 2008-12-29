@@ -18,7 +18,6 @@ LARGE_FILE_FLAGS = -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 EXTRA_FLAGS = $(OS_FLAGS) $(LARGE_FILE_FLAGS)
 
 INCLUDES = -I ../include -I $(KSRC)/include -idirafter ../include/dummy
-# INCLUDES = -I ../include -idirafter ../include/dummy
 
 # CFLAGS =  -O2 -Wall -W $(EXTRA_FLAGS)
 CFLAGS = -g -O2 -Wall -W $(EXTRA_FLAGS)

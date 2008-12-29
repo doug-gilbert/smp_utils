@@ -1,4 +1,4 @@
-.TH SMP_PHY_TEST "8" "December 2008" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_PHY_TEST "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_phy_test \- invoke PHY TEST FUNTION SMP function
 .SH SYNOPSIS
@@ -73,9 +73,8 @@ transmits the test pattern at the specified physical link rate:
 8 \-> 1.5 Gbps, 9 \-> 3 Gbps, 10 \-> 6 Gbps. Default value is 9.
 .TP
 \fB\-P\fR, \fB\-\-pattern\fR=\fIPA\fR
-specifies the type of test pattern to transmit. SAS-2 (rev15) values are:
-1 \-> JTPAT, 2 \-> CJTPAT, 10h \-> TRAIN, 11h \-> TRAIN_DONE, 12h \-> IDLE,
-13h \-> SCRAMBLED_0, 40h \-> "two_dwords".  Default value is 2.
+specifies the type of test pattern to transmit. Permitted values are:
+1 \-> JTPAT, 2 \-> CJTPAT, 40h \-> "two_dwords".  Default value is 2.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.

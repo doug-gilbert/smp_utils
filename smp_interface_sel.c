@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2007 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,10 +45,9 @@
 #define I_MPT 2
 #define I_SGV4 4
 
-int
-smp_initiator_open(const char * device_name, int subvalue,
-                   const char * i_params, unsigned long long sa,
-                   struct smp_target_obj * tobj, int verbose)
+int smp_initiator_open(const char * device_name, int subvalue,
+                       const char * i_params, unsigned long long sa,
+                       struct smp_target_obj * tobj, int verbose)
 {
     int force = 0;
     char * cp;
@@ -81,7 +80,7 @@ smp_initiator_open(const char * device_name, int subvalue,
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
         else if (verbose)
-            fprintf(stderr, "smp_initiator_open: interface not recognized\n");
+            fprintf(stderr, "chk_mpt_device: interface not recognized\n");
         cp = strchr(i_params, ',');
         if (cp) {
             if ((tobj->interface_selector > 0) &&
@@ -125,7 +124,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             tobj->opened = 1;
             return 0;
         } else if (verbose > 2)
-            fprintf(stderr, "smp_initiator_open: chk_mpt_device failed\n");
+            fprintf(stderr, "chk_mpt_device: failed\n");
     }
     if ((I_SAS_TPL == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) {
@@ -147,9 +146,8 @@ err_out:
     return -1;
 }
 
-int
-smp_send_req(const struct smp_target_obj * tobj,
-             struct smp_req_resp * rresp, int verbose)
+int smp_send_req(const struct smp_target_obj * tobj,
+                 struct smp_req_resp * rresp, int verbose)
 {
     if ((NULL == tobj) || (0 == tobj->opened)) {
         if (verbose)
@@ -179,8 +177,7 @@ smp_send_req(const struct smp_target_obj * tobj,
     }
 }
 
-int
-smp_initiator_close(struct smp_target_obj * tobj)
+int smp_initiator_close(struct smp_target_obj * tobj)
 {
     int res;
 
@@ -207,10 +204,9 @@ smp_initiator_close(struct smp_target_obj * tobj)
 
 #define I_MPT 2
 
-int
-smp_initiator_open(const char * device_name, int subvalue,
-                   const char * i_params, unsigned long long sa,
-                   struct smp_target_obj * tobj, int verbose)
+int smp_initiator_open(const char * device_name, int subvalue,
+                       const char * i_params, unsigned long long sa,
+                       struct smp_target_obj * tobj, int verbose)
 {
     int force = 0;
     char * cp;
@@ -270,9 +266,8 @@ err_out:
     return -1;
 }
 
-int
-smp_send_req(const struct smp_target_obj * tobj, struct smp_req_resp * rresp,
-             int verbose)
+int smp_send_req(const struct smp_target_obj * tobj,
+                 struct smp_req_resp * rresp, int verbose)
 {
     if ((NULL == tobj) || (0 == tobj->opened)) {
         if (verbose)
@@ -289,8 +284,7 @@ smp_send_req(const struct smp_target_obj * tobj, struct smp_req_resp * rresp,
     }
 }
 
-int
-smp_initiator_close(struct smp_target_obj * tobj)
+int smp_initiator_close(struct smp_target_obj * tobj)
 {
     int res;
 

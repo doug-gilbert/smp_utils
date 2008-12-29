@@ -20,8 +20,7 @@ DISCOVER LIST                         2                smp_discover_list
 ENABLE DISABLE ZONING                 2    
 PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
-READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
-READ GPIO REGISTER ENHANCED           SFF-8485*
+READ GPIO REGISTER                    SFF-8485         smp_read_gpio
 REPORT BROADCAST                      2    
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
@@ -35,25 +34,19 @@ REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
 REPORT SELF-CONFIGURATION STATUS      2    
 REPORT ZONE MANAGER PASSWORD          2    
 REPORT ZONE PERMISSION TABLE          2    
-WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
-WRITE GPIO REGISTER ENHANCED          SFF-8485*
+WRITE GPIO REGISTER                   SFF-8485         smp_write_gpio
 ZONE ACTIVATE                         2    
 ZONE LOCK                             2    
 ZONE UNLOCK                           2    
 ZONED BROADCAST                       2    
 
-*  in sas2r15 the non-ENHANCED versions are marked as obsolete but the
-   ENHANCED version are not yet defined in the most recent SFF-8485
-   (rev 0.7).
-
-There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
-replacing 2 obsoleted in SFF-8485). smp_utils currently implements 14
-functions.
+There are 27 SMP functions defined in sas2r13.pdf (plus 2 in SFF-8485)
+of which smp_utils currently implements 14.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
 SAS-1.1 standard (ANSI INCITS 417-2006). The most recent draft of SAS-2
-is sas2r15.pdf and is being submitted for approval.
+is sas2r13.pdf .
 
 At this time all SMP functions introduced in the original standard
 and SAS-1.1 have corresponding smp_utils utilities. Currently
@@ -62,4 +55,4 @@ corresponding to a newly introduced function in SAS-2.
 
 
 Doug Gilbert
-26th December 2008
+6th January 2008
