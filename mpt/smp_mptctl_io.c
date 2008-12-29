@@ -169,10 +169,10 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         int ret = -1;
 
         if (verbose && (0 == memcmp(target_sa, null_sas_addr, 8))) {
-                fprintf(stderr, "mpt interface typically needs SAS "
-                        "address of target (e.g expander).\n");
+                fprintf(stderr, "The MPT interface typically needs SAS "
+                        "address of target (e.g. expander).\n");
                 fprintf(stderr, "A '--sa=SAS_ADDR' command line option "
-                        "may be required\n");
+                        "may be required. See man page.\n");
         }
         if (verbose > 2) {
                 fprintf(stderr, "send_req_mpt: subvalue=%d  ", subvalue);
