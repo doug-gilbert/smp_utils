@@ -8,8 +8,8 @@ Version:        %{version}
 Release:        %{release}
 License:        FreeBSD
 Group:          Utilities/System
-URL:            http://www.torque.net/sg/smp_utils.html
-Source0:        http://www.torque.net/sg/p/%{name}-%{version}.tgz
+URL:            http://sg.danny.cz/sg/smp_utils.html
+Source0:        http://sg.danny.cz/sg/p/%{name}-%{version}.tgz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
 Packager:       Douglas Gilbert <dgilbert at interlog dot com>
 
@@ -54,7 +54,7 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Tue Dec 02 2008 - dgilbert at interlog dot com
+* Mon Dec 29 2008 - dgilbert at interlog dot com
 - adjust sgv4 for lk 2.6.27, sync with sas2r15
   * smp_utils-0.94
 * Sun Jan 06 2008 - dgilbert at interlog dot com
