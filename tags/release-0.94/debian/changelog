@@ -1,0 +1,30 @@
+smp-utils (0.94-0.1) unstable; urgency=low
+
+  * make sgv4 includes more robust for lk 2.6.27
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 29 Dec 2008 12:30:00 -0500
+
+smp-utils (0.93-0.1) unstable; urgency=low
+
+  * add affiliation contexts (new in sas2r08), sync to sas2r12
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Sun, 06 Jan 2008 11:00:00 -0500
+
+smp-utils (0.92-0.1) unstable; urgency=low
+
+  * sync against sas2r07, add smp_conf_general
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Fri, 08 Dec 2006 13:00:00 -0500
+
+smp-utils (0.91-0.1) unstable; urgency=low
+
+  * add smp_phy_test and smp_discover_list, uniform exit status values
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Tue, 22 Aug 2006 16:00:00 -0400
+
+smp-utils (0.90-0.1) unstable; urgency=low
+
+  * Initial release
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 10 Jun 2006 19:00:00 -0400
+

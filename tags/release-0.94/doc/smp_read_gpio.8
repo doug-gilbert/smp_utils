@@ -1,0 +1,86 @@
+.TH SMP_READ_GPIO "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.SH NAME
+smp_read_gpio \- invoke READ GPIO REGISTER SMP function
+.SH SYNOPSIS
+.B smp_read_gpio
+[\fI\-\-count=CO\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=IN\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-type=TY\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) READ GPIO REGISTER request to a SMP
+target. The SMP target is identified by the \fISMP_DEVICE\fR and the
+\fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be deduced
+from the \fISMP_DEVICE\fR. With one interface there is one \fISMP_DEVICE\fR
+per machine so the \fISMP_DEVICE,N\fR syntax is needed to differentiate
+between HBAs if there are multiple present.
+.PP
+This function is defined in SFF\-8485 ( see www.sffcommittee.com )
+together with its corresponding WRITE GPIO REGISTER SMP function.
+The other SMP functions are defined in SAS documents at www.t10.org .
+SFF\-8485 defines a curious device called a "virtual SMP port"
+that lives in a host bus adapter (HBA) and allows SMP to manipulate
+the sideband signals on wide internal cables. To stop other initiators
+in a multi\-initiator domain from accessing those sideband signals,
+the virtual SMP (target) port is not indicated in a DISCOVER response.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-c\fR, \fB\-\-count\fR=\fICO\fR
+where \fICO\fR is the register count. This is the number of (4 byte)
+registers to request. The default value is 1.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
+where \fIIN\fR is the register index. This value is origin zero and its
+default value is 0. If the request succeeds, then \fI\-\-count=CO\fR
+registers starting from \fI\-\-index=IN\fR of the given \fI\-\-type=TY\fR
+should be in the response.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
+SAS addresses are shown in hexadecimal. To give a number in hexadecimal
+either prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-t\fR, \fB\-\-type\fR=\fITY\fR
+where \fITY\fR is the register type. The default value is 0 (GPIO_CFG).
+If the request succeeds, then \fI\-\-count=CO\fR registers starting from
+\fI\-\-index=IN\fR of the given \fI\-\-type=TY\fR should be in the response.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH CONFORMING TO
+The SMP READ GPIO REGISTER function is defined in SFF\-8485 (see
+www.sffcommittee.com ) together with its corresponding WRITE
+GPIO REGISTER SMP function.
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006\-2008 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_write_gpio(smp_utils)
