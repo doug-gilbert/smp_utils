@@ -2,14 +2,15 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.94 [20081202] [svn:r37]
+Changelog for smp_utils-0.94 [20081229] [svn:r38]
   - smp_discover: sync to sas2r15
-  - smp_discover_list: sync to sas2r15 (more to do)
+  - smp_discover_list: sync to sas2r15
   - smp_rep_general: sync to sas2r15
+  - smp_rep_exp_route_tbl: sync to sas2r15
   - smp_lib: sync to sas2r15
   - sgv4: more detail in error messages
   - sgv4: drop scsi.h include, gives problems with lk 2.6.27
-  - mpt: allow either /dev/mptctl or /dev/mpt2ctl [10,200-221]
+  - mpt: allow either /dev/mptctl or /dev/mpt2ctl [10;220-221]
 
 Changelog for smp_utils-0.93 [20080106] [svn:r7]
   - sgv4: add new interface

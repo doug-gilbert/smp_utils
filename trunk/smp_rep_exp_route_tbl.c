@@ -46,14 +46,14 @@
  * its response.
  */
 
-static char * version_str = "1.03 20080101";
+static char * version_str = "1.04 20081224";    /* sync with sas2r15 */
 
 
 #define SMP_UTILS_TEST
 
 #ifdef SMP_UTILS_TEST
 static unsigned char tst1_resp[] = {
-    0x41, 0x17, 0, 11, 0, 1, 0, 2, 0x0, 0x0, 0, 1,
+    0x41, 0x22, 0, 11, 0, 1, 0, 2, 0x0, 0x0, 4, 1,
     0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0x0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -64,7 +64,7 @@ static unsigned char tst1_resp[] = {
     0, 0, 0, 0};
 
 static unsigned char tst2_resp[] = {
-    0x41, 0x17, 0, 15, 0, 1, 0, 2, 0x0, 0x0, 0, 2,
+    0x41, 0x22, 0, 15, 0, 1, 0, 2, 0x0, 0x0, 4, 2,
     0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0x0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -280,8 +280,8 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
 int
 main(int argc, char * argv[])
 {
-    int res, c, len, exp_cc, sphy_id, num_desc;
-    int k, j, err, off, exp_rtcc, zg_valid;
+    int res, c, len, exp_cc, sphy_id, num_desc, desc_len;
+    int k, j, err, off, exp_rtcc;
     long long sa_ll;
     unsigned long long ull;
     char i_params[256];
@@ -446,31 +446,35 @@ main(int argc, char * argv[])
     len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
     exp_cc = (resp[4] << 8) + resp[5];
     exp_rtcc = (resp[6] << 8) + resp[7];
-    num_desc = (resp[10] << 8) + resp[11];
+    desc_len = resp[10];
+    num_desc = resp[11];
     sphy_id = resp[19];
     printf("Report expander route table response header:\n");
     printf("  expander change count: %d\n", exp_cc);
     printf("  expander route table change count: %d\n", exp_rtcc);
+    printf("  self configuring: %d\n", !!(resp[8] & 0x8));
+    printf("  zone configuring: %d\n", !!(resp[8] & 0x4));
     printf("  configuring: %d\n", !!(resp[8] & 0x2));
-    printf("  number of report expander route table descriptors: %d\n",
-           num_desc);
+    printf("  zone enabled: %d\n", !!(resp[8] & 0x1));
+    printf("  expander route table descriptor length: %d dwords\n", desc_len);
+    printf("  number of expander route table descriptors: %d\n", num_desc);
     printf("  first routed SAS address index: %d\n",
            (resp[12] << 8) + resp[13]);
     printf("  last routed SAS address index: %d\n",
            (resp[14] << 8) + resp[15]);
     printf("  starting phy id: %d\n", sphy_id);
 
-    if (len != (32 + (num_desc * 16))) {
+    if (len != (32 + (num_desc * (desc_len * 4)))) {
         fprintf(stderr, ">>> Response length of %d bytes doesn't match "
-                "%d descriptors, each\n  of 16 bytes plus a 32 byte "
-                "header and 4 byte CRC\n", len + 4, num_desc);
-        if (len < (32 + (num_desc * 16))) {
+                "%d descriptors, each\n  of %d bytes plus a 32 byte "
+                "header and 4 byte CRC\n", len + 4, num_desc, desc_len * 4);
+        if (len < (32 + (num_desc * (desc_len * 4)))) {
             ret = SMP_LIB_CAT_MALFORMED;
             goto finish;
         }
     }
     for (k = 0, err = 0; k < num_desc; ++k) {
-        off = 32 + (k * 16);
+        off = 32 + (k * (desc_len * 4));
         printf("  descriptor %d:\n", k + 1);
         for (j = 0, ull = 0; j < 8; ++j) {
             if (j > 0)
@@ -482,10 +486,11 @@ main(int argc, char * argv[])
         for (j = 0; j < 6; ++j)
             printf("%02x", resp[off + 8 + j]);
         printf("\n");
-        zg_valid = !!(resp[off + 14] & 0x80);
-        printf("    zone group valid: %d\n", zg_valid);
-        if (zg_valid)
-            printf("    zone group: %d\n", resp[off + 15]);
+#if 0
+        // gone is sas2r15
+        printf("    zone group valid: %d\n", !!(resp[off + 14] & 0x80));
+#endif
+        printf("    zone group: %d\n", resp[off + 15]);
     }
 
 finish:
