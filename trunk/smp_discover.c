@@ -45,7 +45,7 @@
  * This utility issues a DISCOVER function and outputs its response.
  */
 
-static char * version_str = "1.14 20081122";    /* sas2r15 */
+static char * version_str = "1.15 20081229";    /* sas2r15 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -82,7 +82,8 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "Usage: "
           "smp_discover [--brief] [--help] [--hex] [--ignore] "
@@ -119,7 +120,8 @@ static void usage()
 
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -149,7 +151,8 @@ static char * smp_short_attached_device_type[] = {
     "res",
 };
 
-static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
+static char *
+smp_get_plink_rate(int val, int prog, int b_len, char * b)
 {
     switch (val) {
     case 0:
@@ -174,7 +177,8 @@ static char * smp_get_plink_rate(int val, int prog, int b_len, char * b)
     return b;
 }
 
-static char * smp_get_reason(int val, int b_len, char * b)
+static char *
+smp_get_reason(int val, int b_len, char * b)
 {
     switch (val) {
     case 0: snprintf(b, b_len, "unknown"); break;
@@ -194,7 +198,8 @@ static char * smp_get_reason(int val, int b_len, char * b)
     return b;
 }
 
-static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
+static char *
+smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
 {
     switch (val) {
     case 0: snprintf(b, b_len, "phy enabled; unknown"); break;
@@ -215,8 +220,8 @@ static char * smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     return b;
 }
 
-static char * find_sas_connector_type(int conn_type, char * buff,
-                                      int buff_len)
+static char *
+find_sas_connector_type(int conn_type, char * buff, int buff_len)
 {
     switch (conn_type) {
     case 0x0:
@@ -286,9 +291,10 @@ static char * find_sas_connector_type(int conn_type, char * buff,
 /* Returns length of response in bytes, excluding the CRC on success,
    -3 (or less) -> SMP_LIB errors negated ('-4 - smp_err),
    -1 for other errors */
-static int do_discover(struct smp_target_obj * top, int disc_phy_id,
-                       unsigned char * resp, int max_resp_len,
-                       int silence_err_report, const struct opts_t * optsp)
+static int
+do_discover(struct smp_target_obj * top, int disc_phy_id,
+            unsigned char * resp, int max_resp_len,
+            int silence_err_report, const struct opts_t * optsp)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 2,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -372,8 +378,9 @@ static int do_discover(struct smp_target_obj * top, int disc_phy_id,
     return len;
 }
 
-static int do_single_list(const unsigned char * smp_resp, int len,
-                          int show_exp_cc, int do_brief)
+static int
+do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
+               int do_brief)
 {
     int res, j, sas2;
     unsigned long long ull;
@@ -451,8 +458,8 @@ static int do_single_list(const unsigned char * smp_resp, int len,
     return 0;
 }
 
-static int do_single(struct smp_target_obj * top,
-                     const struct opts_t * optsp)
+static int
+do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
@@ -646,8 +653,8 @@ static int do_single(struct smp_target_obj * top,
 
 #define MAX_PHY_ID 8192
 
-static int do_multiple(struct smp_target_obj * top,
-                       const struct opts_t * optsp)
+static int
+do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
     unsigned char smp_resp[128];
     unsigned long long ull;
@@ -833,7 +840,8 @@ static int do_multiple(struct smp_target_obj * top,
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c;
     long long sa_ll;
@@ -946,7 +954,8 @@ int main(int argc, char * argv[])
     if ((cp = strchr(device_name, ','))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in SMP_DEVICE name\n");
+            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
