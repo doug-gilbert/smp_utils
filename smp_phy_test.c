@@ -46,7 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.04 20081216"; /* sync with sas2r15 */
+static char * version_str = "1.05 20081229"; /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -67,7 +67,8 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "Usage: "
           "smp_phy_test [--control=CO] [--dwords=DW] [--expected=EX]\n"
@@ -106,7 +107,8 @@ static void usage()
 
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -114,7 +116,8 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len;
     int do_control = 0;

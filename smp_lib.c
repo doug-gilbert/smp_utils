@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.15 20081121";    /* sas-2 rev 15 */
+static char * version_str = "1.16 20081229";    /* sas-2 rev 15 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -91,7 +91,8 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {-1, -1, -1},
 };
 
-int smp_get_func_def_req_len(int func_code)
+int
+smp_get_func_def_req_len(int func_code)
 {
     struct smp_func_def_rrlen * drlp;
 
@@ -102,7 +103,8 @@ int smp_get_func_def_req_len(int func_code)
     return -1;
 }
 
-int smp_get_func_def_resp_len(int func_code)
+int
+smp_get_func_def_resp_len(int func_code)
 {
     struct smp_func_def_rrlen * drlp;
 
@@ -149,7 +151,8 @@ static struct smp_val_name smp_func_results[] =
     {0x0, NULL},
 };
 
-char * smp_get_func_res_str(int func_res, int buff_len, char * buff)
+char *
+smp_get_func_res_str(int func_res, int buff_len, char * buff)
 {
     struct smp_val_name * vnp;
 
@@ -177,7 +180,8 @@ int smp_is_naa5(unsigned long long addr)
 static char safe_errbuf[64] = {'u', 'n', 'k', 'n', 'o', 'w', 'n', ' ',
                                'e', 'r', 'r', 'n', 'o', ':', ' ', 0};
 
-char * safe_strerror(int errnum)
+char *
+safe_strerror(int errnum)
 {
     size_t len;
     char * errstr;
@@ -199,7 +203,8 @@ char * safe_strerror(int errnum)
        > 0     each line has address then up to 16 ASCII-hex bytes
        = 0     in addition, the bytes are listed in ASCII to the right
        < 0     only the ASCII-hex bytes are listed (i.e. without address) */
-void dStrHex(const char* str, int len, int no_ascii)
+void
+dStrHex(const char* str, int len, int no_ascii)
 {
     const char* p = str;
     unsigned char c;
@@ -269,7 +274,8 @@ void dStrHex(const char* str, int len, int no_ascii)
    then -1 is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
    Main (SI) multipliers supported: K, M, G. */
-int smp_get_num(const char * buf)
+int
+smp_get_num(const char * buf)
 {
     int res, num, n, len;
     unsigned int unum;
@@ -349,7 +355,8 @@ int smp_get_num(const char * buf)
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
    Main (SI) multipliers supported: K, M, G, T, P. */
-long long smp_get_llnum(const char * buf)
+long long
+smp_get_llnum(const char * buf)
 {
     int res, len;
     long long num, ll;
@@ -442,7 +449,8 @@ long long smp_get_llnum(const char * buf)
     }
 }
 
-const char * smp_lib_version()
+const char *
+smp_lib_version()
 {
         return version_str;
 }

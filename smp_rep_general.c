@@ -65,7 +65,8 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "Usage: "
           "smp_rep_general [--change_report] [--help] [--hex]\n"
@@ -93,7 +94,8 @@ static void usage()
 
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -101,7 +103,8 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, sas2;
     int do_change = 0;
