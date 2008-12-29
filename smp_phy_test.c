@@ -46,7 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.03 20080101";
+static char * version_str = "1.04 20081216"; /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
