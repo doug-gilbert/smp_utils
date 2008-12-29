@@ -36,7 +36,12 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT_DEV_MINOR 220
 #define MPT2_DEV_MINOR 221
 
-int chk_mpt_device(const char * dev_name, int verbose)
+static const char null_sas_addr[8];
+
+
+/* Part of interface to upper level. */
+int
+chk_mpt_device(const char * dev_name, int verbose)
 {
     struct stat st;
 
@@ -64,7 +69,9 @@ int chk_mpt_device(const char * dev_name, int verbose)
     return 0;
 }
 
-int open_mpt_device(const char * dev_name, int verbose)
+/* Part of interface to upper level. */
+int
+open_mpt_device(const char * dev_name, int verbose)
 {
     int res;
 
@@ -76,7 +83,9 @@ int open_mpt_device(const char * dev_name, int verbose)
     return res;
 }
 
-int close_mpt_device(int fd)
+/* Part of interface to upper level. */
+int
+close_mpt_device(int fd)
 {
     return close(fd);
 }
@@ -101,7 +110,8 @@ void SmpImmediateIoctl(int fd, int ioc_num);
  * Generic command to issue the MPT command using the special
  * SDI_IOC | 0x01 Ioctl Function.
  *****************************************************************/
-int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
+int
+issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 {
         int CmdBlkSize;
         int status = -1;
@@ -143,8 +153,10 @@ int issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
         return status;
 }
 
-int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
-                 struct smp_req_resp * rresp, int verbose)
+/* Part of interface to upper level. */
+int
+send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
+             struct smp_req_resp * rresp, int verbose)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
@@ -156,6 +168,12 @@ int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         unsigned char * ucp;
         int ret = -1;
 
+        if (verbose && (0 == memcmp(target_sa, null_sas_addr, 8))) {
+                fprintf(stderr, "mpt interface typically needs SAS "
+                        "address of target (e.g expander).\n");
+                fprintf(stderr, "A '--sa=SAS_ADDR' command line option "
+                        "may be required\n");
+        }
         if (verbose > 2) {
                 fprintf(stderr, "send_req_mpt: subvalue=%d  ", subvalue);
                 fprintf(stderr, "SAS address=0x");
@@ -303,7 +321,8 @@ err_out:
  * ConfigIoctl
  *
  *****************************************************************/
-void SmpTwoSGLsIoctl(int fd, int ioc_num)
+void
+SmpTwoSGLsIoctl(int fd, int ioc_num)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
@@ -387,7 +406,8 @@ err_out:
         return;
 }
 
-void SmpImmediateIoctl(int fd, int ioc_num)
+void
+SmpImmediateIoctl(int fd, int ioc_num)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
