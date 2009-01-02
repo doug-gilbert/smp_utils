@@ -1,3 +1,9 @@
+smp-utils (0.95-0.1) unstable; urgency=low
+
+  * bump version
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Fri, 02 Jan 2009 18:00:00 -0500
+
 smp-utils (0.94-0.1) unstable; urgency=low
 
   * make sgv4 includes more robust for lk 2.6.27
