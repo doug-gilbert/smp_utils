@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.94
+%define version 0.95
 %define release 1
 
 Summary:        Utilities for SAS management protocol (SMP)
@@ -54,6 +54,9 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
+* Fri Jan 02 2009 - dgilbert at interlog dot com
+- xxxxxxxxxxxxxx
+  * smp_utils-0.95
 * Mon Dec 29 2008 - dgilbert at interlog dot com
 - adjust sgv4 for lk 2.6.27, sync with sas2r15
   * smp_utils-0.94
