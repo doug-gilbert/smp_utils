@@ -54,8 +54,8 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Tue Feb 03 2009 - dgilbert at interlog dot com
-- improve Makefile for non-root users
+* Tue Oct 27 2009 - dgilbert at interlog dot com
+- discover changes in spl-r04
   * smp_utils-0.95
 * Mon Dec 29 2008 - dgilbert at interlog dot com
 - adjust sgv4 for lk 2.6.27, sync with sas2r15

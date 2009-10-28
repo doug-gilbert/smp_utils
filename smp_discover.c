@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2009 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,9 +43,12 @@
  * program.
  *
  * This utility issues a DISCOVER function and outputs its response.
+ *
+ * Defined in SAS-2 (most recent draft sas2r16.pdf) and SPL which defines
+ * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.15 20081229";    /* sas2r15 */
+static char * version_str = "1.16 20091023";    /* spl-r04 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -378,6 +381,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     return len;
 }
 
+/* Note that the inner attributes are output in alphabetical order */
 static int
 do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
                int do_brief)
@@ -405,8 +409,10 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
     }
     printf("  att_dev_type=%d\n", (0x70 & smp_resp[12]) >> 4);
     printf("  att_iport_mask=0x%x\n", smp_resp[14]);
-    if (sas2 && (! do_brief))
+    if (sas2 && (! do_brief)) {
         printf("  att_izp=%d\n", !!(0x4 & smp_resp[33]));
+        printf("  att_pa_cap=%d\n", !!(0x8 & smp_resp[33]));
+    }
     printf("  att_phy_id=%d\n", smp_resp[32]);
     if (sas2 && (! do_brief)) {
         printf("  att_reason=%d\n", (0xf & smp_resp[12]));
@@ -418,6 +424,8 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
         ull |= smp_resp[24 + j];
     }
     printf("  att_sas_addr=0x%llx\n", ull);
+    if (sas2 && (! do_brief))
+        printf("  att_sl_cap=%d\n", !!(0x10 & smp_resp[33]));
     printf("  att_tport_mask=0x%x\n", smp_resp[15]);
     if (! do_brief) {
         if (sas2 || (smp_resp[45] & 0x7f)) {
@@ -433,6 +441,7 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
             printf("  hw_mux_sup=%d\n", (!! (smp_resp[95] & 0x1)));
     }
     if (! do_brief) {
+        printf("  phy_power_cond=%d\n", ((0xc0 & smp_resp[48]) >> 6));
         printf("  pr_max_p_lrate=%d\n", ((0xf0 & smp_resp[41]) >> 4));
         printf("  pr_min_p_lrate=%d\n", ((0xf0 & smp_resp[40]) >> 4));
     }
@@ -441,7 +450,7 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
     if (! do_brief) {
         if (len > 95)
             printf("  neg_phy_lrate=%d\n", (0xf & smp_resp[94]));
-        printf("  pp_timeout=%d\n", !!(0xf & smp_resp[43]));
+        printf("  pp_timeout=%d\n", (0xf & smp_resp[43]));
         printf("  phy_cc=%d\n", smp_resp[42]);
         if (len > 95)
             printf("  reason=%d\n", (0xf0 & smp_resp[94]) >> 4);
@@ -453,6 +462,16 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
         ull |= smp_resp[16 + j];
     }
     printf("  sas_addr=0x%llx\n", ull);
+    if (! do_brief) {
+        printf("  sas_pa_cap=%d\n", !!(0x4 & smp_resp[48]));
+        printf("  sas_pa_en=%d\n", !!(0x4 & smp_resp[49]));
+        printf("  sas_sl_cap=%d\n", !!(0x8 & smp_resp[48]));
+        printf("  sas_sl_en=%d\n", !!(0x8 & smp_resp[49]));
+        printf("  sata_pa_cap=%d\n", !!(0x1 & smp_resp[48]));
+        printf("  sata_pa_en=%d\n", !!(0x1 & smp_resp[49]));
+        printf("  sata_sl_cap=%d\n", !!(0x2 & smp_resp[48]));
+        printf("  sata_sl_en=%d\n", !!(0x2 & smp_resp[49]));
+    }
 
     printf("  virt_phy=%d\n", !!(0x80 & smp_resp[43]));
     return 0;
@@ -496,14 +515,14 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
            smp_get_neg_xxx_link_rate(0xf & smp_resp[13], sizeof(b), b));
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
-           !! (smp_resp[14] & 8), !! (smp_resp[14] & 4),
-           !! (smp_resp[14] & 2), (smp_resp[14] & 1));
+           !!(smp_resp[14] & 8), !!(smp_resp[14] & 4),
+           !!(smp_resp[14] & 2), (smp_resp[14] & 1));
     if (0 == optsp->do_brief)
         printf("  attached sata port selector: %d\n",
-               !! (smp_resp[15] & 0x80));
+               !!(smp_resp[15] & 0x80));
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
-           !! (smp_resp[15] & 8), !! (smp_resp[15] & 4),
-           !! (smp_resp[15] & 2), (smp_resp[15] & 1));
+           !!(smp_resp[15] & 8), !!(smp_resp[15] & 4),
+           !!(smp_resp[15] & 2), (smp_resp[15] & 1));
 
     ull = 0;
     for (j = 0; j < 8; ++j) {
@@ -522,11 +541,16 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     printf("  attached phy identifier: %d\n", smp_resp[32]);
     if (0 == optsp->do_brief) {
         if (sas2 || (optsp->verbose > 3)) {
+            printf("  attached slumber capable: %d\n",
+                   !!(smp_resp[33] & 0x10));
+            printf("  attached partial capable: %d\n",
+                   !!(smp_resp[33] & 0x8));
             printf("  attached inside ZPSDS persistent: %d\n",
-                   smp_resp[33] & 4);
+                   !!(smp_resp[33] & 4));
             printf("  attached requested inside ZPSDS: %d\n",
-                   smp_resp[33] & 2);
-            printf("  attached break_reply capable: %d\n", smp_resp[33] & 1);
+                   !!(smp_resp[33] & 2));
+            printf("  attached break_reply capable: %d\n",
+                   !!(smp_resp[33] & 1));
         }
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((smp_resp[40] >> 4) & 0xf), 1,
@@ -559,6 +583,15 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
                find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
         printf("  connector element index: %d\n", smp_resp[46]);
         printf("  connector physical link: %d\n", smp_resp[47]);
+        printf("  phy power condition: %d\n", (smp_resp[48] & 0xc0) >> 6);
+        printf("  sas slumber capable: %d\n", !!(smp_resp[48] & 0x8));
+        printf("  sas partial capable: %d\n", !!(smp_resp[48] & 0x4));
+        printf("  sata slumber capable: %d\n", !!(smp_resp[48] & 0x2));
+        printf("  sata partial capable: %d\n", !!(smp_resp[48] & 0x1));
+        printf("  sas slumber enabled: %d\n", !!(smp_resp[49] & 0x8));
+        printf("  sas partial enabled: %d\n", !!(smp_resp[49] & 0x4));
+        printf("  sata slumber enabled: %d\n", !!(smp_resp[49] & 0x2));
+        printf("  sata partial enabled: %d\n", !!(smp_resp[49] & 0x1));
     }
     if (len > 59) {
         ull = 0;

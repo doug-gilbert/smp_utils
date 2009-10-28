@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2009 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,9 +43,12 @@
  * program.
  *
  * This utility issues a DISCOVER LIST function and outputs its response.
+ *
+ * Defined in SAS-2 (most recent draft sas2r16.pdf) and SPL which defines
+ * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.09 20081216";    /* sas2r15 */
+static char * version_str = "1.10 20091023";    /* spl-r04 */
 
 
 #define SMP_UTILS_TEST
@@ -616,9 +619,11 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == optsp->do_brief) {
-        printf("  attached inside ZPSDS persistent: %d\n", rp[33] & 4);
-        printf("  attached requested inside ZPSDS: %d\n", rp[33] & 2);
-        printf("  attached break_reply capable: %d\n", rp[33] & 1);
+        printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
+        printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
+        printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));
+        printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
+        printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1,
                                   sizeof(b), b));
@@ -649,6 +654,15 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
            find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
     printf("  connector element index: %d\n", rp[46]);
     printf("  connector physical link: %d\n", rp[47]);
+    printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
+    printf("  sas slumber capable: %d\n", !!(rp[48] & 0x8));
+    printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
+    printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
+    printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
+    printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
+    printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
+    printf("  sata slumber enabled: %d\n", !!(rp[49] & 0x2));
+    printf("  sata partial enabled: %d\n", !!(rp[49] & 0x1));
     if (len > 59) {
         ull = 0;
         for (j = 0; j < 8; ++j) {
