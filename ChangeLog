@@ -2,11 +2,12 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.95 [20091027] [svn:r45]
+Changelog for smp_utils-0.95 [20101116] [svn:r46]
   - place link to smp_utils.html examples in man pages
   - alter Makefile for non-root users
-  - todo: check for changes between sas2r15 and sas2r16
   - add spl-r04 discover changes (spl is upper layers of sas-2.1)
+  - mpt: cope with mpt2 ioctl that uses a different magic number
+
 
 Changelog for smp_utils-0.94 [20081229] [svn:r40]
   - smp_discover: sync to sas2r15

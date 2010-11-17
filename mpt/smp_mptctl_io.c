@@ -37,6 +37,7 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT2_DEV_MINOR 221
 
 static const char null_sas_addr[8];
+static int mptcommand = MPTCOMMAND;
 
 
 /* Part of interface to upper level. */
@@ -74,12 +75,20 @@ int
 open_mpt_device(const char * dev_name, int verbose)
 {
     int res;
+    struct stat st;
 
     res = open(dev_name, O_RDWR);
     if (res < 0) {
         if (verbose)
             perror("open_mpt_device failed");
-    }
+    } else if (fstat(res, &st) >= 0) {
+        if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
+            (MPT2_DEV_MINOR == minor(st.st_rdev)))
+            mptcommand = MPT2COMMAND;
+        else
+            mptcommand = MPTCOMMAND;
+    } else if (verbose)
+        perror("open_mpt_device: stat failed");
     return res;
 }
 
@@ -125,8 +134,8 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
         mpiBlkPtr->hdr.iocnum = ioc_num;
         mpiBlkPtr->hdr.port = 0;
 
-        if (ioctl(fd, (unsigned long) MPTCOMMAND, (char *) mpiBlkPtr) != 0)
-                perror("MPTCOMMAND ioctl failed");
+        if (ioctl(fd, mptcommand, (char *) mpiBlkPtr) != 0)
+                perror("MPTCOMMAND or MPT2COMMAND ioctl failed");
         else {
 #if 0
                 MPIDefaultReply_t *pReply = NULL;
