@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.16 20081229";    /* sas-2 rev 15 */
+static char * version_str = "1.16 20101116";    /* sas-2 rev 15 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -158,7 +158,7 @@ smp_get_func_res_str(int func_res, int buff_len, char * buff)
 
     for (vnp = smp_func_results; vnp->name; ++vnp) {
         if (func_res == vnp->value) {
-            snprintf(buff, buff_len, vnp->name);
+            snprintf(buff, buff_len, "%s", vnp->name);
             return buff;
         }
     }
