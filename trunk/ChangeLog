@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.95 [20101116] [svn:r46]
+Changelog for smp_utils-0.95 [20101116] [svn:r47]
   - place link to smp_utils.html examples in man pages
   - alter Makefile for non-root users
   - add spl-r04 discover changes (spl is upper layers of sas-2.1)
