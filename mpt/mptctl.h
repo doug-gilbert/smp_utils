@@ -95,6 +95,14 @@
 #define MPTDIAGQUERY		_IOWR(MPT_MAGIC_NUMBER,29,mpt_diag_query_t)
 #define MPTDIAGREADBUFFER	_IOWR(MPT_MAGIC_NUMBER,30,mpt_diag_read_buffer_t)
 
+
+/*
+ * Hack to cope with MPT2 controllers which use a different
+ * magic number. One one ioctl based on it is used.
+ */
+#define MPT2_MAGIC_NUMBER	'L'
+#define MPT2COMMAND		_IOWR(MPT2_MAGIC_NUMBER,20,struct mpt_ioctl_command)
+
 /*
  * SPARC PLATFORM REMARKS:
  * IOCTL data structures that contain pointers
