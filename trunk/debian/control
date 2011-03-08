@@ -8,11 +8,11 @@ Standards-Version: 3.6.1
 Package: smp-utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Utilities that send a Serial Attached
- SCSI (SAS) Management Protocol (SMP) request to a SMP target.
- If the request fails then the error is decoded. If the request succeeds
- then the response is either decoded, printed out in hexadecimal or
- output in binary. This package supports multiple interfaces since
- SMP passthroughs are not mature. This package supports the linux
- 2.4 and 2.6 series and should be easy to port to other operating
- systems.
+Description: SAS Expander (SMP) utilities for SAS/SATA disks
+ Utilities that send a Serial Attached SCSI (SAS) Management
+ Protocol (SMP) request to a SMP target. If the request fails then
+ the error is decoded. If the request succeeds then the response is
+ either decoded, printed out in hexadecimal or output in binary.
+ This package supports multiple interfaces since SMP passthroughs
+ are not mature. This package supports the linux 2.4 and 2.6 series
+ and should be easy to port to other operating systems.

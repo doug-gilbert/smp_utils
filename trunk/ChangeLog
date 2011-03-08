@@ -2,8 +2,8 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20101119] [svn:r48]
-  - bump version
+Changelog for smp_utils-0.96 [20110308] [svn:r49]
+  - remove doc/smp_utils.html , refer readers to web page
 
 Changelog for smp_utils-0.95 [20101116] [svn:r47]
   - place link to smp_utils.html examples in man pages
