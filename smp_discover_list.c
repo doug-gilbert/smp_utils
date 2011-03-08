@@ -56,7 +56,7 @@ static char * version_str = "1.11 20110308";    /* spl-r04 */
 #ifdef SMP_UTILS_TEST
 static unsigned char tst1_resp[] = {
     0x41, 0x20, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
-    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -84,7 +84,7 @@ static unsigned char tst1_resp[] = {
 
 static unsigned char tst2_resp[] = {
     0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x2, 2, 0, 1,
-    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -100,7 +100,7 @@ static unsigned char tst2_resp[] = {
 
 static unsigned char tst3_resp[] = {
     0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x0, 2, 0, 1,
-    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -116,7 +116,7 @@ static unsigned char tst3_resp[] = {
 
 static unsigned char tst4_resp[] = {
     0x41, 0x20, 0, 49, 0, 0, 0, 0, 0x0, 2, 0, 0,
-    76, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    19, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -144,7 +144,7 @@ static unsigned char tst4_resp[] = {
 
 static unsigned char tst5_resp[] = {
     0x41, 0x20, 0, 59, 0, 0, 0, 0, 0x0, 2, 0, 0,
-    96, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
+    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -1179,7 +1179,7 @@ main(int argc, char * argv[])
     if (opts.desc_type != resp_desc_type)
         fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
                 opts.desc_type, resp_desc_type);
-    desc_len = resp[12];
+    desc_len = resp[12] * 4;
     if ((! opts.do_one) && (0 == opts.do_brief)) {
         printf("  expander change count: %d\n", hdr_ecc);
         printf("  filter: %d\n", resp_filter);
