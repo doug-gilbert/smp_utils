@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 Douglas Gilbert.
+ * Copyright (c) 2007-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.04 20081224";    /* sync with sas2r15 */
+static char * version_str = "1.05 20110308";    /* sync with sas2r15 */
 
 
 #define SMP_UTILS_TEST
@@ -183,8 +183,10 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k;
+    int len, res, k, dword_resp_len;
 
+    dword_resp_len = max_resp_len / 4;
+    smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
     smp_req[8] = ((optsp->do_num) >> 8) & 0xff;
     smp_req[9] = optsp->do_num & 0xff;
     smp_req[10] = ((optsp->start_rsa_index) >> 8) & 0xff;

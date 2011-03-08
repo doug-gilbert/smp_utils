@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.10 20091023";    /* spl-r04 */
+static char * version_str = "1.11 20110308";    /* spl-r04 */
 
 
 #define SMP_UTILS_TEST
@@ -460,8 +460,10 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k;
+    int len, res, k, dword_resp_len;
 
+    dword_resp_len = max_resp_len / 4;
+    smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
     smp_req[8] = optsp->phy_id;
     smp_req[9] = optsp->do_num;
     smp_req[10] = optsp->filter & 0xf;
