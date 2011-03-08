@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.16 20091023";    /* spl-r04 */
+static char * version_str = "1.17 20110308";    /* spl-r04 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -718,9 +718,14 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             expander_sa = ull;
         else {
             if (ull != expander_sa) {
-                fprintf(stderr, ">> expander's SAS address is changing?? "
-                        "was=%llxh, now=%llxh\n", expander_sa, ull);
-                expander_sa = ull;
+                if (ull > 0) {
+                    fprintf(stderr, ">> expander's SAS address is changing?? "
+                            "phy_id=%d, was=%llxh, now=%llxh\n", smp_resp[9],
+                            expander_sa, ull);
+                    expander_sa = ull;
+                } else if (optsp->verbose)
+                    fprintf(stderr, ">> expander's SAS address shown as 0 at "
+                            "phy_id=%d\n", smp_resp[9]);
             }
         }
         if (first && (! optsp->do_raw)) {
