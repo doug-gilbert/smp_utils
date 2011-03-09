@@ -255,7 +255,7 @@ main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     if (! do_zero) {
-        len = sizeof(smp_rr) / 4;
+        len = sizeof(smp_resp) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff;
     }
     if (verbose) {
@@ -264,6 +264,7 @@ main(int argc, char * argv[])
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
     }
+    memset(smp_resp, 0, sizeof(smp_resp));
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
@@ -302,7 +303,7 @@ main(int argc, char * argv[])
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if (do_hex || do_raw) {
         if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
+            dStrHex((const char *)smp_resp, len, !! do_hex);
         else
             dStrRaw((const char *)smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
