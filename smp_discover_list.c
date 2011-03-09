@@ -48,136 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.11 20110308";    /* spl-r04 */
-
-
-/* #define SMP_UTILS_TEST */
-
-#ifdef SMP_UTILS_TEST
-static unsigned char tst1_resp[] = {
-    0x41, 0x20, 0, 41, 0, 0, 0, 0, 0x0, 5, 0, 1,
-    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x0, 0, 0x0, 0x0, 0x0, 0x0, 2, 0, 0, 0, 0, 0,
-    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-    0, 0, 0, 0,
-
-    0x1, 0, 0x11, 0x9, 0x0, 0x8, 2, 0x20, 0, 0, 7, 13,
-    0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
-    0, 0, 0, 0,
-
-    0x2, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 4, 31,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0x3, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 5, 37,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0x4, 0, 0x10, 0x8, 0x0, 0x1, 2, 0, 0, 0, 6, 7,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x38,
-    0, 0, 0, 0,
-
-    0, 0, 0, 0};
-
-static unsigned char tst2_resp[] = {
-    0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x2, 2, 0, 1,
-    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x2, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 4, 31,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0x3, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 5, 37,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0, 0, 0, 0};
-
-static unsigned char tst3_resp[] = {
-    0x41, 0x20, 0, 23, 0, 0, 0, 0, 0x0, 2, 0, 1,
-    6, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x2, 0x16, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 4, 31,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0x3, 0, 0x20, 0x9, 0x0, 0x2, 2, 0, 0, 0, 5, 37,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0, 0, 0, 0,
-
-    0, 0, 0, 0};
-
-static unsigned char tst4_resp[] = {
-    0x41, 0x20, 0, 49, 0, 0, 0, 0, 0x0, 2, 0, 0,
-    19, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x41, 0x10, 0x0, 18, 0, 0, 0, 0,
-    0, 0x1, 0, 0, 0x10, 0x9, 0x0, 0x8,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
-    0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
-    0x7, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 13, 0x87, 0x2, 0x10, 1, 2,
-    0, 0, 0, 0,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x20,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x41, 0x10, 0x0, 18, 0, 0, 0, 0,
-    0, 0x2, 0, 0, 0x20, 0x9, 0x0, 0x2,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0x4, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 31, 0x7, 0x2, 0x2, 3, 4,
-    0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0, 0, 0, 0};
-
-static unsigned char tst5_resp[] = {
-    0x41, 0x20, 0, 59, 0, 0, 0, 0, 0x0, 2, 0, 0,
-    24, 0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x41, 0x10, 0x0, 0x17, 0, 0, 0, 0,
-    0, 0x0, 0, 0, 0x11, 0x9, 0x0, 0x8,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x22,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0x7, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 13, 0x87, 0x2, 0x21, 2, 3,
-    0, 0, 0, 0,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x20,
-    0x77, 0, 0, 0, 0, 0, 0, 0,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x99,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2a, 0x1,
-
-    0x41, 0x10, 0x0, 0x17, 0, 0, 0, 0,
-    0, 0x1, 0, 0, 0x21, 0x9, 0x0, 0x2,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x22,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x33,
-    0x7, 0x0, 0, 0, 0, 0, 0, 0,
-    0x88, 0x99, 13, 0x87, 0x2, 0x21, 2, 3,
-    0, 0, 0, 0,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x20,
-    0x77, 0, 0, 0, 0, 0, 0, 0,
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x27, 0x99,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2a, 0x1,
-
-    0, 0, 0, 0};
-
-#endif
-
+static char * version_str = "1.11 20110309";    /* spl-r04 */
 
 
 static struct option long_options[] = {
@@ -194,9 +65,6 @@ static struct option long_options[] = {
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
         {"raw", 0, 0, 'r'},
-#ifdef SMP_UTILS_TEST
-        {"test", 1, 0, 't'},
-#endif
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -213,7 +81,6 @@ struct opts_t {
     int do_one;
     int phy_id;
     int do_raw;
-    int do_test;
     int verbose;
     int sa_given;
     unsigned long long sa;
@@ -229,21 +96,18 @@ usage()
           "[--list]\n"
           "                    [--num=NUM] [--one] [--phy=ID] [--raw] "
           "[--sa=SAS_ADDR]\n");
-#ifdef SMP_UTILS_TEST
-    fprintf(stderr,
-          "                    [--test=TE] [--verbose] [--version] "
-          "<smp_device>[,<n>]\n");
-#else
     fprintf(stderr,
           "                    [--verbose] [--version] "
           "<smp_device>[,<n>]\n");
-#endif
     fprintf(stderr,
           "  where:\n"
-          "    --brief|-b           brief: abridge output\n"
-          "    --descriptor=TY|-d TY    descriptor type\n"
+          "    --brief|-b           brief: short descriptors and abridged "
+          "output\n"
+          "    --descriptor=TY|-d TY    descriptor type:\n"
           "                         0 -> long (as in DISCOVER); 1 -> "
           "short (24 byte)\n"
+          "                         default is 1 if --brief given, "
+          "else default is 0\n"
           "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
           "expander\n"
           "                         attached; 2 -> expander "
@@ -266,11 +130,6 @@ usage()
           "                         or trailing 'h'). Depending on "
           "the interface, may\n"
           "                         not be needed\n");
-#ifdef SMP_UTILS_TEST
-    fprintf(stderr,
-          "    --test=TE|-t TE      test responses (def: 0 (non-test "
-          "mode))\n");
-#endif
     fprintf(stderr,
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
@@ -481,30 +340,8 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
-    if (0 == optsp->do_test)
-        res = smp_send_req(top, &smp_rr, optsp->verbose);
-    else {
-#ifdef SMP_UTILS_TEST
-        memset(resp, 0, max_resp_len);
-        if (1 == optsp->do_test)
-            memcpy(resp, tst1_resp, sizeof(tst1_resp));
-        else if (2 == optsp->do_test)
-            memcpy(resp, tst2_resp, sizeof(tst2_resp));
-        else if (3 == optsp->do_test)
-            memcpy(resp, tst3_resp, sizeof(tst3_resp));
-        else if (4 == optsp->do_test)
-            memcpy(resp, tst4_resp, sizeof(tst4_resp));
-        else if (5 == optsp->do_test)
-            memcpy(resp, tst5_resp, sizeof(tst5_resp));
-        else
-            fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
-#else
-        fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
-#endif
-        smp_rr.act_response_len = -1;
-        res = 0;
-    }
 
+    res = smp_send_req(top, &smp_rr, optsp->verbose);
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
         if (0 == optsp->verbose)
@@ -1000,6 +837,7 @@ main(int argc, char * argv[])
     struct opts_t opts;
 
     memset(&opts, 0, sizeof(opts));
+    opts.do_num = 1;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
@@ -1074,15 +912,6 @@ main(int argc, char * argv[])
             if (opts.sa > 0)
                 ++opts.sa_given;
             break;
-#ifdef SMP_UTILS_TEST
-        case 't':
-           opts.do_test = smp_get_num(optarg);
-           if ((opts.do_test < 0) || (opts.do_test > 127)) {
-                fprintf(stderr, "bad argument to '--test'\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            break;
-#endif
         case 'v':
             ++opts.verbose;
             break;
@@ -1152,12 +981,10 @@ main(int argc, char * argv[])
         }
     }
 
-    if (0 == opts.do_test) {
-        res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
-                                 &tobj, opts.verbose);
-        if (res < 0)
-            return SMP_LIB_FILE_ERROR;
-    }
+    res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
+                             &tobj, opts.verbose);
+    if (res < 0)
+        return SMP_LIB_FILE_ERROR;
 
     memset(resp, 0, sizeof(resp));
     ret = do_discover_list(&tobj, resp, sizeof(resp), &opts);
@@ -1228,12 +1055,10 @@ main(int argc, char * argv[])
     }
 
 finish:
-    if (0 == opts.do_test) {
-        res = smp_initiator_close(&tobj);
-        if (res < 0) {
-            if (0 == ret)
-                return SMP_LIB_FILE_ERROR;
-        }
+    res = smp_initiator_close(&tobj);
+    if (res < 0) {
+        if (0 == ret)
+            return SMP_LIB_FILE_ERROR;
     }
     return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
 }

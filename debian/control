@@ -2,8 +2,9 @@ Source: smp-utils
 Section: admin
 Priority: optional
 Maintainer: Douglas Gilbert <dgilbert@interlog.com>
-Build-Depends: debhelper (>> 4.0.0)
-Standards-Version: 3.6.1
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: http://sg.danny.cz/sg/smp_utils.html
 
 Package: smp-utils
 Architecture: any

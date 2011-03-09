@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.17 20110308";    /* sas2r15 */
+static char * version_str = "1.17 20110309";    /* sas2r15 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -92,7 +92,7 @@ usage()
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
           "field,\n"
-          "                         required prior to SAS-2\n\n"
+          "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT GENERAL function\n"
           );
 

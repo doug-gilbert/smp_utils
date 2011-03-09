@@ -89,7 +89,7 @@ static void usage()
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
           "field,\n"
-          "                         required prior to SAS-2\n\n"
+          "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT MANUFACTURER INFORMATION function\n"
           );
 

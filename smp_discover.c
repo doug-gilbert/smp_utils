@@ -96,7 +96,8 @@ usage()
           "                    [--list] [--multiple] [--num=NUM] "
           "[--phy=ID] [--raw]\n"
           "                    [--sa=SAS_ADDR] [--verbose] "
-          "[--version] SMP_DEVICE[,N]\n"
+          "[--version] [--zero]\n"
+          "                    SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --brief|-b           brief decoded output\n"
           "    --help|-h            print out usage message\n"
@@ -122,7 +123,7 @@ usage()
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
           "field,\n"
-          "                         required prior to SAS-2\n\n"
+          "                         may be required prior to SAS-2\n\n"
           "Performs a SMP DISCOVER function\n"
           );
 
@@ -490,7 +491,7 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
 static int
 do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[120];
     unsigned long long ull;
     unsigned int ui;
     int res, len, j, sas2;
@@ -699,7 +700,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[120];
     unsigned long long ull;
     unsigned long long expander_sa;
     int res, len, k, j, num, off, plus, negot, adt;
