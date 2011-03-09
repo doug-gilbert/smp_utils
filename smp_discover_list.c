@@ -51,7 +51,7 @@
 static char * version_str = "1.11 20110308";    /* spl-r04 */
 
 
-#define SMP_UTILS_TEST
+/* #define SMP_UTILS_TEST */
 
 #ifdef SMP_UTILS_TEST
 static unsigned char tst1_resp[] = {
@@ -821,7 +821,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
 }
 
 static int
-decode_1line(const unsigned char * resp, int offset, int desc)
+decode_1line(const unsigned char * resp, int offset, int desc, int brief)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -865,6 +865,8 @@ decode_1line(const unsigned char * resp, int offset, int desc)
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
+    if (brief && (0 == adt))
+        return 0;
     switch (route_attr) {
     case 0:
         cp = "D";
@@ -1209,7 +1211,7 @@ main(int argc, char * argv[])
     for (k = 0, err = 0; k < num_desc; ++k) {
         off = 48 + (k * desc_len);
         if (opts.do_one) {
-            if (decode_1line(resp, off, resp_desc_type))
+            if (decode_1line(resp, off, resp_desc_type, opts.do_brief))
                 ++err;
         } else {
             printf("descriptor %d:\n", k + 1);

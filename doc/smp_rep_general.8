@@ -1,11 +1,12 @@
-.TH SMP_REP_GENERAL "8" "January 2009" "smp_utils\-0.95" SMP_UTILS
+.TH SMP_REP_GENERAL "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_general \- invoke REPORT GENERAL SMP function
 .SH SYNOPSIS
 .B smp_rep_general
 [\fI\-\-change_report\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -49,17 +50,22 @@ increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.TP
+\fB\-z\fR, \fB\-\-zero\fR
+zero the Allocated Response Length field in the request. This is required
+for strict SAS\-1.1 compliance. However this option should not be
+given in SAS\-2 and later; if it is given an abridged response may result.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO
-The SMP REPORT GENERAL function was introduced in SAS-1, with small additions
-in SAS-1.1 . There have been a large number of additions in SAS-2 .
+The SMP REPORT GENERAL function was introduced in SAS\-1, with small additions
+in SAS\-1.1 . There have been a large number of additions in SAS\-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2009 Douglas Gilbert
+Copyright \(co 2006\-2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
