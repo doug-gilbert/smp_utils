@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20110308] [svn:r51]
+Changelog for smp_utils-0.96 [20110308] [svn:r52]
   - remove doc/smp_utils.html , refer readers to web page
   - smp_discover_list: fix for SAS-2
   - smp_rep_exp_route_tbl: fix for SAS-2
