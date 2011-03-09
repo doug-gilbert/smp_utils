@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.01 20080101";
+static char * version_str = "1.02 20110309";
 
 
 static struct option long_options[] = {
@@ -126,7 +126,7 @@ int main(int argc, char * argv[])
     char device_name[512];
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_CONFIG_GENERAL,
-                               0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0};
     unsigned char smp_resp[128];
     struct smp_req_resp smp_rr;

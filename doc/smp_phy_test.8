@@ -1,4 +1,4 @@
-.TH SMP_PHY_TEST "8" "December 2008" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_PHY_TEST "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_phy_test \- invoke PHY TEST FUNTION SMP function
 .SH SYNOPSIS
@@ -73,7 +73,7 @@ transmits the test pattern at the specified physical link rate:
 8 \-> 1.5 Gbps, 9 \-> 3 Gbps, 10 \-> 6 Gbps. Default value is 9.
 .TP
 \fB\-P\fR, \fB\-\-pattern\fR=\fIPA\fR
-specifies the type of test pattern to transmit. SAS-2 (rev15) values are:
+specifies the type of test pattern to transmit. SAS\-2 (rev15) values are:
 1 \-> JTPAT, 2 \-> CJTPAT, 10h \-> TRAIN, 11h \-> TRAIN_DONE, 12h \-> IDLE,
 13h \-> SCRAMBLED_0, 40h \-> "two_dwords".  Default value is 2.
 .TP
@@ -96,13 +96,13 @@ increase the verbosity of the output. Can be used multiple times
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH CONFORMING TO
-The SMP PHY TEST function was introduced in SAS-1.1 and enhanced in SAS-2 .
+The SMP PHY TEST function was introduced in SAS\-1.1 and enhanced in SAS\-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2008 Douglas Gilbert
+Copyright \(co 2006\-2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.17 20110308";    /* spl-r04 */
+static char * version_str = "1.17 20110309";    /* spl-r04 */
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -64,6 +64,7 @@ struct opts_t {
     int phy_id;
     int do_raw;
     int verbose;
+    int do_zero;
     int sa_given;
     unsigned long long sa;
 };
@@ -82,6 +83,7 @@ static struct option long_options[] = {
         {"raw", 0, 0, 'r'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zero", 0, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -117,7 +119,10 @@ usage()
           "the interface, may\n"
           "                         not be needed\n"
           "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "    --version|-V         print version string and exit\n"
+          "    --zero|-z            zero Allocated Response Length "
+          "field,\n"
+          "                         required prior to SAS-2\n\n"
           "Performs a SMP DISCOVER function\n"
           );
 
@@ -299,13 +304,18 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
             unsigned char * resp, int max_resp_len,
             int silence_err_report, const struct opts_t * optsp)
 {
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 2,
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
     int len, res, k;
 
+    if (! optsp->do_zero) {     /* SAS-2 or later */
+        len = max_resp_len / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
+        smp_req[3] = 2; /* Request Length: in dwords */
+    }
     if (optsp->ign_zp)
         smp_req[8] |= 0x1;
     smp_req[9] = disc_phy_id;
@@ -896,7 +906,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -958,6 +968,9 @@ main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'z':
+            ++opts.do_zero;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
