@@ -1159,6 +1159,7 @@ main(int argc, char * argv[])
             return SMP_LIB_FILE_ERROR;
     }
 
+    memset(resp, 0, sizeof(resp));
     ret = do_discover_list(&tobj, resp, sizeof(resp), &opts);
     if (ret)
         goto finish;
