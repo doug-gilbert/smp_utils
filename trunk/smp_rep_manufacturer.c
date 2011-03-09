@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.06 20080101";
+static char * version_str = "1.07 20110309";
 
 #ifndef OVERRIDE_TO_SAS2
 #define OVERRIDE_TO_SAS2 0
@@ -62,6 +62,7 @@ static struct option long_options[] = {
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zero", 0, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -72,7 +73,7 @@ static void usage()
           "[--raw]\n"
           "                            [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
-          "                            SMP_DEVICE[,N]\n"
+          "                            [--zero] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
@@ -85,7 +86,10 @@ static void usage()
           "the interface, may\n"
           "                         not be needed\n"
           "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "    --version|-V         print version string and exit\n"
+          "    --zero|-z            zero Allocated Response Length "
+          "field,\n"
+          "                         required prior to SAS-2\n\n"
           "Performs a SMP REPORT MANUFACTURER INFORMATION function\n"
           );
 
@@ -106,6 +110,7 @@ int main(int argc, char * argv[])
     int phy_id = 0;
     int do_raw = 0;
     int verbose = 0;
+    int do_zero = 0;
     long long sa_ll;
     unsigned long long sa = 0;
     char i_params[256];
@@ -124,7 +129,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHI:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "hHI:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -168,6 +173,9 @@ int main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'z':
+            ++do_zero;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
@@ -235,6 +243,10 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    if (! do_zero) {
+        len = sizeof(smp_resp) / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff;
+    }
     if (verbose) {
         fprintf(stderr, "    Report manufacturer information request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
