@@ -303,7 +303,7 @@ main(int argc, char * argv[])
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if (do_hex || do_raw) {
         if (do_hex)
-            dStrHex((const char *)smp_resp, len, !! do_hex);
+            dStrHex((const char *)smp_resp, len, (1 == do_hex));
         else
             dStrRaw((const char *)smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
@@ -420,9 +420,9 @@ main(int argc, char * argv[])
            smp_resp[59]);
     if (len < 68)
         goto err_out;
-    printf("  last self-configuarion status descriptor index: %d\n",
+    printf("  last self-configuration status descriptor index: %d\n",
            (smp_resp[60] << 8) + smp_resp[61]);
-    printf("  maximum number of stored self-configuarion status "
+    printf("  maximum number of stored self-configuration status "
            "descriptors: %d\n", (smp_resp[62] << 8) + smp_resp[63]);
     printf("  last phy event list descriptor index: %d\n",
            (smp_resp[64] << 8) + smp_resp[65]);
