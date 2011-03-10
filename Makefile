@@ -30,7 +30,6 @@ INCLUDES = -I include
 # may be overridden by 'make -e'
 CFLAGS = -g -O2
 
-# MY_CFLAGS = -Wall -W $(EXTRA_FLAGS)
 MY_CFLAGS = -Wall -W $(EXTRA_FLAGS)
 # MY_CFLAGS = -Wall -W -pedantic -std=c99 $(EXTRA_FLAGS)
 

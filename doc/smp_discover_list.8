@@ -7,7 +7,8 @@ smp_discover_list \- invoke DISCOVER LIST SMP function
 [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR] [\fI\-\-one\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-summary\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -78,8 +79,13 @@ target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
 SAS addresses are shown in hexadecimal. To give a number in hexadecimal
 either prefix it with '0x' or put a trailing 'h' on it.
 .TP
+\fB\-S\fR, \fB\-\-summary\fR
+output a multi line summary, with one line per active phy. Checks up
+to 40 phys starting at phy identifier \fIID\fR (which defaults to 0).
+Equivalent to '-bo -d 1 -n 40'.
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
-increase the verbosity of the output. Can be used multiple times
+increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
