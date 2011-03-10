@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.05 20110308";    /* sync with sas2r15 */
+static char * version_str = "1.05 20110309";    /* sync with sas2r15 */
 
 
 #define SMP_UTILS_TEST
@@ -185,7 +185,7 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
     char * cp;
     int len, res, k, dword_resp_len;
 
-    dword_resp_len = max_resp_len / 4;
+    dword_resp_len = (max_resp_len - 8) / 4;
     smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
     smp_req[8] = ((optsp->do_num) >> 8) & 0xff;
     smp_req[9] = optsp->do_num & 0xff;
@@ -288,7 +288,7 @@ main(int argc, char * argv[])
     unsigned long long ull;
     char i_params[256];
     char device_name[512];
-    unsigned char resp[1024];
+    unsigned char resp[1020 + 8];
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;

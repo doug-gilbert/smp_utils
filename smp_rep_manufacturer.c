@@ -48,9 +48,8 @@
 
 static char * version_str = "1.07 20110309";
 
-#ifndef OVERRIDE_TO_SAS2
-#define OVERRIDE_TO_SAS2 0
-#endif
+
+#define SMP_FN_REPORT_MANUFACTURER_RESP_LEN 64
 
 
 static struct option long_options[] = {
@@ -118,7 +117,7 @@ int main(int argc, char * argv[])
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ,
                                SMP_FN_REPORT_MANUFACTURER, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[SMP_FN_REPORT_MANUFACTURER_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
@@ -244,7 +243,7 @@ int main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     if (! do_zero) {
-        len = sizeof(smp_resp) / 4;
+        len = (sizeof(smp_resp) - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff;
     }
     if (verbose) {
@@ -322,7 +321,7 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     sas1_1 = smp_resp[8] & 1;
-    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
+    sas2 = !! (smp_resp[3]);
 
     printf("Report manufacturer response:\n");
     if (sas2 || (verbose > 3)) {

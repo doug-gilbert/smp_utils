@@ -50,9 +50,9 @@
 
 static char * version_str = "1.17 20110309";    /* spl-r04 */
 
-#ifndef OVERRIDE_TO_SAS2
-#define OVERRIDE_TO_SAS2 0
-#endif
+
+#define SMP_FN_DISCOVER_RESP_LEN 124
+
 
 struct opts_t {
     int do_brief;
@@ -313,7 +313,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     int len, res, k;
 
     if (! optsp->do_zero) {     /* SAS-2 or later */
-        len = max_resp_len / 4;
+        len = (max_resp_len - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
         smp_req[3] = 2; /* Request Length: in dwords */
     }
@@ -400,7 +400,7 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
     int res, j, sas2;
     unsigned long long ull;
 
-    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
+    sas2 = !! (smp_resp[3]);
     if (sas2 && show_exp_cc && (! do_brief)) {
         res = (smp_resp[4] << 8) + smp_resp[5];
         printf("expander_cc=%d\n", res);
@@ -491,7 +491,7 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
 static int
 do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[120];
+    unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull;
     unsigned int ui;
     int res, len, j, sas2;
@@ -506,7 +506,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     if (optsp->do_list)
         return do_single_list(smp_resp, len, 1, optsp->do_brief);
     printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
-    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
+    sas2 = !! (smp_resp[3]);
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (sas2 || (optsp->verbose > 3)) {
         if (optsp->verbose || (res > 0))
@@ -700,7 +700,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[120];
+    unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull;
     unsigned long long expander_sa;
     int res, len, k, j, num, off, plus, negot, adt;

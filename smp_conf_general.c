@@ -126,7 +126,7 @@ int main(int argc, char * argv[])
     char device_name[512];
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_CONFIG_GENERAL,
-                               2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0};
     unsigned char smp_resp[128];
     struct smp_req_resp smp_rr;

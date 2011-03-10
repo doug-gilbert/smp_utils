@@ -6,7 +6,7 @@ smp_rep_phy_sata \- invoke REPORT PHY SATA SMP function
 [\fI\-\-affiliation=AC\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR]
 [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-zero\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -50,6 +50,14 @@ increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.TP
+\fB\-z\fR, \fB\-\-zero\fR
+zero the Allocated Response Length field in the request. This is required
+for strict SAS\-1.1 compliance. However this option should not be
+given in SAS\-2 and later; if it is given an abridged response may result.
+Also zero Request Length field in the request. This is required
+for strict SAS\-1.1 compliance. Again, this option should not be
+given in SAS\-2 and later.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO

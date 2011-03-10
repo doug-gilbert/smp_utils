@@ -325,7 +325,7 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     char * cp;
     int len, res, k, dword_resp_len;
 
-    dword_resp_len = max_resp_len / 4;
+    dword_resp_len = (max_resp_len - 8) / 4;
     smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
     smp_req[8] = optsp->phy_id;
     smp_req[9] = optsp->do_num;
@@ -833,7 +833,7 @@ main(int argc, char * argv[])
     long long sa_ll;
     char i_params[256];
     char device_name[512];
-    unsigned char resp[1024];
+    unsigned char resp[1020 + 8];
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
