@@ -47,9 +47,7 @@
 
 static char * version_str = "1.17 20110309";    /* sas2r15 */
 
-#ifndef OVERRIDE_TO_SAS2
-#define OVERRIDE_TO_SAS2 0
-#endif
+#define SMP_FN_REPORT_GENERAL_RESP_LEN 84
 
 
 static struct option long_options[] = {
@@ -124,7 +122,7 @@ main(int argc, char * argv[])
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
                                0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[SMP_FN_REPORT_GENERAL_RESP_LEN];
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
     int subvalue = 0;
@@ -255,7 +253,7 @@ main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     if (! do_zero) {
-        len = sizeof(smp_resp) / 4;
+        len = (sizeof(smp_resp) - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff;
     }
     if (verbose) {
@@ -333,7 +331,7 @@ main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
-    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
+    sas2 = !! (smp_resp[3]);
     if (do_change) {
         printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
         goto err_out;
