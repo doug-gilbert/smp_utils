@@ -69,6 +69,11 @@ target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
 SAS addresses are shown in hexadecimal. To give a number in hexadecimal
 either prefix it with '0x' or put a trailing 'h' on it.
 .TP
+\fB\-S\fR, \fB\-\-summary\fR
+output a multi line summary, with one line per active phy. Checks all
+phys (or less is \fI\-\-num=NUM\fR is given), starting at phy 0 (unless
+\fI\-\-phy=ID\fR is given). Equivalent to '--multiple --brief' ('-mb').
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times
 .TP

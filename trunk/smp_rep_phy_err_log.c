@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.09 20110319";
+static char * version_str = "1.10 20110310";
 
 #define SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN 32
 
@@ -71,7 +71,7 @@ static void usage()
           "[--phy=ID]\n"
           "                           [--raw] [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
-          "                           SMP_DEVICE[,N]\n"
+          "                           [--zero] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
