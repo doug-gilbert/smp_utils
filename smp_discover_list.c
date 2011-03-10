@@ -134,7 +134,7 @@ usage()
           "                         not be needed\n");
     fprintf(stderr,
           "    --summary|-S         output 1 line per active phy\n"
-          "                         equivalent to: '-bo -d 1 -n 40'\n"
+          "                         equivalent to: '-o -d 1 -n 40'\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP DISCOVER LIST function\n"
@@ -662,7 +662,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
 }
 
 static int
-decode_1line(const unsigned char * resp, int offset, int desc, int brief)
+decode_1line(const unsigned char * resp, int offset, int desc, int verb)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -706,7 +706,7 @@ decode_1line(const unsigned char * resp, int offset, int desc, int brief)
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
-    if (brief && (0 == adt))
+    if ((0 == verb) && (0 == adt))
         return 0;
     switch (route_attr) {
     case 0:
@@ -829,7 +829,7 @@ int
 main(int argc, char * argv[])
 {
     int res, c, len, hdr_ecc, sphy_id, num_desc, resp_filter, resp_desc_type;
-    int desc_len, k, err, off;
+    int desc_len, k, err, off, adt;
     long long sa_ll;
     char i_params[256];
     char device_name[512];
@@ -992,7 +992,6 @@ main(int argc, char * argv[])
         opts.desc_type = opts.do_brief ? 1 : 0;
     if (opts.do_summary) {
         opts.desc_type = 1;
-        opts.do_brief = 1;
         opts.do_one = 1;
         opts.do_num = 40;
     }
@@ -1055,16 +1054,23 @@ main(int argc, char * argv[])
     for (k = 0, err = 0; k < num_desc; ++k) {
         off = 48 + (k * desc_len);
         if (opts.do_one) {
-            if (decode_1line(resp, off, resp_desc_type, opts.do_brief))
+            if (decode_1line(resp, off, resp_desc_type, opts.verbose))
                 ++err;
         } else {
-            printf("descriptor %d:\n", k + 1);
             if (0 == resp_desc_type) {
-                if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
-                    ++err;
+                adt = (resp[off + 12] >> 4) & 7;
+                if (opts.verbose || adt) {
+                    printf("descriptor %d:\n", k + 1);
+                    if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
+                        ++err;
+                }
             } else if (1 == resp_desc_type) {
-                if (decode_desc1_multiline(resp, off, &opts))
-                    ++err;
+                adt = (resp[off + 2] >> 4) & 7;
+                if (opts.verbose || adt) {
+                    printf("descriptor %d:\n", k + 1);
+                    if (decode_desc1_multiline(resp, off, &opts))
+                        ++err;
+                }
             } else
                 ++err;
         }
