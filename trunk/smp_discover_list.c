@@ -64,6 +64,7 @@ static struct option long_options[] = {
         {"one", 0, 0, 'o'},
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
+        {"summary", 0, 0, 'S'},
         {"raw", 0, 0, 'r'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
@@ -73,6 +74,7 @@ static struct option long_options[] = {
 struct opts_t {
     int do_brief;
     int desc_type;
+    int desc_type_given;
     int filter;
     int do_list;
     int do_hex;
@@ -81,6 +83,7 @@ struct opts_t {
     int do_one;
     int phy_id;
     int do_raw;
+    int do_summary;
     int verbose;
     int sa_given;
     unsigned long long sa;
@@ -95,10 +98,9 @@ usage()
           "                    [--hex] [--ignore] [--interface=PARAMS] "
           "[--list]\n"
           "                    [--num=NUM] [--one] [--phy=ID] [--raw] "
-          "[--sa=SAS_ADDR]\n");
-    fprintf(stderr,
-          "                    [--verbose] [--version] "
-          "<smp_device>[,<n>]\n");
+          "[--sa=SAS_ADDR]\n"
+          "                    [--summary] [--verbose] [--version]\n"
+          "                    <smp_device>[,<n>]\n");
     fprintf(stderr,
           "  where:\n"
           "    --brief|-b           brief: short descriptors and abridged "
@@ -131,6 +133,8 @@ usage()
           "the interface, may\n"
           "                         not be needed\n");
     fprintf(stderr,
+          "    --summary|-S         output 1 line per active phy\n"
+          "                         equivalent to: '-bo -d 1 -n 40'\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP DISCOVER LIST function\n"
@@ -842,7 +846,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bd:f:hHiI:ln:op:rs:t:vV", long_options,
+        c = getopt_long(argc, argv, "bd:f:hHiI:ln:op:rs:SvV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -857,6 +861,7 @@ main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--desc'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++opts.desc_type_given;
             break;
         case 'f':
            opts.filter = smp_get_num(optarg);
@@ -911,6 +916,9 @@ main(int argc, char * argv[])
             opts.sa = (unsigned long long)sa_ll;
             if (opts.sa > 0)
                 ++opts.sa_given;
+            break;
+        case 'S':
+            ++opts.do_summary;
             break;
         case 'v':
             ++opts.verbose;
@@ -979,6 +987,14 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
+    }
+    if (! opts.desc_type_given)
+        opts.desc_type = opts.do_brief ? 1 : 0;
+    if (opts.do_summary) {
+        opts.desc_type = 1;
+        opts.do_brief = 1;
+        opts.do_one = 1;
+        opts.do_num = 40;
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
