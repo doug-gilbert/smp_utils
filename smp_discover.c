@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
  */
 
-static char * version_str = "1.17 20110309";    /* spl-r04 */
+static char * version_str = "1.17 20110310";    /* spl-r04 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -63,6 +63,7 @@ struct opts_t {
     int do_num;
     int phy_id;
     int do_raw;
+    int do_summary;
     int verbose;
     int do_zero;
     int sa_given;
@@ -80,6 +81,7 @@ static struct option long_options[] = {
         {"num", 1, 0, 'n'},
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
+        {"summary", 0, 0, 'S'},
         {"raw", 0, 0, 'r'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
@@ -95,9 +97,9 @@ usage()
           "[--interface=PARAMS]\n"
           "                    [--list] [--multiple] [--num=NUM] "
           "[--phy=ID] [--raw]\n"
-          "                    [--sa=SAS_ADDR] [--verbose] "
-          "[--version] [--zero]\n"
-          "                    SMP_DEVICE[,N]\n"
+          "                    [--sa=SAS_ADDR] [--summary] "
+          "[--verbose] [--version]\n"
+          "                        [--zero] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --brief|-b           brief decoded output\n"
           "    --help|-h            print out usage message\n"
@@ -119,12 +121,18 @@ usage()
           "                         or trailing 'h'). Depending on "
           "the interface, may\n"
           "                         not be needed\n"
+          "    --summary|-S         query phys, output 1 line for each "
+          "active one,\n"
+          "                         equivalent to '--multiple --brief' "
+          "('-mb')\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
           "field,\n"
           "                         may be required prior to SAS-2\n\n"
-          "Performs a SMP DISCOVER function\n"
+          "Sends one or more SMP DISCOVER functions. With '--summary' the "
+          "disposition of\neach active phy in an expander is shown in "
+          "table form.\n"
           );
 
 }
@@ -907,7 +915,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:vVz", long_options,
+        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:SvVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -969,6 +977,9 @@ main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'S':
+            ++opts.do_summary;
+            break;
         case 'z':
             ++opts.do_zero;
             break;
@@ -1033,6 +1044,10 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
+    }
+    if (opts.do_summary) {
+        opts.do_brief = 1;
+        opts.multiple = 1;
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
