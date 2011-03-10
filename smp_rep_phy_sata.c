@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,11 +46,9 @@
  * response.
  */
 
-static char * version_str = "1.09 20080101";
+static char * version_str = "1.10 20110309";
 
-#ifndef OVERRIDE_TO_SAS2
-#define OVERRIDE_TO_SAS2 0
-#endif
+#define SMP_FN_REPORT_PHY_SATA_RESP_LEN 72
 
 
 static struct option long_options[] = {
@@ -63,6 +61,7 @@ static struct option long_options[] = {
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zero", 0, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -73,7 +72,8 @@ static void usage()
           "                        [--interface=PARAMS] [--phy=ID] "
           "[--raw]\n"
           "                        [--sa=SAS_ADDR] [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "[--zero]\n"
+          "                        SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --affiliation=AC|-a AC    affiliation context (field in "
           "request)\n"
@@ -89,7 +89,10 @@ static void usage()
           "the interface, may\n"
           "                         not be needed\n"
           "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "    --version|-V         print version string and exit\n"
+          "    --zero|-z            zero Allocated Response Length "
+          "field,\n"
+          "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT PHY SATA function\n"
           );
 
@@ -105,13 +108,14 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len, sas2;
+    int res, c, k, j, len;
     int aff_context = 0;
     int do_hex = 0;
     int phy_id = 0;
     int phy_id_given = 0;
     int do_raw = 0;
     int verbose = 0;
+    int do_zero = 0;
     long long sa_ll;
     unsigned long long sa = 0;
     unsigned long long ull;
@@ -119,20 +123,19 @@ int main(int argc, char * argv[])
     char device_name[512];
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_SATA,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned char smp_resp[SMP_FN_REPORT_PHY_SATA_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
     int ret = 0;
 
-    sas2 = smp_resp[3] ? 1 : OVERRIDE_TO_SAS2;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "ahHI:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "ahHI:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -181,6 +184,9 @@ int main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'z':
+            ++do_zero;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
@@ -249,6 +255,11 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    if (! do_zero) {     /* SAS-2 or later */
+        len = (sizeof(smp_resp) - 8) / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
+        smp_req[3] = 2; /* Request Length: in dwords */
+    }
     smp_req[9] = phy_id;
     smp_req[10] = aff_context;
     if (verbose) {
@@ -330,8 +341,7 @@ int main(int argc, char * argv[])
     if (verbose || (res > 0))
         printf("  expander change count: %d\n", res);
     printf("  phy identifier: %d\n", smp_resp[9]);
-    if (sas2)
-        printf("  STP I_T nexus loss occurred: %d\n", !!(smp_resp[11] & 0x4));
+    printf("  STP I_T nexus loss occurred: %d\n", !!(smp_resp[11] & 0x4));
     printf("  affiliations supported: %d\n", !!(smp_resp[11] & 0x2));
     printf("  affiliation valid: %d\n", !!(smp_resp[11] & 0x1));
     ull = 0;

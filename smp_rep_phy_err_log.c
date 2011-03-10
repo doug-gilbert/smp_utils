@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,9 @@
  * response.
  */
 
-static char * version_str = "1.08 20080101";
+static char * version_str = "1.09 20110319";
+
+#define SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN 32
 
 
 static struct option long_options[] = {
@@ -58,6 +60,7 @@ static struct option long_options[] = {
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zero", 0, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -82,7 +85,10 @@ static void usage()
           "the interface, may\n"
           "                         not be needed\n"
           "     --verbose|-v        increase verbosity\n"
-          "     --version|-V        print version string and exit\n\n"
+          "     --version|-V        print version string and exit\n"
+          "     --zero|-z           zero Allocated Response Length "
+          "field,\n"
+          "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT PHY ERROR LOG function\n"
           );
 
@@ -104,14 +110,15 @@ int main(int argc, char * argv[])
     int phy_id_given = 0;
     int do_raw = 0;
     int verbose = 0;
+    int do_zero = 0;
     long long sa_ll;
     unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_ERR_LOG,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned char smp_resp[SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
@@ -122,7 +129,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHI:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "hHI:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -164,6 +171,9 @@ int main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'z':
+            ++do_zero;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
@@ -232,6 +242,11 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    if (! do_zero) {     /* SAS-2 or later */
+        len = (sizeof(smp_resp) - 8) / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
+        smp_req[3] = 2; /* Request Length: in dwords */
+    }
     smp_req[9] = phy_id;
     if (verbose) {
         fprintf(stderr, "    Report phy error log request: ");
