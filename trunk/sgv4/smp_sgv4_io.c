@@ -34,7 +34,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
 
     if (strlen(dev_name) > sizeof(buff)) {
         fprintf(stderr, "device name too long (greater than %d bytes)\n",
-                sizeof(buff));
+                (int)sizeof(buff));
         return 0;
     }
     len = 0;
@@ -96,7 +96,7 @@ open_sgv4_device(const char * dev_name, int verbose)
 
     if (strlen(dev_name) > sizeof(buff)) {
         fprintf(stderr, "device name too long (greater than %d bytes)\n",
-                sizeof(buff));
+                (int)sizeof(buff));
         return 0;
     }
     len = 0;
