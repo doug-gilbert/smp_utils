@@ -54,7 +54,7 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Wed Mar 09 2011 - dgilbert at interlog dot com
+* Fri Mar 11 2011 - dgilbert at interlog dot com
 - corrections for SAS-2
   * smp_utils-0.96
 * Tue Oct 27 2009 - dgilbert at interlog dot com
