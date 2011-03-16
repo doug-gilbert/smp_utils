@@ -5,9 +5,9 @@ smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 .B smp_conf_general
 [\fI\-\-connect=CO\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-inactivity=IN\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-nexus=NE\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-nexus=NE\fR] [\fI\-\-open=OP\fR] [\fI\-\-raw\fR]
+[\fI\-\-reduced=RE\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -59,8 +59,19 @@ corresponding "STP SMP I_T nexus loss time" field to \fINE\fR. Unit of
 specific amount of time; a \fINE\fR of 65535 means the port shall never
 recognize an I_T nexus loss.
 .TP
+\fB\-o\fR, \fB\-\-open\fR=\fIOP\fR
+sets the "update STP reject to open limit" flag and the
+corresponding "STP reject to open limit" field to \fIOP\fR. Unit of
+\fIOP\fR is 10 microseconds.
+.TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-R\fR, \fB\-\-reduced\fR=\fIRE\fR
+sets the "update Initial time to reduced functionality" flag and the
+corresponding "Initial time to reduced functionality" field to \fIRE\fR.
+Unit of \fIRE\fR is 100 milliseconds. The maximum permitted \fIRE\fR value
+is 255 which corresponds to 25.5 seconds.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an

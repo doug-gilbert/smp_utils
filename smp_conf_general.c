@@ -45,7 +45,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.02 20110309";
+static char * version_str = "1.02 20110313";
 
 
 static struct option long_options[] = {
@@ -56,7 +56,9 @@ static struct option long_options[] = {
         {"inactivity", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
         {"nexus", 1, 0, 'p'},
+        {"open", 1, 0, 'o'},
         {"raw", 0, 0, 'r'},
+        {"reduced", 1, 0, 'R'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
@@ -70,9 +72,11 @@ static void usage()
           "[--hex]\n"
           "                        [--inactivity=IN] "
           "[--interface=PARAMS]\n"
-          "                        [--nexus=NE] [--raw] [--sa=SAS_ADDR] "
-          "[--verbose]\n"
-          "                        [--version] SMP_DEVICE[,N]\n"
+          "                        [--nexus=NE] [--open=OP] [--raw] "
+          "[--reduced=RE]\n"
+          "                        [--sa=SAS_ADDR] [--verbose] "
+          "[--version]\n"
+          "                        SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --connect=CO|-c CO    STP maximum connect time limit "
           "(100 us)\n"
@@ -86,12 +90,16 @@ static void usage()
           "interface\n"
           "    --nexus=NE|-n NE     STP SMP I_T nexus loss time "
           "(ms)\n"
+          "    --open=OP|-o OP      STP reject to open limit "
+          "(10 us)\n"
           "    --raw|-r             output response in binary\n"
+          "    --reduced=RE|-R RE    initial time to reduced functionality "
+          "(100 ms)\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                         '0x' or trailing 'h'). Depending on "
+          "the\n"
+          "                         interface, may not be needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP CONFIGURE GENERAL function\n"
@@ -115,9 +123,13 @@ int main(int argc, char * argv[])
     int do_hex = 0;
     int do_inactivity = 0;
     int do_nexus = 0;
+    int do_open = 0;
+    int do_reduced = 0;
     int connect_val = 0;
     int inactivity_val = 0;
     int nexus_val = 0;
+    int open_val = 0;
+    int reduced_val = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -139,7 +151,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:E:hHi:I:n:rs:vV", long_options,
+        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:rR:s:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -187,8 +199,24 @@ int main(int argc, char * argv[])
             }
             ++do_nexus;
             break;
+        case 'o':
+            open_val = smp_get_num(optarg);
+            if ((open_val < 0) || (open_val > 65535)) {
+                fprintf(stderr, "bad argument to '--open'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            ++do_open;
+            break;
         case 'r':
             ++do_raw;
+            break;
+        case 'R':
+            reduced_val = smp_get_num(optarg);
+            if ((reduced_val < 0) || (reduced_val > 255)) {
+                fprintf(stderr, "bad argument to '--reduced'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            ++do_reduced;
             break;
         case 's':
             sa_ll = smp_get_llnum(optarg);
@@ -288,6 +316,15 @@ int main(int argc, char * argv[])
         smp_req[8] |= 0x4;
         smp_req[14] = (nexus_val >> 8) & 0xff;
         smp_req[15] = nexus_val & 0xff;
+    }
+    if (do_open) {
+        smp_req[8] |= 0x10;
+        smp_req[18] = (open_val >> 8) & 0xff;
+        smp_req[19] = open_val & 0xff;
+    }
+    if (do_reduced) {
+        smp_req[8] |= 0x8;
+        smp_req[16] = reduced_val & 0xff;
     }
     if (verbose) {
         fprintf(stderr, "    Configure general request: ");

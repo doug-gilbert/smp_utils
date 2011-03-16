@@ -6,8 +6,9 @@ smp_phy_control \- invoke PHY CONTROL SMP function
 [\fI\-\-attached=ADN\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR]
 [\fI\-\-min=MI\fR] [\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR]
-[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-sas_pa=CO\fR]
+[\fI\-\-sas_sl=CO\fR] [\fI\-\-sata_pa=CO\fR] [\fI\-\-sata_sl=CO\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -61,12 +62,12 @@ man page for more information.
 \fB\-M\fR, \fB\-\-max\fR=\fIMA\fR
 permits the programmed maximum physical link rate to be changed on the
 gven phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
-Gbps, 10 \-> 6 Gbps. Default value is 0.
+Gbps, 10 \-> 6 Gbps or 11 \-> 12 Gbps. Default value is 0.
 .TP
 \fB\-m\fR, \fB\-\-min\fR=\fIMI\fR
 permits the programmed minimum physical link rate to be changed on the
 given phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
-Gbps, 10 \-> 6 Gbps. Default value is 0.
+Gbps, 10 \-> 6 Gbps or 11 \-> 12 Gbps. Default value is 0.
 .TP
 \fB\-o\fR, \fB\-\-op\fR=\fIOP\fR
 specifies the operation to be performed on the given phy. The \fIOP\fR
@@ -97,6 +98,26 @@ target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most SAS
 addresses are shown in hexadecimal. To give a number in hexadecimal either
 prefix it with '0x' or put a trailing 'h' on it.
 .TP
+\fB\-q\fR, \fB\-\-sas_pa\fR=\fICO\fR
+set the Enable SAS Partial field to \fICO\fR which is two bits wide.
+The defined values for \fICO\fR are 0 for no change; 1 for manage partial
+phy power conditions; 2 for disable partial phy power conditions.
+.TP
+\fB\-l\fR, \fB\-\-sas_sl\fR=\fICO\fR
+set the Enable SAS Slumber field to \fICO\fR which is two bits wide.
+The defined values for \fICO\fR are 0 for no change; 1 for manage slumber
+phy power conditions; 2 for disable slumber phy power conditions.
+.TP
+\fB\-Q\fR, \fB\-\-sata_pa\fR=\fICO\fR
+set the Enable SATA Partial field to \fICO\fR which is two bits wide.
+The defined values for \fICO\fR are 0 for no change; 1 for manage partial
+phy power conditions; 2 for disable partial phy power conditions.
+.TP
+\fB\-L\fR, \fB\-\-sata_sl\fR=\fICO\fR
+set the Enable SATA Slumber field to \fICO\fR which is two bits wide.
+The defined values for \fICO\fR are 0 for no change; 1 for manage slumber
+phy power conditions; 2 for disable slumber phy power conditions.
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times
 .TP
@@ -111,7 +132,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2009 Douglas Gilbert
+Copyright \(co 2006\-2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
