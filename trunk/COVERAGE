@@ -58,8 +58,16 @@ is sas2r15.pdf and is being submitted for approval.
 At this time all SMP functions introduced in the original standard
 and SAS-1.1 have corresponding smp_utils utilities. Currently
 smp_discover_list and smp_rep_exp_route_tbl are the only utilities
-corresponding to a newly introduced function in SAS-2.
+corresponding to newly introduced functions in SAS-2.
+
+Now there is a SAS-2.1 standard at the draft stage and it has been
+split into 2 documents. The document containing the SMP functions
+is called the SAS Protocol Layer (SPL). So far only a small number
+of changes have been made to the SMP functions in the SPL draft.
+Work is ongoing on a SAS-3 standard in which a phy can run up to
+12 Gbps. To date no drafts have been published but the document
+containing the SMP functions will probably be known as SPL-2.
 
 
 Doug Gilbert
-26th December 2008
+14th March 2011

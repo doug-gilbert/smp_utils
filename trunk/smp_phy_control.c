@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.09 20080101";
+static char * version_str = "1.10 20110314";
 
 
 static struct option long_options[] = {
@@ -62,6 +62,10 @@ static struct option long_options[] = {
         {"pptv", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
+        {"sas_pa", 1, 0, 'q'},
+        {"sas_sl", 1, 0, 'l'},
+        {"sata_pa", 1, 0, 'Q'},
+        {"sata_sl", 1, 0, 'L'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -74,10 +78,13 @@ static void usage()
           "[--hex]\n"
           "                       [--interface=PARAMS] [--max=MA] "
           "[--min=MI] [--op=OP]\n"
-          "                       [--phy=ID] [pptv=TI] [--raw] "
+          "                       [--phy=ID] [--pptv=TI] [--raw] "
           "[--sa=SAS_ADDR]\n"
-          "                       [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "                       [--sas_pa=CO] [--sas_sl=CO] "
+          "[--sata_pa=CO]\n"
+          "                       [--sata_sl=CO] [--version] "
+          "[--verbose] [--version]\n"
+          "                       SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --attached=ADN|-a ADN    attached device name\n"
           "    --expected=EX|-E EX    set expected expander change count "
@@ -92,6 +99,15 @@ static void usage()
           "10->6 Gbps)\n"
           "    --min=MI|-m MI       programmable minimum physical link "
           "speed\n"
+          "    --sas_pa=CO|-q CO    Enable SAS Partial field; CO: 0->leave "
+          "(def), 1->\n"
+          "                         manage, 2->disable\n"
+          "    --sas_sl=CO|-l CO    Enable Slumber Partial field; for CO "
+          "see --sas_pa=\n"
+          "    --sata_pa=CO|-Q CO    Enable SATA Partial field; for CO "
+          "see --sas_pa=\n"
+          "    --sata_sl=CO|-L CO    Enable SATA Slumber field; for CO "
+          "see --sas_pa=\n"
           "    --op=OP|-o OP        OP (operation) is a number or "
           "abbreviation (from:\n"
           "                         nop, lr, hr, dis, cel, ca, tspss, "
@@ -102,10 +118,10 @@ static void usage()
           "                         (if given sets UPPTV bit)\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                         '0x' or trailing 'h'). Depending on "
+          "the interface,\n"
+          "                         may not be needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP PHY CONTROL function\n"
@@ -152,6 +168,10 @@ int main(int argc, char * argv[])
     int do_min = 0;
     int do_max = 0;
     int op_val = 0;
+    int sas_pa = 0;
+    int sas_sl = 0;
+    int sata_pa = 0;
+    int sata_sl = 0;
     int pptv = -1;
     int phy_id = 0;
     int do_raw = 0;
@@ -178,8 +198,8 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "a:E:hHI:m:M:o:p:P:rs:vV", long_options,
-                        &option_index);
+        c = getopt_long(argc, argv, "a:E:hHI:l:L:m:M:o:p:P:q:Q;rs:vV",
+                        long_options, &option_index);
         if (c == -1)
             break;
 
@@ -217,10 +237,11 @@ int main(int argc, char * argv[])
             case 8:
             case 9:
             case 10:
+            case 11:
                 break;
             default:
-                fprintf(stderr, "bad argument to '--min', want 0, 8, 9 "
-                        "or 10\n");
+                fprintf(stderr, "bad argument to '--min', want 0, 8, 9, "
+                        "10 or 11\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -231,10 +252,25 @@ int main(int argc, char * argv[])
             case 8:
             case 9:
             case 10:
+            case 11:
                 break;
             default:
-                fprintf(stderr, "bad argument to '--max', want 0, 8, 9 "
-                        "or 10\n");
+                fprintf(stderr, "bad argument to '--max', want 0, 8, 9, "
+                        "10 or 11\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'l':
+           sas_sl = smp_get_num(optarg);
+           if ((sas_sl < 0) || (sas_sl > 3)) {
+                fprintf(stderr, "bad argument to '--sas_sl'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'L':
+           sata_sl = smp_get_num(optarg);
+           if ((sata_sl < 0) || (sata_sl > 3)) {
+                fprintf(stderr, "bad argument to '--sata_sl'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -271,6 +307,20 @@ int main(int argc, char * argv[])
            if ((pptv < 0) || (pptv > 15)) {
                 fprintf(stderr, "bad argument to '--pptv', want value"
                         "from 0 to 15 inclusive\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'q':
+           sas_pa = smp_get_num(optarg);
+           if ((sas_pa < 0) || (sas_pa > 3)) {
+                fprintf(stderr, "bad argument to '--sas_pa'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'Q':
+           sata_pa = smp_get_num(optarg);
+           if ((sata_pa < 0) || (sata_pa > 3)) {
+                fprintf(stderr, "bad argument to '--sata_pa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -373,6 +423,7 @@ int main(int argc, char * argv[])
     }
     smp_req[32] |= (do_min << 4);
     smp_req[33] |= (do_max << 4);
+    smp_req[34] = (sas_sl << 6) | (sas_pa << 4) | (sata_sl << 2) | sata_pa;
     if (verbose) {
         fprintf(stderr, "    Phy control request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
@@ -401,7 +452,8 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", smp_rr.act_response_len);
+        fprintf(stderr, "response too short, len=%d\n",
+                smp_rr.act_response_len);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -429,12 +481,14 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n", smp_resp[0]);
+        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n", smp_req[1], smp_resp[1]);
+        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
 
