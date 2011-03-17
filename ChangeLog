@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20110314] [svn:r61]
+Changelog for smp_utils-0.96 [20110316] [svn:r62]
   - remove doc/smp_utils.html , refer readers to web page
   - smp_discover_list: SAS-2 fix, add --summary option
   - smp_rep_exp_route_tbl: SAS-2 fix
@@ -12,6 +12,7 @@ Changelog for smp_utils-0.96 [20110314] [svn:r61]
     add --zero options
   - smp_conf_general: sync to SAS-2
   - smp_phy_control: sync to SAS-2, SPL
+  - smp_phy_test: sync to SAS-2
 
 Changelog for smp_utils-0.95 [20101116] [svn:r47]
   - place link to smp_utils.html examples in man pages
