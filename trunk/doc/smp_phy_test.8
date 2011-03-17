@@ -6,8 +6,9 @@ smp_phy_test \- invoke PHY TEST FUNTION SMP function
 [\fI\-\-control=CO\fR] [\fI\-\-dwords=DW\fR] [\fI\-\-expected=EX\fR]
 [\fI\-\-function=FN\fR]  [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-linkrate=LR\fR] [\fI\-\-pattern=PA\fR]
-[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-sata\fR]
+[\fI\-\-spread=SC\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -70,7 +71,8 @@ man page for more information.
 .TP
 \fB\-l\fR, \fB\-\-linkrate\fR=\fILR\fR
 transmits the test pattern at the specified physical link rate:
-8 \-> 1.5 Gbps, 9 \-> 3 Gbps, 10 \-> 6 Gbps. Default value is 9.
+8 \-> 1.5 Gbps, 9 \-> 3 Gbps, 10 \-> 6 Gbps, 11 \-> 12 Gbps. Default
+value is 9.
 .TP
 \fB\-P\fR, \fB\-\-pattern\fR=\fIPA\fR
 specifies the type of test pattern to transmit. SAS\-2 (rev15) values are:
@@ -89,6 +91,15 @@ expander. This option may not be needed if the \fISMP_DEVICE\fR has the
 target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most
 SAS addresses are shown in hexadecimal. To give a number in hexadecimal
 either prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-t\fR, \fB\-\-sata\fR
+set phy test function SATA bit. The default action is to leave that bit
+clear (zero).
+.TP
+\fB\-S\fR, \fB\-\-spread\fR=\fISC\fR
+set the phy test function Spread Spectrum Clocking (SSC) field to \fISC\fR.
+Default value is zero (no spreading). Other defined values are 1 for centre
+spreading and 2 for down spreading.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times

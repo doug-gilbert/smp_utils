@@ -46,7 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.06 20110314"; /* sync with sas2r15 */
+static char * version_str = "1.07 20110316"; /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -61,6 +61,8 @@ static struct option long_options[] = {
         {"pattern", 1, 0, 'P'},
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
+        {"sata", 0, 0, 't'},
+        {"spread", 1, 0, 'S'},
         {"raw", 0, 0, 'r'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
@@ -75,9 +77,9 @@ usage()
           "                    [--function=FN] [--help] [--hex] "
           "[--interface=PARAMS]\n"
           "                    [--linkrate=LR] [--pattern=PA] [--phy=ID]\n"
-          "                    [--raw] [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                    SMP_DEVICE[,N]\n"
+          "                    [--raw] [--sa=SAS_ADDR] [--sata] "
+          "[--spread=SP]\n"
+          "                    [--verbose] [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --control=CO|-c CO    phy test pattern dwords control "
           "(def: 0)\n"
@@ -100,6 +102,10 @@ usage()
           "                         or trailing 'h'). Depending on "
           "the interface, may\n"
           "                         not be needed\n"
+          "    --sata|-t            set phy test function SATA bit "
+          "(def: 0)\n"
+          "    --spread=SC|-S SC    set phy test function SCC to SC "
+          "(def: 0)\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP PHY TEST FUNCTION function\n"
@@ -129,6 +135,8 @@ main(int argc, char * argv[])
     int pattern = 2;    /* CJTPAT */
     int phy_id = 0;
     int do_raw = 0;
+    int do_sata = 0;
+    int do_ssc = 0;
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
@@ -151,8 +159,8 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:d:E:f:hHI:l:p:P:rs:vV", long_options,
-                        &option_index);
+        c = getopt_long(argc, argv, "c:d:E:f:hHI:l:p:P:rs:S:tvV",
+                        long_options, &option_index);
         if (c == -1)
             break;
 
@@ -232,6 +240,16 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
+            break;
+        case 'S':
+            do_ssc = smp_get_num(optarg);
+            if ((do_ssc < 0) || (do_ssc > 3)) {
+                fprintf(stderr, "bad argument to '--spread'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 't':
+            ++do_sata;
             break;
         case 'v':
             ++verbose;
@@ -313,6 +331,8 @@ main(int argc, char * argv[])
     smp_req[10] = do_function;
     smp_req[11] = pattern;
     smp_req[15] = linkrate & 0xf;
+    smp_req[15] |= (do_ssc << 4) & 0x30;
+    smp_req[15] |= (do_sata << 6) & 0x40;
     smp_req[19] = do_control;
     for (k = 0; k < 8; ++k, dwords >>= 8)
         smp_req[20 + 7 - k] = dwords & 0xff;
