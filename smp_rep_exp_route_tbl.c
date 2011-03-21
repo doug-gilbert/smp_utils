@@ -46,40 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.05 20110309";    /* sync with sas2r15 */
-
-
-#define SMP_UTILS_TEST
-
-#ifdef SMP_UTILS_TEST
-static unsigned char tst1_resp[] = {
-    0x41, 0x22, 0, 11, 0, 1, 0, 2, 0x0, 0x0, 4, 1,
-    0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0x0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
-    0x0, 0x0, 0x0, 0x0, 0x0, 0x8,
-    0x80, 0x7,
-
-    0, 0, 0, 0};
-
-static unsigned char tst2_resp[] = {
-    0x41, 0x22, 0, 15, 0, 1, 0, 2, 0x0, 0x0, 4, 2,
-    0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0x0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-    0x51, 0x11, 0x22, 0x33, 0x39, 0x88, 0x77, 0x66,
-    0x0, 0x0, 0x0, 0x0, 0x0, 0x8,
-    0x80, 0x7,
-
-    0x50, 0x0, 0x33, 0x44, 0x41, 0x11, 0x22, 0x33,
-    0x0, 0x0, 0x0, 0x0, 0x20, 0x0,
-    0x80, 0x5,
-
-    0, 0, 0, 0};
-
-#endif
-
+static char * version_str = "1.05 20110320";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -92,9 +59,6 @@ static struct option long_options[] = {
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
         {"raw", 0, 0, 'r'},
-#ifdef SMP_UTILS_TEST
-        {"test", 1, 0, 't'},
-#endif
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -107,7 +71,6 @@ struct opts_t {
     int do_num;
     int phy_id;
     int do_raw;
-    int do_test;
     int verbose;
     int sa_given;
     unsigned long long sa;
@@ -122,10 +85,6 @@ usage()
           "                    [--interface=PARAMS] [--num=NUM] [--phy=ID] "
           "[--raw]\n"
           "                    [--sa=SAS_ADDR] ");
-#ifdef SMP_UTILS_TEST
-    fprintf(stderr,
-          "[--test=TE] ");
-#endif
     fprintf(stderr,
           "[--verbose] [--version]\n"
           "                    <smp_device>[,<n>]\n"
@@ -143,15 +102,10 @@ usage()
           "phy id]\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n");
-#ifdef SMP_UTILS_TEST
-    fprintf(stderr,
-          "    --test=TE|-t TE      test responses (def: 0 (non-test "
-          "mode))\n");
-#endif
+          "target (use leading\n"
+          "                         '0x' or trailing 'h'). Depending on "
+          "the\n"
+          "                         interface, may not be needed\n");
     fprintf(stderr,
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
@@ -203,23 +157,7 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
-    if (0 == optsp->do_test)
-        res = smp_send_req(top, &smp_rr, optsp->verbose);
-    else {
-#ifdef SMP_UTILS_TEST
-        memset(resp, 0, max_resp_len);
-        if (1 == optsp->do_test)
-            memcpy(resp, tst1_resp, sizeof(tst1_resp));
-        else if (2 == optsp->do_test)
-            memcpy(resp, tst2_resp, sizeof(tst2_resp));
-        else
-            fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
-#else
-        fprintf(stderr, ">>> test %d not supported\n", optsp->do_test);
-#endif
-        smp_rr.act_response_len = -1;
-        res = 0;
-    }
+    res = smp_send_req(top, &smp_rr, optsp->verbose);
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
@@ -301,7 +239,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHi:I:n:p:rs:t:vV", long_options,
+        c = getopt_long(argc, argv, "bhHi:I:n:p:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -355,15 +293,6 @@ main(int argc, char * argv[])
             if (opts.sa > 0)
                 ++opts.sa_given;
             break;
-#ifdef SMP_UTILS_TEST
-        case 't':
-           opts.do_test = smp_get_num(optarg);
-           if ((opts.do_test < 0) || (opts.do_test > 127)) {
-                fprintf(stderr, "bad argument to '--test'\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            break;
-#endif
         case 'v':
             ++opts.verbose;
             break;
@@ -433,12 +362,10 @@ main(int argc, char * argv[])
         }
     }
 
-    if (0 == opts.do_test) {
-        res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
-                                 &tobj, opts.verbose);
-        if (res < 0)
-            return SMP_LIB_FILE_ERROR;
-    }
+    res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
+                             &tobj, opts.verbose);
+    if (res < 0)
+        return SMP_LIB_FILE_ERROR;
 
     ret = do_rep_exp_rou_tbl(&tobj, resp, sizeof(resp), &opts);
     if (ret)
@@ -488,20 +415,14 @@ main(int argc, char * argv[])
         for (j = 0; j < 6; ++j)
             printf("%02x", resp[off + 8 + j]);
         printf("\n");
-#if 0
-        // gone is sas2r15
-        printf("    zone group valid: %d\n", !!(resp[off + 14] & 0x80));
-#endif
         printf("    zone group: %d\n", resp[off + 15]);
     }
 
 finish:
-    if (0 == opts.do_test) {
-        res = smp_initiator_close(&tobj);
-        if (res < 0) {
-            if (0 == ret)
-                return SMP_LIB_FILE_ERROR;
-        }
+    res = smp_initiator_close(&tobj);
+    if (res < 0) {
+        if (0 == ret)
+            return SMP_LIB_FILE_ERROR;
     }
     return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
 }

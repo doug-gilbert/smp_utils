@@ -45,10 +45,10 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  *
  * Defined in SAS-2 (most recent draft sas2r16.pdf) and SPL which defines
- * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r4.pdf .
+ * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.11 20110309";    /* spl-r04 */
+static char * version_str = "1.11 20110320";    /* spl-r07 */
 
 
 static struct option long_options[] = {

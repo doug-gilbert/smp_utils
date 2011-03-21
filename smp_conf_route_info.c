@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.03 20061206";
+static char * version_str = "1.04 20110320";
 
 
 static struct option long_options[] = {
@@ -87,13 +87,13 @@ static void usage()
           "interface\n"
           "    --phy=ID|-p ID       phy identifier (def: 0)\n"
           "    --raw|-r             output response in binary\n"
-          "    --routed=R_SAS_ADDR|-R R_SAS_ADDR    to be placed in "
-          "route entry\n"
+          "    --routed=R_SAS_ADDR|-R R_SAS_ADDR    routed SAS "
+          "address\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                         '0x' or trailing 'h'). Depending on "
+          "the\n"
+          "                         interface, may not be needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP CONFIGURE ROUTE INFORMATION function\n"
