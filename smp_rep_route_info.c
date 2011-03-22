@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,9 @@
  * response.
  */
 
-static char * version_str = "1.06 20080101";
+static char * version_str = "1.07 20110321";
+
+#define REP_ROUTE_INFO_RESP_LEN 44
 
 
 static struct option long_options[] = {
@@ -61,6 +63,7 @@ static struct option long_options[] = {
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zero", 0, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -73,7 +76,7 @@ static void usage()
           "[--raw]\n"
           "                          [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
-          "                          SMP_DEVICE[,N]\n"
+          "                          [--zero] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --help|-h         print out usage message\n"
           "    --hex|-H          print response in hexadecimal\n"
@@ -92,7 +95,10 @@ static void usage()
           "the interface, may\n"
           "                      not be needed\n"
           "    --verbose|-v      increase verbosity\n"
-          "    --version|-V      print version string and exit\n\n"
+          "    --version|-V      print version string and exit\n"
+          "    --zero|-z         zero Allocated Response Length "
+          "field,\n"
+          "                      may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT ROUTE INFORMATION function\n"
           );
 
@@ -112,15 +118,21 @@ static void dStrRaw(const char* str, int len)
  */
 static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
                         unsigned char * resp, int max_resp_len,
-                        int * resp_len, int do_hex, int do_raw, int verbose)
+                        int * resp_len, int do_zero, int do_hex, int do_raw,
+                        int verbose)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ROUTE_INFO,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
     int len, res, k;
 
+    if (! do_zero) {     /* SAS-2 or later */
+        len = (max_resp_len - 8) / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
+        smp_req[3] = 2; /* Request Length: in dwords */
+    }
     smp_req[6] = (index >> 8) & 0xff;
     smp_req[7] = index & 0xff;
     smp_req[9] = phy_id;
@@ -204,9 +216,10 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
 #define MAX_ADJACENT_DISABLED 4
 
 static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
-                       int num_ind, int do_hex, int do_raw, int verbose)
+                       int num_ind, int do_zero, int do_hex, int do_raw,
+                       int verbose)
 {
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
     unsigned long long ull;
     int res, len, j, k, num, disabled, adj_dis;
     int first = 1;
@@ -214,7 +227,7 @@ static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
     num = num_ind ? (index + num_ind) : MAX_NUM_INDEXES;
     for (adj_dis = 0, k = index; k < num; ++k) {
         res = do_rep_route(top, phy_id, k, smp_resp, sizeof(smp_resp),
-                           &len, do_hex, do_raw, verbose);
+                           &len, do_zero, do_hex, do_raw, verbose);
         if (SMP_FRES_NO_INDEX == res)
             return 0;   /* expected, end condition */
         if (res)
@@ -249,14 +262,14 @@ static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
 }
 
 static int do_single(struct smp_target_obj * top, int phy_id, int index,
-                     int do_hex, int do_raw, int verbose)
+                     int do_zero, int do_hex, int do_raw, int verbose)
 {
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
     unsigned long long ull;
     int res, len, j;
 
     res = do_rep_route(top, phy_id, index, smp_resp, sizeof(smp_resp),
-                       &len, do_hex, do_raw, verbose);
+                       &len, do_zero, do_hex, do_raw, verbose);
     if (res)
         return res;
     if (do_hex || do_raw)
@@ -291,6 +304,7 @@ int main(int argc, char * argv[])
     int phy_id = 0;
     int do_raw = 0;
     int verbose = 0;
+    int do_zero = 0;
     long long sa_ll;
     unsigned long long sa = 0;
     char i_params[256];
@@ -305,7 +319,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHi:I:mn:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "hHi:I:mn:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -363,6 +377,9 @@ int main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'z':
+            ++do_zero;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
@@ -435,10 +452,11 @@ int main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     if (multiple)
-        ret = do_multiple(&tobj, phy_id, er_ind, do_num, do_hex, do_raw,
-                          verbose);
+        ret = do_multiple(&tobj, phy_id, er_ind, do_num, do_zero, do_hex,
+                          do_raw, verbose);
     else
-        ret = do_single(&tobj, phy_id, er_ind, do_hex, do_raw, verbose);
+        ret = do_single(&tobj, phy_id, er_ind, do_zero, do_hex, do_raw,
+                        verbose);
 
     if ((0 == verbose) && ret) {
         if (SMP_LIB_CAT_MALFORMED == ret)

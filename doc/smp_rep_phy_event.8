@@ -1,25 +1,23 @@
-.TH SMP_REP_PHY_SATA "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_PHY_EVENT "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
-smp_rep_phy_sata \- invoke REPORT PHY SATA SMP function
+smp_rep_phy_event \- invoke REPORT PHY EVENT SMP function
 .SH SYNOPSIS
-.B smp_rep_phy_sata
-[\fI\-\-affiliation=AC\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-[\fI\-\-zero\fR] \fISMP_DEVICE[,N]\fR
+.B smp_rep_phy_event
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) REPORT PHY SATA request function
+Sends a SAS Management Protocol (SMP) REPORT PHY EVENT request function
 to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
 the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
 deduced from the \fISMP_DEVICE\fR. With one interface there is one
 \fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
 differentiate between HBAs if there are multiple present.
-.TP
-\fB\-a\fR, \fB\-\-affiliation\fR=\fIAC\fR
-where \fIAC\fR is the affiliation context relative identifier that is
-placed in request (new in sas2r08). Defaults to 0.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -50,26 +48,29 @@ increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
-.TP
-\fB\-z\fR, \fB\-\-zero\fR
-zero the Allocated Response Length field in the request. This option
-also zeros the Request Length field in the request. This is required
-for strict SAS\-1.1 compliance. However this option should not be
-given in SAS\-2 and later; if it is given an abridged response may result.
-.SH EXAMPLES
-See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
+.SH NOTES
+Similar information is maintained for SAS SSP target phys (e.g. on a SAS
+disk). It can be obtained from the Protocol Specific Port log page with
+the sg_logs utility.
+.PP
+Similar information may be obtained for SAS initiator phys (e.g. on a SAS
+HBA). As an example in Linux 2.6.28 error information can be found in this
+directory /sys/class/sas_phy/phy-4:0 (for the phy 0 in SCSI/SAS host 4).
+.PP
+Similar information may be obtained for SATA device phys (e.g. on a SATA
+disk). If there is a SAT layer between OS and the SATA device then the
+sg_sat_phy_event utility can fetch the information.
 .SH CONFORMING TO
-The SMP REPORT PHY SATA function was introduced in SAS\-1 .
-The "Expander change count", "STP I_T nexus loss occurred" and several other
-fields were added in SAS\-2 .
+The SMP REPORT PHY EVENT function was introduced in SAS\-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_phy_control(smp_utils)
+.B smp_utils, smp_phy_control, smp_rep_phy_event_list(smp_utils)
+.B sg_logs, sg_sat_phy_event(sg3_utils)
