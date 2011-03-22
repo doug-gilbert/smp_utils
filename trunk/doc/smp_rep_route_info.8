@@ -6,7 +6,7 @@ smp_rep_route_info \- invoke REPORT ROUTE INFORMATION SMP function
 [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=IN\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-multiple\fR] [\fI\-\-num=NUM\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -77,6 +77,12 @@ increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.TP
+\fB\-z\fR, \fB\-\-zero\fR
+zero the Allocated Response Length field in the request. This option 
+also zeros the Request Length field in the request. This is required
+for strict SAS\-1.1 compliance. However this option should not be
+given in SAS\-2 and later; if it is given an abridged response may result.
 .SH CONFORMING TO
 The SMP REPORT ROUTE INFORMATION function was introduced in SAS\-1 .
 The "Expander change count" field was added in SAS\-2 .

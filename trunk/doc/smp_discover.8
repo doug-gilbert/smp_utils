@@ -81,12 +81,10 @@ increase the verbosity of the output. Can be used multiple times
 print the version string and then exit.
 .TP
 \fB\-z\fR, \fB\-\-zero\fR
-zero the Allocated Response Length field in the request. This is required
+zero the Allocated Response Length field in the request. This option
+also zeros the Request Length field in the request. This is required
 for strict SAS\-1.1 compliance. However this option should not be
 given in SAS\-2 and later; if it is given an abridged response may result.
-Also zero Request Length field in the request. This is required
-for strict SAS\-1.1 compliance. Again, this option should not be
-given in SAS\-2 and later.
 .SH SINGLE LINE FORMAT
 The \fI\-\-multiple\fR option causes SMP DISCOVER responses to be compressed
 to a header followed by one line per phy. To save space SAS addresses are

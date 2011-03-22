@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.10 20110309";
+static char * version_str = "1.10 20110321";
 
 #define SMP_FN_REPORT_PHY_SATA_RESP_LEN 72
 
@@ -84,10 +84,10 @@ static void usage()
           "    --phy=ID|-p ID       phy identifier (def: 0)\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                         '0x' or trailing 'h'). Depending on "
+          "the\n"
+          "                         interface, may not be needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
