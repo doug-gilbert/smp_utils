@@ -46,7 +46,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.10 20110314";
+static char * version_str = "1.11 20110322";
 
 
 static struct option long_options[] = {
@@ -458,7 +458,7 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     len = smp_resp[3];
-    if (0 == len) {
+    if ((0 == len) && (0 == smp_resp[2])) {
         len = smp_get_func_def_resp_len(smp_resp[1]);
         if (len < 0) {
             len = 0;
@@ -474,10 +474,14 @@ int main(int argc, char * argv[])
             dStrRaw((const char *)smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
             ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[1] != smp_req[1])
+        else if (smp_resp[1] != smp_req[1])
             ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[2])
+        else if (smp_resp[2]) {
+            if (verbose)
+                fprintf(stderr, "Phy control result: %s\n",
+                        smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
+        }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
@@ -507,5 +511,9 @@ err_out:
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
-    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
+    if (ret < 0)
+        ret = SMP_LIB_CAT_OTHER;
+    if (verbose && ret)
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+    return ret;
 }
