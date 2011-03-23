@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.04 20080101";
+static char * version_str = "1.05 20110322";
 
 
 static struct option long_options[] = {
@@ -305,9 +305,9 @@ int main(int argc, char * argv[])
             dStrRaw((const char *)smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
             ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[1] != smp_req[1])
+        else if (smp_resp[1] != smp_req[1])
             ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[2])
+        else if (smp_resp[2])
             ret = smp_resp[2];
         goto err_out;
     }
@@ -322,7 +322,6 @@ int main(int argc, char * argv[])
                 smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
-
     }
     if (smp_resp[2]) {
         ret = smp_resp[2];
@@ -373,5 +372,9 @@ err_out:
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
-    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
+        if (ret < 0)
+        ret = SMP_LIB_CAT_OTHER;
+    if (verbose && ret)
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+    return ret;
 }

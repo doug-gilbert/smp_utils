@@ -166,7 +166,7 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
         return SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
-    if (0 == len) {
+    if ((0 == len) && (0 == resp[2])) {
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
@@ -184,8 +184,12 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
             return SMP_LIB_CAT_MALFORMED;
         if (resp[1] != smp_req[1])
             return SMP_LIB_CAT_MALFORMED;
-        if (resp[2])
+        if (resp[2]) {
+            if (verbose)
+                fprintf(stderr, "Report route information result: %s\n",
+                        smp_get_func_res_str(resp[2], sizeof(b), b));
             return resp[2];
+        }
         if (resp_len)
             *resp_len = len;
         return 0;
@@ -473,5 +477,9 @@ int main(int argc, char * argv[])
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
-    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
+    if (ret < 0)
+        ret = SMP_LIB_CAT_OTHER;
+    if (verbose && ret)
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+    return ret;
 }

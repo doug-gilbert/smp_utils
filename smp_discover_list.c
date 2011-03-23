@@ -363,7 +363,7 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
         return SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
-    if (0 == len) {
+    if ((0 == len) && (0 == resp[2])) {
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
@@ -381,8 +381,12 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
             return SMP_LIB_CAT_MALFORMED;
         if (resp[1] != smp_req[1])
             return SMP_LIB_CAT_MALFORMED;
-        if (resp[2])
+        if (resp[2]) {
+            if (optsp->verbose)
+                fprintf(stderr, "Discover list result: %s\n",
+                        smp_get_func_res_str(resp[2], sizeof(b), b));
             return resp[2];
+        }
         return 0;
     }
     if (SMP_FRAME_TYPE_RESP != resp[0]) {
@@ -1082,5 +1086,9 @@ finish:
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
-    return (ret >= 0) ? ret : SMP_LIB_CAT_OTHER;
+    if (ret < 0)
+        ret = SMP_LIB_CAT_OTHER;
+    if (opts.verbose && ret)
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+    return ret;
 }
