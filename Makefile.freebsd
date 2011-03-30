@@ -52,7 +52,6 @@ libsmp.a : smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o
 
 depend dep:
 	cd mpt && $(MAKE) dep
-	cd sas_tpl && $(MAKE) dep
 	for i in *.c; do $(CC) $(INCLUDES) $(CFLAGS) -M $$i; \
 	done > .depend
 

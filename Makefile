@@ -47,31 +47,26 @@ LDFLAGS =
 .c.o:
 	$(CC) $(INCLUDES) $(CFLAGS) $(MY_CFLAGS) -c -o $@ $<
 
-all: sub_mpt sub_sas_tpl sub_sgv4 libsmp.a $(EXECS)
+all: sub_mpt sub_sgv4 libsmp.a $(EXECS)
 
 sub_mpt:
 	cd mpt && $(MAKE)
 
-sub_sas_tpl:
-	cd sas_tpl && $(MAKE)
-
 sub_sgv4:
 	cd sgv4 && $(MAKE)
 
-libsmp.a : sub_mpt sub_sas_tpl sub_sgv4 smp_lib.o smp_interface_sel.o
+libsmp.a : sub_mpt sub_sgv4 smp_lib.o smp_interface_sel.o
 	ar r libsmp.a smp_lib.o smp_interface_sel.o mpt/smp_mptctl_io.o  \
-	sas_tpl/smp_portal_intf.o sgv4/smp_sgv4_io.o
+	sgv4/smp_sgv4_io.o
 
 depend dep:
 	cd mpt && $(MAKE) dep
-	cd sas_tpl && $(MAKE) dep
 	cd sgv4 && $(MAKE) dep
 	for i in *.c; do $(CC) $(INCLUDES) $(CFLAGS) -M $$i; \
 	done > .depend
 
 clean:
 	cd mpt && $(MAKE) clean
-	cd sas_tpl && $(MAKE) clean
 	cd sgv4 && $(MAKE) clean
 	/bin/rm -f *.o $(EXECS) core* .depend *.a *.la *.lo
 	/bin/rm -rf .libs

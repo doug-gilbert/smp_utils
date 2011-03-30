@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2008 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,10 @@
 
 #ifdef SMP_UTILS_LINUX
 
-#include "sas_tpl/smp_portal_intf.h"
 #include "mpt/smp_mptctl_io.h"
 #include "sgv4/smp_sgv4_io.h"
 
 
-#define I_SAS_TPL 1
 #define I_MPT 2
 #define I_SGV4 4
 
@@ -71,10 +69,7 @@ smp_initiator_open(const char * device_name, int subvalue,
 #endif
     }
     if (i_params[0]) {
-        if ((0 == strncmp("tpl", i_params, 2)) ||
-            (0 == strncmp("ai", i_params, 2)))
-            tobj->interface_selector = I_SAS_TPL;
-        else if (0 == strncmp("mpt", i_params, 3))
+        if (0 == strncmp("mpt", i_params, 3))
             tobj->interface_selector = I_MPT;
         else if (0 == strncmp("sgv4", i_params, 2))
             tobj->interface_selector = I_SGV4;
@@ -127,21 +122,6 @@ smp_initiator_open(const char * device_name, int subvalue,
         } else if (verbose > 2)
             fprintf(stderr, "smp_initiator_open: chk_mpt_device failed\n");
     }
-    if ((I_SAS_TPL == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) {
-        res = chk_smp_portal_file(device_name, verbose);
-        if (res || force) {
-            if (0 == tobj->interface_selector)
-                tobj->interface_selector = I_SAS_TPL;
-            if ((0 == res) && force)
-                fprintf(stderr, "... overriding failed check due "
-                        "to 'force'\n");
-            tobj->subvalue = subvalue;
-            tobj->opened = 1;
-            return 0;
-        } else if (verbose > 2)
-            fprintf(stderr, "chk_smp_portal_file: failed\n");
-    }
 err_out:
     fprintf(stderr, "smp_initiator_open: failed to open %s\n", device_name);
     return -1;
@@ -161,18 +141,7 @@ smp_send_req(const struct smp_target_obj * tobj,
     else if (I_MPT == tobj->interface_selector)
         return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr,
                             rresp, verbose);
-    else if (I_SAS_TPL == tobj->interface_selector) {
-            int res;
-            rresp->act_response_len = -1;
-            res = do_smp_portal_func(tobj->device_name,
-                                     rresp->request, rresp->request_len,
-                                     rresp->response, rresp->max_response_len,
-                                     verbose);
-            if (res == -1)
-                    rresp->transport_err = -1;
-            rresp->act_response_len = res;
-            return 0;
-    } else {
+    else {
         if (verbose)
             fprintf(stderr, "smp_send_req: no transport??\n");
         return -1;
