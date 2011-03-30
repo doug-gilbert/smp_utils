@@ -63,13 +63,6 @@ member of the '/sys/class/bsg' directory or a device node made by the
 bsg driver. Such device nodes are dynamic (i.e. they don't have a fixed
 major number) and should correspond to the major and minor numbers
 found in the 'sys/class/bsg/<smp_target_device>/dev' file.
-.TP
-\fBtpl\fR (\fBai\fR)
-This interface is currently used by one adaptec 94xx driver. The "device"
-name will usually be "smp_portal" and it will be found within the sysfs
-file system (typically mounted under "/sys"). The target SMP SAS address
-is implicit (as is the SMP initiator). Either 'tpl' or 'ai' can be used
-to specify this interface.
 .SH ENVIRONMENT VARIABLES
 If the device name is not given then the SMP_UTILS_DEVICE environment
 variable is checked and if present its contents are used as the device name.
@@ -110,8 +103,8 @@ interface type is guessed by a utility based on the characteristics of the
 given \fISMP_DEVICE\fR argument or what is in the corresponding environment
 variables. \fIPARAMS\fR is of the form: \fIINTF[,force]\fR.
 If the guess doesn't work then the interface can be specified by giving
-a \fIINTF\fR of either 'mpt', 'sgv4' or 'tpl' ( with 'ai' being a synonym
-for 'tpl'). Sanity checks are still performed and a utility may refuse if
+a \fIINTF\fR of either 'mpt' or 'sgv4'.
+Sanity checks are still performed and a utility may refuse if
 it doesn't agree with the given \fIINTF\fR. If the user is really sure then
 adding a ',force' will force the utility to use the given interface.
 .TP
@@ -144,7 +137,8 @@ reserved for SMP function result codes. See SAS draft or standard,
 application layer, management application layer, SMP functions.
 Here are some common function result codes: 1 [unknown SMP function],
 2 [SMP function failed], 16 [phy does not exist], 17 [index does not
-exist], 18 [phy does not support SATA] and 19 [unknown phy operation].
+exist], 18 [phy does not support SATA], 19 [unknown phy operation] and
+35 [zone lock violation].
 .TP
 .B 91
 syntax error. Either illegal options, options with bad arguments or
