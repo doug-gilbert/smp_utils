@@ -96,7 +96,6 @@ static void usage()
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP ZONE LOCK function\n"
           );
-
 }
 
 /* Read ASCII hex bytes from fname (a file named '-' taken as stdin).
@@ -436,9 +435,12 @@ int main(int argc, char * argv[])
     smp_req[7] = inact_tl & 0xff;
     memcpy(smp_req + 8, password, 32);
     if (verbose) {
-        fprintf(stderr, "    Zone lock request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        fprintf(stderr, "    Zone lock request:");
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+ 	    if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));

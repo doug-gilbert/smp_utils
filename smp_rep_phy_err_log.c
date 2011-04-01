@@ -91,7 +91,6 @@ static void usage()
           "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT PHY ERROR LOG function\n"
           );
-
 }
 
 static void dStrRaw(const char* str, int len)

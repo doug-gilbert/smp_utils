@@ -93,7 +93,6 @@ usage()
           "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT GENERAL function\n"
           );
-
 }
 
 static void

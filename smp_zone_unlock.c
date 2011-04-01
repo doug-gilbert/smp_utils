@@ -90,7 +90,6 @@ static void usage()
           "    --version|-V           print version string and exit\n\n"
           "Performs a SMP ZONE UNLOCK function\n"
           );
-
 }
 
 static void dStrRaw(const char* str, int len)
@@ -142,7 +141,6 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            break;
             break;
         case 'h':
         case '?':

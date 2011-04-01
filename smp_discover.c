@@ -134,7 +134,6 @@ usage()
           "disposition of\neach active phy in an expander is shown in "
           "table form.\n"
           );
-
 }
 
 static void

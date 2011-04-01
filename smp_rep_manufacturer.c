@@ -91,7 +91,6 @@ static void usage()
           "                         may be required prior to SAS-2\n\n"
           "Performs a SMP REPORT MANUFACTURER INFORMATION function\n"
           );
-
 }
 
 static void dStrRaw(const char* str, int len)
