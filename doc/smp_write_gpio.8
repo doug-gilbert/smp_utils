@@ -1,4 +1,4 @@
-.TH SMP_WRITE_GPIO "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.TH SMP_WRITE_GPIO "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_write_gpio \- invoke WRITE GPIO REGISTER SMP function
 .SH SYNOPSIS
@@ -13,8 +13,8 @@ smp_write_gpio \- invoke WRITE GPIO REGISTER SMP function
 Sends a SAS Management Protocol (SMP) WRITE GPIO REGISTER request function
 to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
 the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
-deduced from the \fISMP_DEVICE\fR. With one interface there is one
-\fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
+deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
 .PP
 This function is defined in SFF\-8485 ( see www.sffcommittee.com )

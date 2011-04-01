@@ -1,4 +1,4 @@
-.TH SMP_READ_GPIO "8" "January 2009" "smp_utils\-0.95" SMP_UTILS
+.TH SMP_READ_GPIO "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_read_gpio \- invoke READ GPIO REGISTER SMP function
 .SH SYNOPSIS
@@ -13,9 +13,9 @@ smp_read_gpio \- invoke READ GPIO REGISTER SMP function
 Sends a SAS Management Protocol (SMP) READ GPIO REGISTER request to a SMP
 target. The SMP target is identified by the \fISMP_DEVICE\fR and the
 \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be deduced
-from the \fISMP_DEVICE\fR. With one interface there is one \fISMP_DEVICE\fR
-per machine so the \fISMP_DEVICE,N\fR syntax is needed to differentiate
-between HBAs if there are multiple present.
+from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
+differentiate between HBAs if there are multiple present.
 .PP
 This function is defined in SFF\-8485 ( see www.sffcommittee.com )
 together with its corresponding WRITE GPIO REGISTER SMP function.
