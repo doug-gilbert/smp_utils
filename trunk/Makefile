@@ -14,7 +14,8 @@ EXECS = smp_rep_general smp_rep_manufacturer smp_discover smp_phy_control \
 	smp_read_gpio smp_conf_route_info smp_write_gpio smp_phy_test \
 	smp_discover_list smp_conf_general smp_rep_exp_route_tbl \
 	smp_rep_phy_event smp_rep_phy_event_list smp_zone_lock \
-	smp_ena_dis_zoning smp_zone_unlock smp_zone_activate
+	smp_ena_dis_zoning smp_zone_unlock smp_zone_activate \
+	smp_conf_zone_phy_info smp_conf_zone_perm_tbl
 
 MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_discover.8 smp_phy_control.8 smp_rep_phy_err_log.8 \
@@ -22,7 +23,8 @@ MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_conf_route_info.8 smp_write_gpio.8 smp_phy_test.8 \
 	  smp_discover_list.8 smp_conf_general.8 smp_rep_exp_route_tbl.8 \
 	  smp_rep_phy_event.8 smp_rep_phy_event_list.8 smp_zone_lock.8 \
-	  smp_ena_dis_zoning.8 smp_zone_unlock.8 smp_zone_activate.8
+	  smp_ena_dis_zoning.8 smp_zone_unlock.8 smp_zone_activate.8 \
+	  smp_conf_zone_phy_info.8 smp_conf_zone_perm_tbl.8
 
 MAN_PREF = man8
 
@@ -68,7 +70,7 @@ depend dep:
 	for i in *.c; do $(CC) $(INCLUDES) $(CFLAGS) -M $$i; \
 	done > .depend
 
-clean:
+clean distclean:
 	cd mpt && $(MAKE) clean
 	cd sgv4 && $(MAKE) clean
 	/bin/rm -f *.o $(EXECS) core* .depend *.a *.la *.lo
@@ -134,6 +136,12 @@ smp_zone_unlock: smp_zone_unlock.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 smp_zone_activate: smp_zone_activate.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_conf_zone_phy_info: smp_conf_zone_phy_info.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_conf_zone_perm_tbl: smp_conf_zone_perm_tbl.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 install: $(EXECS)

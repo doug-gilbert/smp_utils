@@ -104,7 +104,6 @@ static void usage()
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP CONFIGURE GENERAL function\n"
           );
-
 }
 
 static void dStrRaw(const char* str, int len)

@@ -111,7 +111,6 @@ usage()
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT EXPANDER ROUTE TABLE LIST function\n"
           );
-
 }
 
 static void
