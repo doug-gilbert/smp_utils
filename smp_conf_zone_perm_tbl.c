@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
@@ -42,18 +43,20 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a ENABLE DISABLE ZONING function and outputs its
- * response.
+ * This utility issues a CONFIGURE ZONE PERMISSION TABLE function and outputs
+ * its response.
  */
 
-static char * version_str = "1.00 20110331";
+static char * version_str = "1.00 20110401";
 
 
 static struct option long_options[] = {
-        {"ena-dis", 1, 0, 'e'},
         {"expected", 1, 0, 'E'},
+        {"first", 1, 0, 'f'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
+        {"numzg", 1, 0, 'n'},
+        {"permf", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"save", 1, 0, 'S'},
@@ -65,22 +68,30 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_ena_dis_zoning [--ena-dis=ED] [--expected=EX] [--help] "
-          "[--hex]\n"
-          "                          [--interface=PARAMS] [--raw] "
+          "smp_conf_zone_perm_tbl [--expected=EX] [--first=SS] [--help]\n"
+          "                              [--hex] [--interface=PARAMS] "
+          "[--numzg=NG]\n"
+          "                              --permf=FN [--raw] "
           "[--sa=SAS_ADDR]\n"
-          "                          [--save=SAV] [--verbose] [--version]\n"
-          "                          SMP_DEVICE[,N]\n"
+          "                              [--save=SAV] [--verbose] "
+          "[--version]\n"
+          "                              SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --ena-dis=ED|-e ED     ED: 0 -> no change (def); 1 -> "
-          "enable\n"
-          "                           2 -> disable\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
+          "    --first=SS|-f SS       starting (first) source zone group "
+          "(def: 0)\n"
           "    --help|-h              print out usage message\n"
           "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --numzg=NG|-n NG       number of zone groups. NG should be "
+          "0 (def)\n"
+          "                           or 1. 0 -> 128 zone groups, 1 -> 256\n"
+          "    --permf=FN|-P FN       FN is a file containing zone "
+          "permission\n"
+          "                           configuration descriptors in hex; "
+          "required\n"
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -94,8 +105,135 @@ static void usage()
           "                           3 -> shadow and saved\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP ENABLE DISABLE ZONING function\n"
+          "Performs a SMP CONFIGURE ZONE PERMISSION TABLE function\n"
           );
+}
+
+/* Read ASCII hex bytes from fname (a file named '-' taken as stdin).
+ * There should be either one entry per line or a comma, space or tab
+ * separated list of bytes. The first ASCII hex string detected has its
+ * length checked; if the length is 1 or 2 then bytes are expected to
+ * be space, comma or tab separated; if the length is 3 or more then a
+ * string of ACSII hex digits is expected, 2 per byte. Everything from
+ * and including a '#' on a line is ignored.
+ * Returns 0 if ok, or 1 if error. */
+static int
+f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
+          int max_arr_len)
+{
+    int fn_len, in_len, k, j, m;
+    int no_space = 0;
+    int checked_hexlen = 0;
+    unsigned int h;
+    const char * lcp;
+    FILE * fp;
+    char line[512];
+    int off = 0;
+
+    if ((NULL == fname) || (NULL == mp_arr) || (NULL == mp_arr_len))
+        return 1;
+    fn_len = strlen(fname);
+    if (0 == fn_len)
+        return 1;
+    if ((1 == fn_len) && ('-' == fname[0]))        /* read from stdin */
+        fp = stdin;
+    else {
+        fp = fopen(fname, "r");
+        if (NULL == fp) {
+            fprintf(stderr, "Unable to open %s for reading\n", fname);
+            return 1;
+        }
+    }
+
+    for (j = 0; j < 512; ++j) {
+        if (NULL == fgets(line, sizeof(line), fp))
+            break;
+        in_len = strlen(line);
+        if (in_len > 0) {
+            if ('\n' == line[in_len - 1]) {
+                --in_len;
+                line[in_len] = '\0';
+            }
+        }
+        if (0 == in_len)
+            continue;
+        lcp = line;
+        m = strspn(lcp, " \t");
+        if (m == in_len)
+            continue;
+        lcp += m;
+        in_len -= m;
+        if ('#' == *lcp)
+            continue;
+        if (! checked_hexlen) {
+            ++checked_hexlen;
+            k = strspn(lcp, "0123456789aAbBcCdDeEfF");
+            if (k > 2)
+                no_space = 1;
+        }
+
+        k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
+        if ((k < in_len) && ('#' != lcp[k])) {
+            fprintf(stderr, "f2hex_arr: syntax error at "
+                    "line %d, pos %d\n", j + 1, m + k + 1);
+            goto bad;
+        }
+        if (no_space) {
+            for (k = 0; isxdigit(*lcp) && isxdigit(*(lcp + 1));
+                 ++k, lcp += 2) {
+                if (1 != sscanf(lcp, "%2x", &h)) {
+                    fprintf(stderr, "f2hex_arr: bad hex number in line "
+                            "%d, pos %d\n", j + 1, (int)(lcp - line + 1));
+                    goto bad;
+                }
+                if ((off + k) >= max_arr_len) {
+                    fprintf(stderr, "f2hex_arr: array length exceeded\n");
+                    goto bad;
+                }
+                mp_arr[off + k] = h;
+            }
+            off += k;
+        } else {
+            for (k = 0; k < 1024; ++k) {
+                if (1 == sscanf(lcp, "%x", &h)) {
+                    if (h > 0xff) {
+                        fprintf(stderr, "f2hex_arr: hex number "
+                                "larger than 0xff in line %d, pos %d\n",
+                                j + 1, (int)(lcp - line + 1));
+                        goto bad;
+                    }
+                    if ((off + k) >= max_arr_len) {
+                        fprintf(stderr, "f2hex_arr: array length "
+                                "exceeded\n");
+                        goto bad;
+                    }
+                    mp_arr[off + k] = h;
+                    lcp = strpbrk(lcp, " ,\t");
+                    if (NULL == lcp)
+                        break;
+                    lcp += strspn(lcp, " ,\t");
+                    if ('\0' == *lcp)
+                        break;
+                } else {
+                    if ('#' == *lcp) {
+                        --k;
+                        break;
+                    }
+                    fprintf(stderr, "f2hex_arr: error in "
+                            "line %d, at pos %d\n", j + 1,
+                            (int)(lcp - line + 1));
+                    goto bad;
+                }
+            }
+            off += (k + 1);
+        }
+    }
+    *mp_arr_len = off;
+    fclose(fp);
+    return 0;
+bad:
+    fclose(fp);
+    return 1;
 }
 
 static void dStrRaw(const char* str, int len)
@@ -108,10 +246,12 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len;
-    int ena_dis = 0;
+    int res, c, k, len, num_desc, desc_len;
+    const char * permf = NULL;
     int expected_cc = 0;
+    int first = 0;
     int do_hex = 0;
+    int num_zg = 128;
     int do_raw = 0;
     int do_save = 0;
     int verbose = 0;
@@ -120,8 +260,7 @@ int main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_ENABLE_DISABLE_ZONING,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+    unsigned char smp_req[1028];
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
@@ -129,27 +268,30 @@ int main(int argc, char * argv[])
     char * cp;
     int ret = 0;
 
+    memset(smp_req, 0, sizeof(smp_req));
+    smp_req[0] = SMP_FRAME_TYPE_REQ;
+    smp_req[1] = SMP_FN_CONFIG_ZONE_PERMISSION_TBL;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "e:E:hHI:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "E:f:hHI:n:P:rs:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
-        case 'e':
-            ena_dis = smp_get_num(optarg);;
-            if ((ena_dis < 0) || (ena_dis > 3)) {
-                fprintf(stderr, "bad argument to '--ena-dis'\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            break;
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
                 fprintf(stderr, "bad argument to '--expected'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'f':
+            first = smp_get_num(optarg);
+            if ((first < 0) || (first > 255)) {
+                fprintf(stderr, "bad argument to '--first'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -163,6 +305,23 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
+            break;
+        case 'n':
+            k = smp_get_num(optarg);
+            switch (k) {
+            case 0:
+                num_zg = 128;
+                break;
+            case 1:
+                num_zg = 256;
+                break;
+            default:
+                fprintf(stderr, "bad argument to '--numzg'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
+        case 'P':
+            permf = optarg;
             break;
         case 'r':
             ++do_raw;
@@ -249,24 +408,48 @@ int main(int argc, char * argv[])
             }
         }
     }
+    if (NULL == permf) {
+        fprintf(stderr, "--permf=FN option is required (i.e. it's not "
+                "optional)\n");
+        return SMP_LIB_SYNTAX_ERROR;
+    }
+    if (f2hex_arr(permf, smp_req + 16, &len, sizeof(smp_req) - 20)) {
+        fprintf(stderr, "failed decoding --permf=FN option\n");
+        return SMP_LIB_SYNTAX_ERROR;
+    }
+    desc_len = (128 == num_zg) ? 16 : 32;
+    num_desc = len / desc_len;
+    if (0 != (len % desc_len)) {
+        memset(smp_req + 16 + (desc_len * num_desc), 0, 4);
+        fprintf(stderr, "warning: permf data not a multiple of %d bytes, "
+                "ignore excess\n", desc_len);
+    }
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    smp_req[3] = (num_desc * (desc_len / 4)) + 3;
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = do_save & 0x3;
-    smp_req[8] = ena_dis & 0x3;
+    smp_req[6] = first;
+    smp_req[7] = num_desc;
+    smp_req[8] = (do_save & 0x3);
+    if (256 == num_zg)
+        smp_req[8] |= 0x40;
+    smp_req[9] = (256 == num_zg) ? 8 : 4;
     if (verbose) {
-        fprintf(stderr, "    Enable disable zoning request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        fprintf(stderr, "    Configure zone permission table request:");
+        for (k = 0; k < (20 + (num_desc * desc_len)); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = sizeof(smp_req);
+    smp_rr.request_len = 20 + (num_desc * desc_len);
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(smp_resp);
     smp_rr.response = smp_resp;
@@ -312,7 +495,7 @@ int main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                fprintf(stderr, "Enable disable zoning result: %s\n",
+                fprintf(stderr, "Configure zone permission table result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
         }
@@ -333,7 +516,7 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Enable disable zoning result: %s\n", cp);
+        fprintf(stderr, "Configure zone permission table result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }

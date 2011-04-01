@@ -110,7 +110,6 @@ usage()
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP PHY TEST FUNCTION function\n"
           );
-
 }
 
 static void

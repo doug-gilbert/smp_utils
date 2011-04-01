@@ -139,7 +139,6 @@ usage()
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP DISCOVER LIST function\n"
           );
-
 }
 
 static void
