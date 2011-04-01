@@ -13,14 +13,17 @@ EXECS = smp_rep_general smp_rep_manufacturer smp_discover smp_phy_control \
 	smp_rep_phy_err_log smp_rep_phy_sata smp_rep_route_info \
 	smp_read_gpio smp_conf_route_info smp_write_gpio smp_phy_test \
 	smp_discover_list smp_conf_general smp_rep_exp_route_tbl \
-	smp_rep_phy_event smp_rep_phy_event_list
+	smp_rep_phy_event smp_rep_phy_event_list smp_zone_lock \
+	smp_ena_dis_zoning smp_zone_unlock smp_zone_activate
 
 MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_discover.8 smp_phy_control.8 smp_rep_phy_err_log.8 \
 	  smp_rep_phy_sata.8 smp_rep_route_info.8 smp_read_gpio.8 \
 	  smp_conf_route_info.8 smp_write_gpio.8 smp_phy_test.8 \
 	  smp_discover_list.8 smp_conf_general.8 smp_rep_exp_route_tbl.8 \
-	  smp_rep_phy_event.8 smp_rep_phy_event_list.8
+	  smp_rep_phy_event.8 smp_rep_phy_event_list.8 smp_zone_lock.8 \
+	  smp_ena_dis_zoning.8 smp_zone_unlock.8 smp_zone_activate.8
+
 MAN_PREF = man8
 
 OS_FLAGS = -DSMP_UTILS_LINUX
@@ -119,6 +122,18 @@ smp_rep_phy_event: smp_rep_phy_event.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 smp_rep_phy_event_list: smp_rep_phy_event_list.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_zone_lock: smp_zone_lock.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_ena_dis_zoning: smp_ena_dis_zoning.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_zone_unlock: smp_zone_unlock.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_zone_activate: smp_zone_activate.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 install: $(EXECS)
