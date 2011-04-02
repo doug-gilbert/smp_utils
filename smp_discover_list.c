@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.11 20110320";    /* spl-r07 */
+static char * version_str = "1.12 20110401";    /* spl2r00 */
 
 
 static struct option long_options[] = {
@@ -80,7 +80,7 @@ struct opts_t {
     int do_hex;
     int ign_zp;
     int do_num;
-    int do_one;
+    int do_1line;
     int phy_id;
     int do_raw;
     int do_summary;
@@ -406,7 +406,8 @@ do_discover_list(struct smp_target_obj * top, unsigned char * resp,
     return 0;
 }
 
-/* long format: as described in (full, single) DISCOVER response */
+/* long format: as described in (full, single) DISCOVER response
+ * Returns 0 for okay, else -1 . */
 static int
 decode_desc0_multiline(const unsigned char * resp, int offset,
                        int hdr_ecc, struct opts_t * optsp)
@@ -422,7 +423,10 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     func_res = rp[2];
     len = 4 + (rp[3] * 4);        /* length in bytes, excluding 4 byte CRC */
     printf("  phy identifier: %d\n", phy_id);
-    if (func_res) {
+    if (SMP_FRES_PHY_VACANT == func_res) {
+        printf("  inaccessible (phy vacant)\n");
+        return 0;
+    } else if (func_res) {
         printf("  >>> function result: %s\n",
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
@@ -494,8 +498,11 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief)
+    if (optsp->do_brief) {
+        if ((len > 59) && (rp[60] & 0x1))
+            printf("  zone group: %d\n", rp[63]);
         return 0;
+    }
     printf("  connector type: %s\n",
            find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
     printf("  connector element index: %d\n", rp[46]);
@@ -589,13 +596,16 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  device slot group output connector: %.6s\n", rp + 110);
 
     }
+    if (len > 117) 
+        printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
     return 0;
 }
 
-/* short format: parts if DISCOVER response compressed into 24 bytes */
+/* short format: only DISCOVER LIST has this abridged 24 byte descriptor.
+ * Returns 0 for okay, else -1 . */
 static int
 decode_desc1_multiline(const unsigned char * resp, int offset,
-                       struct opts_t * optsp)
+                       int z_supported, struct opts_t * optsp)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -606,7 +616,10 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     phy_id = rp[0];
     func_res = rp[1];
     printf("  phy identifier: %d\n", phy_id);
-    if (func_res) {
+    if (SMP_FRES_PHY_VACANT == func_res) {
+        printf("  inaccessible (phy vacant)\n");
+        return 0;
+    } else if (func_res) {
         printf("  >>> function result: %s\n",
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
@@ -649,8 +662,11 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief)
+    if (optsp->do_brief) {
+        if (z_supported)
+            printf("  zone group: %d\n", rp[8]);
         return 0;
+    }
     printf("  reason: %s\n", smp_get_reason(0xf & (rp[7] >> 4),
                                             sizeof(b), b));
     printf("  negotiated physical link rate: %s\n",
@@ -664,19 +680,24 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     return 0;
 }
 
+/* Decodes either descriptor type into one line output. This is a
+ * "per phy" function. Returns 0 for ok, 1 for ok plus seen ZG other
+ * than ZG:1, else -1 . */
 static int
-decode_1line(const unsigned char * resp, int offset, int desc, int verb)
+decode_1line(const unsigned char * resp, int offset, int desc,
+             int z_supported, int verb)
 {
     const unsigned char *rp;
     unsigned long long ull;
     int phy_id, j, off, plus, negot, adt, route_attr, vp, asa_off;
-    int func_res, aphy_id, a_init, a_target;
+    int func_res, aphy_id, a_init, a_target, z_group;
+    int zg_not1 = 0;
     char b[256];
     const char * cp;
 
     rp = resp + offset;
     switch (desc) {
-    case 0:
+    case 0:     /* longer descriptor */
         phy_id = rp[9];
         func_res = rp[2];
         adt = ((0x70 & rp[12]) >> 4);
@@ -687,8 +708,9 @@ decode_1line(const unsigned char * resp, int offset, int desc, int verb)
         aphy_id = rp[32];
         a_init = rp[14];
         a_target = rp[15];
+        z_group = rp[63];
         break;
-    case 1:
+    case 1:     /* abridged 24 byte descriptor */
         phy_id = rp[0];
         func_res = rp[1];
         adt = ((0x70 & rp[2]) >> 4);
@@ -699,12 +721,16 @@ decode_1line(const unsigned char * resp, int offset, int desc, int verb)
         aphy_id = rp[10];
         a_init = rp[4];
         a_target = rp[5];
+        z_group = rp[8];
         break;
     default:
         printf("  Unknown descriptor type %d\n", desc);
         return -1;
     }
-    if (func_res) {
+    if (SMP_FRES_PHY_VACANT == func_res) {
+        printf("  phy %3d: inaccessible (phy vacant)\n", phy_id);
+        return 0;
+    } else if (func_res) {
         printf("  phy %3d: function result: %s\n", phy_id,
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
@@ -823,8 +849,13 @@ decode_1line(const unsigned char * resp, int offset, int desc, int verb)
         cp = "";
         break;
     }
-    printf("%s\n", cp);
-    return 0;
+    printf("%s", cp);
+    if (z_supported && (1 != z_group)) {
+        ++zg_not1;
+        printf("  ZG:%d", z_group);
+    }
+    printf("\n");
+    return !! zg_not1;
 }
 
 
@@ -832,7 +863,7 @@ int
 main(int argc, char * argv[])
 {
     int res, c, len, hdr_ecc, sphy_id, num_desc, resp_filter, resp_desc_type;
-    int desc_len, k, err, off, adt;
+    int desc_len, k, err, off, adt, fresult;
     long long sa_ll;
     char i_params[256];
     char device_name[512];
@@ -840,6 +871,9 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
+    int z_supported = 0;
+    int z_enabled = 0;
+    int zg_not1 = 0;
     int ret = 0;
     struct opts_t opts;
 
@@ -898,7 +932,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'o':
-            ++opts.do_one;
+            ++opts.do_1line;
             break;
         case 'p':
            opts.phy_id = smp_get_num(optarg);
@@ -995,7 +1029,7 @@ main(int argc, char * argv[])
         opts.desc_type = opts.do_brief ? 1 : 0;
     if (opts.do_summary) {
         opts.desc_type = 1;
-        opts.do_one = 1;
+        opts.do_1line = 1;
         opts.do_num = 40;
     }
 
@@ -1014,7 +1048,9 @@ main(int argc, char * argv[])
     hdr_ecc = (resp[4] << 8) + resp[5];
     sphy_id = resp[8];
     num_desc = resp[9];
-    if (! opts.do_one) {
+    z_supported = !!(resp[16] & 0x80);
+    z_enabled = !!(resp[16] & 0x40);
+    if (! opts.do_1line) {
         printf("Discover list response header:\n");
         printf("  starting phy id: %d\n", sphy_id);
         printf("  number of discover list descriptors: %d\n", num_desc);
@@ -1028,13 +1064,13 @@ main(int argc, char * argv[])
         fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
                 opts.desc_type, resp_desc_type);
     desc_len = resp[12] * 4;
-    if ((! opts.do_one) && (0 == opts.do_brief)) {
+    if ((! opts.do_1line) && (0 == opts.do_brief)) {
         printf("  expander change count: %d\n", hdr_ecc);
         printf("  filter: %d\n", resp_filter);
         printf("  descriptor type: %d\n", resp_desc_type);
         printf("  discover list descriptor length: %d\n", desc_len);
-        printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
-        printf("  zoning enabled: %d\n", !!(resp[16] & 0x40));
+        printf("  zoning supported: %d\n", z_supported);
+        printf("  zoning enabled: %d\n", z_enabled);
         printf("  self configuring: %d\n", !!(resp[16] & 0x8));
         printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
         printf("  configuring: %d\n", !!(resp[16] & 0x2));
@@ -1056,28 +1092,42 @@ main(int argc, char * argv[])
     }
     for (k = 0, err = 0; k < num_desc; ++k) {
         off = 48 + (k * desc_len);
-        if (opts.do_one) {
-            if (decode_1line(resp, off, resp_desc_type, opts.verbose))
+        if (opts.do_1line) {
+            res = decode_1line(resp, off, resp_desc_type, z_supported,
+                               opts.verbose);
+            if (res < 0)
                 ++err;
+            else if (res > 0)
+                ++zg_not1;
         } else {
+            fresult = resp[off + 2];    /* function result, 0 -> ok */
             if (0 == resp_desc_type) {
                 adt = (resp[off + 12] >> 4) & 7;
-                if (opts.verbose || adt) {
+                if (opts.verbose || adt || fresult) {
                     printf("descriptor %d:\n", k + 1);
                     if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
                         ++err;
                 }
             } else if (1 == resp_desc_type) {
                 adt = (resp[off + 2] >> 4) & 7;
-                if (opts.verbose || adt) {
+                if (opts.verbose || adt || fresult) {
                     printf("descriptor %d:\n", k + 1);
-                    if (decode_desc1_multiline(resp, off, &opts))
+                    if (decode_desc1_multiline(resp, off, z_supported, &opts))
                         ++err;
                 }
             } else
                 ++err;
         }
     }
+    if (err) {
+        if (opts.verbose)
+           fprintf(stderr, ">>> %d error%s detected\n", err,
+                   ((1 == err) ? "" : "s"));
+        if (0 == ret)
+            ret = SMP_LIB_CAT_OTHER;
+    }
+    if (zg_not1)
+        printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
 
 finish:
     res = smp_initiator_close(&tobj);

@@ -44,7 +44,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
             if ('/' != buff[len - 1])
                 buff[len++] = '/';
         } else {
-            if (verbose)
+            if (verbose > 3)
                 perror("chk_sgv4_device: getcwd failed");
             return 0;
         }
@@ -57,7 +57,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
     if (0 == strncmp(buff, "/sys/", 5)) {
         if (strstr(buff, "/bsg/")) {
             if (stat(buff, &st) < 0) {
-                if (verbose > 1) {
+                if (verbose > 3) {
                     fprintf(stderr, "chk_sgv4_device: stat() on %s "
                             "failed: ", buff);
                     perror("");
@@ -72,7 +72,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
         cp = strrchr(buff, '/');
         snprintf(sysfs_nm, sizeof(sysfs_nm), "/sys/class/bsg/%s/dev", cp + 1);
         if (stat(sysfs_nm, &st) < 0) {
-            if (verbose > 1) {
+            if (verbose > 3) {
                 fprintf(stderr, "chk_sgv4_device: stat() on redirected %s "
                         "failed: ", sysfs_nm);
                 perror("");
@@ -143,7 +143,7 @@ open_sgv4_device(const char * dev_name, int verbose)
         }
         memset(buff, 0, sizeof(buff));
         snprintf(buff, sizeof(buff), "/tmp/bsg_%lx%lx", t.tv_sec, t.tv_usec);
-        if (verbose > 1)
+        if (verbose > 2)
             fprintf(stderr, "about to make temporary device node at %s\n"
                     "\tfor char device maj:%d min:%d\n", buff, maj, min);
         res = mknod(buff, S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
@@ -194,7 +194,7 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     unsigned char cmd[16];      /* unused */
     int res;
 
-    if (verbose > 2)
+    if (verbose > 3)
         fprintf(stderr, "send_req_sgv4: fd=%d,  subvalue=%d\n", fd, subvalue);
 
     memset(&hdr, 0, sizeof(hdr));
@@ -220,7 +220,7 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
         perror("send_req_sgv4: SG_IO ioctl");
         return -1;
     }
-    if (verbose) {
+    if (verbose > 2) {
         fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
                 "%u\n", hdr.driver_status, hdr.transport_status);
         fprintf(stderr, "    device_status=%u, duration=%u, info=%u\n",

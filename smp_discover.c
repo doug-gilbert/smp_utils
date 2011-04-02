@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.17 20110322";    /* spl-r07 */
+static char * version_str = "1.18 20110401";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -505,13 +505,21 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull;
     unsigned int ui;
-    int res, len, j, sas2;
+    int res, len, j, sas2, ret;
     char b[256];
 
     len = do_discover(top, optsp->phy_id, smp_resp, sizeof(smp_resp), 0,
                       optsp);
     if (len < 0)
-        return (len < -2) ? (-4 - len) : len;
+        ret = (len < -2) ? (-4 - len) : len;
+    else
+        ret = 0;
+    if (ret) {
+        if (SMP_FRES_PHY_VACANT == ret)
+            printf("  phy identifier: %d  inaccessible (phy vacant)\n",
+                   optsp->phy_id);
+        return ret;
+    }
     if (optsp->do_hex || optsp->do_raw)
         return 0;
     if (optsp->do_list)
@@ -598,8 +606,11 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     default: snprintf(b, sizeof(b), "reserved [%d]", res); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief)
+    if (optsp->do_brief) {
+        if ((len > 59) && !!(smp_resp[60] & 0x1))
+            printf("  zone group: %d\n", smp_resp[63]);
         return 0;
+    }
     if (sas2 || (smp_resp[45] & 0x7f)) {
         printf("  connector type: %s\n",
                find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
@@ -629,8 +640,8 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("  requested inside ZPSDS: %d\n", !!(smp_resp[60] & 0x10));
         /* printf("  zone address resolved: %d\n", !!(smp_resp[60] & 0x8)); */
         printf("  zone group persistent: %d\n", !!(smp_resp[60] & 0x4));
-        printf("  zone participating: %d\n", !!(smp_resp[60] & 0x2));
-        printf("  zone enabled: %d\n", !!(smp_resp[60] & 0x1));
+        printf("  inside ZPSDS: %d\n", !!(smp_resp[60] & 0x2));
+        printf("  zoning enabled: %d\n", !!(smp_resp[60] & 0x1));
         printf("  zone group: %d\n", smp_resp[63]);
         if (len < 76)
             return 0;
@@ -703,11 +714,16 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("  device slot group number: %d\n", smp_resp[109]);
         printf("  device slot group output connector: %.6s\n", smp_resp + 110);
     }
+    if (len > 117)
+        printf("  STP buffer size: %d\n",
+               (smp_resp[116] << 8) + smp_resp[117]);
     return 0;
 }
 
 #define MAX_PHY_ID 8192
 
+/* Calls do_discover() multiple times. Returns 0 if ok, else function
+ * result. */
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
@@ -717,7 +733,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
     int res, len, k, j, num, off, plus, negot, adt;
     char b[256];
     int first = 1;
-    int ret = 0;
+    int ret;
     const char * cp;
 
     expander_sa = 0;
@@ -726,9 +742,14 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         len = do_discover(top, k, smp_resp, sizeof(smp_resp), 1, optsp);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
+        else
+            ret = 0;
         if (SMP_FRES_NO_PHY == ret)
             return 0;   /* expected, end condition */
-        if (ret)
+        else if (SMP_FRES_PHY_VACANT == ret) {
+            printf("  phy %3d: inaccessible (phy vacant)\n", k);
+            continue;
+        } else if (ret)
             return ret;
         ull = 0;
         for (j = 0; j < 8; ++j) {
@@ -760,6 +781,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         }
         if (optsp->do_hex || optsp->do_raw)
             continue;
+
         res = ((0x70 & smp_resp[12]) >> 4);
         if ((optsp->do_brief > 0) && (0 == res))
             continue;
@@ -894,7 +916,11 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             cp = "";
             break;
         }
-        printf("%s\n", cp);
+        printf("%s", cp);
+        if ((len > 59) && !!(smp_resp[60] & 0x1))
+            printf("  ZG:%d\n", smp_resp[63]);
+        else
+            printf("\n");
     }
     return 0;
 }
