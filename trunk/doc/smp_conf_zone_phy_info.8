@@ -1,29 +1,25 @@
-.TH SMP_ENA_DIS_ZONING "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_ZONE_PHY_INFO "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
-smp_ena_dis_zoning \- invoke ENABLE DISABLE ZONING SMP function
+smp_conf_zone_phy_info \- invoke CONFIGURE ZONE PHY INFORMATION function
 .SH SYNOPSIS
-.B smp_ena_dis_zoning
-[\fI\-\-ena\-dis=ED\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
-[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR]
+.B smp_conf_zone_phy_info
+[\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] \fI\-\-pconf=FN\fR [\fI\-\-raw\fR]
 [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-save=SAV\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) ENABLE DISABLE ZONING request function
-to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
-\fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may
-be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
-to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
-differentiate between HBAs if there are multiple present.
+Sends a SAS Management Protocol (SMP) CONFIGURE ZONE PHY INFORMATION request
+function to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR
+and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR
+may be deduced from the \fISMP_DEVICE\fR. The mpt interface uses
+\fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
+additional \fI,N\fR to differentiate between HBAs if there are multiple
+present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
-.TP
-\fB\-e\fR, \fB\-\-ena\-dis\fR=\fIED\fR
-set the 'enable disable zoning' field in the SMP request. \fIED\fR may
-take these values: 0 for no change (default), 1 for enable and 2 for
-disable.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.
@@ -43,6 +39,12 @@ output the response in hexadecimal.
 interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
+.TP
+\fB\-p\fR, \fB\-\-pconf\fR=\fIFN\fR
+FN is a file containing zone phy configuration descriptors in ASCII
+hexadecimal; either as bytes separated by space, tab, comma or newline,
+or as longer strings of hexadecimal bytes in which every 2 digits
+represents a byte. Empty lines and those starting with "#" are ignored.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response to stdout in binary. All error messages are sent to stderr.
@@ -66,7 +68,7 @@ increase the verbosity of the output. Can be used multiple times.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH CONFORMING TO
-The SMP ENABLE DISABLE ZONING function was introduced in SAS\-2 .
+The SMP CONFIGURE ZONE PHY INFORMATION function was introduced in SAS\-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
@@ -77,4 +79,4 @@ Copyright \(co 2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_lock, smp_zone_activate, smp_zone_unlock(smp_utils)
+.B smp_utils, smp_conf_zone_perm_tbl, smp_zone_activate(smp_utils)

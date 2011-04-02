@@ -75,7 +75,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             tobj->interface_selector = I_SGV4;
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
-        else if (verbose)
+        else if (verbose > 3)
             fprintf(stderr, "smp_initiator_open: interface not recognized\n");
         cp = strchr(i_params, ',');
         if (cp) {
@@ -132,7 +132,7 @@ smp_send_req(const struct smp_target_obj * tobj,
              struct smp_req_resp * rresp, int verbose)
 {
     if ((NULL == tobj) || (0 == tobj->opened)) {
-        if (verbose)
+        if (verbose > 2)
             fprintf(stderr, "smp_send_req: nothing open??\n");
         return -1;
     }
@@ -193,7 +193,7 @@ smp_initiator_open(const char * device_name, int subvalue,
         for (j = 0; j < 8; ++j, (sa >>= 8))
             tobj->sas_addr[j] = (sa & 0xff);
 #if 0
-        if (verbose > 0) {
+        if (verbose > 3) {
             fprintf(stderr, "    given SAS address: 0x");
             for (j = 0; j < 8; ++j)
                 fprintf(stderr, "%02x", tobj->sas_addr[7 - j]);
@@ -206,7 +206,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             tobj->interface_selector = I_MPT;
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
-        else if (verbose)
+        else if (verbose > 3)
             fprintf(stderr, "chk_mpt_device: interface not recognized\n");
         cp = strchr(i_params, ',');
         if (cp) {
