@@ -194,8 +194,7 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     unsigned char cmd[16];      /* unused */
     int res;
 
-    if (verbose > 3)
-        fprintf(stderr, "send_req_sgv4: fd=%d,  subvalue=%d\n", fd, subvalue);
+    ++subvalue; /* suppress warning */
 
     memset(&hdr, 0, sizeof(hdr));
     memset(cmd, 0, sizeof(cmd));
@@ -215,20 +214,29 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
 
     hdr.timeout = DEF_TIMEOUT_MS;
 
+    if (verbose > 3)
+        fprintf(stderr, "send_req_sgv4: dout_xfer_len=%u, din_xfer_len="
+                "%u, timeout=%u ms\n", hdr.dout_xfer_len, hdr.din_xfer_len,
+                hdr.timeout);
+
     res = ioctl(fd, SG_IO, &hdr);
     if (res) {
         perror("send_req_sgv4: SG_IO ioctl");
         return -1;
     }
-    if (verbose > 2) {
+    if (verbose > 3) {
         fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
                 "%u\n", hdr.driver_status, hdr.transport_status);
         fprintf(stderr, "    device_status=%u, duration=%u, info=%u\n",
                 hdr.device_status, hdr.duration, hdr.info);
         fprintf(stderr, "    din_resid=%d, dout_resid=%d\n",
                 hdr.din_resid, hdr.dout_resid);
+        if ((verbose > 4) && (hdr.din_xfer_len > 0)) {
+            fprintf(stderr, "  response (ignoring din_resid):\n");
+            dStrHex((const char *)rresp->response, hdr.din_xfer_len, 1);
+        }
     }
-    rresp->act_response_len = -1;  /* hdr.din_xfer_len - hdr.din_resid */
+    rresp->act_response_len = -1; /* >>>> hdr.din_xfer_len - hdr.din_resid */
     if (hdr.driver_status)
         rresp->transport_err = hdr.driver_status;
     else if (hdr.transport_status)

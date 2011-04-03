@@ -1,6 +1,6 @@
 .TH SMP_CONF_ZONE_PERM_TBL "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
-smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERM TABLE function
+smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERMISSION TABLE function
 .SH SYNOPSIS
 .B smp_conf_zone_perm_tbl
 [\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
@@ -10,7 +10,7 @@ smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERM TABLE function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) CONFIGURE ZONE PERM TABLE request
+Sends a SAS Management Protocol (SMP) CONFIGURE ZONE PERMISSION TABLE request
 function to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR
 and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR
 may be deduced from the \fISMP_DEVICE\fR. The mpt interface uses
@@ -67,6 +67,11 @@ increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.SH NOTES
+There are some examples of the \fI\-\-permf=FN\fR format in the examples
+directory. Note the need for symmetry: if Z[s,d] is set then so should
+be Z[d,s] (e.g. if Z[2,8]=1 then so should Z[8,2]=1). It also seems to
+be practical to set Z[s,s] (e.g. if zone group 8 is used then Z[8,8]=1).
 .SH CONFORMING TO
 The SMP CONFIGURE ZONE PERMISSION TABLE function was introduced in SAS\-2 .
 .SH AUTHORS
