@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20110401] [svn:r69]
+Changelog for smp_utils-0.96 [20110403] [svn:r70]
   - smp_conf_zone_perm_tbl, smp_conf_zone_phy_info,
     smp_ena_dis_zoning, smp_rep_phy_event,
     smp_rep_phy_event_list, smp_zone_activate,
@@ -17,6 +17,7 @@ Changelog for smp_utils-0.96 [20110401] [svn:r69]
   - smp_phy_control: sync to SAS-2, SPL
   - smp_phy_test: sync to SAS-2
   - smp_rep_route_info: sync to SAS-2
+  - add examples directory (zone permission descriptors)
   - remove doc/smp_utils.html , refer readers to web page
   - remove tpl (ai) interface
 
