@@ -19,9 +19,15 @@ the various exit status values.
 The reference documents are:
   sas-r05.pdf          www.t10.org   draft prior to original SAS spec
   sas1r10.pdf          www.t10.org   draft prior to SAS 1.1 spec
-  sas2r16.pdf          www.t10.org   SAS 2 draft
+  sas2r16.pdf          www.t10.org   draft prior to SAS-2
+  spl-r07.pdf          www.t10.org   draft prior to SAS-2.1
+  spl2r00.pdf          www.t10.org   current draft
   SFF_8485.PDF         www.sffcommittee.com   SGPIO revision 0.7
+
+In SAS-2.1 the lower levels were put into a document of that name
+while the higher levels were put in a new document called the
+SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-9th March 2011
+5th April 2011

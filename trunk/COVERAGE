@@ -12,17 +12,17 @@ SMP Function                          Standard         smp_utils utility
 CONFIGURE GENERAL                     2                smp_conf_general
 CONFIGURE PHY EVENT                   2    
 CONFIGURE ROUTE INFORMATION           1, 2             smp_conf_route_info
-CONFIGURE ZONE MANAGER PASSWORD       2    
-CONFIGURE ZONE PERMISSION TABLE       2    
-CONFIGURE ZONE PHY INFORMATION        2    
+CONFIGURE ZONE MANAGER PASSWORD       2                smp_conf_zone_man_pass
+CONFIGURE ZONE PERMISSION TABLE       2                smp_conf_zone_perm_tbl
+CONFIGURE ZONE PHY INFORMATION        2                smp_conf_zone_phy_info
 DISCOVER                              1, 1.1, 2        smp_discover
 DISCOVER LIST                         2                smp_discover_list
-ENABLE DISABLE ZONING                 2    
+ENABLE DISABLE ZONING                 2                smp_ena_dis_zoning
 PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
 READ GPIO REGISTER ENHANCED           SFF-8485*
-REPORT BROADCAST                      2    
+REPORT BROADCAST                      2                smp_zoned_broadcast
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
@@ -37,9 +37,9 @@ REPORT ZONE MANAGER PASSWORD          2
 REPORT ZONE PERMISSION TABLE          2    
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
 WRITE GPIO REGISTER ENHANCED          SFF-8485*
-ZONE ACTIVATE                         2    
-ZONE LOCK                             2    
-ZONE UNLOCK                           2    
+ZONE ACTIVATE                         2                smp_zone_activate
+ZONE LOCK                             2                smp_zone_lock
+ZONE UNLOCK                           2                smp_zone_unlock
 ZONED BROADCAST                       2    
 
 *  in sas2r15 the non-ENHANCED versions are marked as obsolete but the
@@ -47,7 +47,7 @@ ZONED BROADCAST                       2
    (rev 0.7).
 
 There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
-replacing 2 obsoleted in SFF-8485). smp_utils currently implements 16
+replacing 2 obsoleted in SFF-8485). smp_utils currently implements 22
 functions.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
@@ -69,4 +69,4 @@ announced by t10.
 
 
 Doug Gilbert
-22nd March 2011
+3rd April 2011
