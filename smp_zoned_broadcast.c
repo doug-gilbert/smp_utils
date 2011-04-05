@@ -32,8 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
+#include <ctype.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -43,22 +43,22 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a CONFIGURE ZONE PHY INFORMATION function and outputs
- * its response.
+ * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.01 20110403";
+static char * version_str = "1.00 20110405";
 
 
 static struct option long_options[] = {
         {"expected", 1, 0, 'E'},
+        {"fszg", 1, 0, 'F'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
-	{"interface", 1, 0, 'I'},
-        {"pconf", 1, 0, 'p'},
+        {"interface", 1, 0, 'I'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
+        {"szg", 1, 0, 'S'},
+        {"type", 1, 0, 't'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -67,57 +67,55 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_zone_phy_info [--expected=EX] [--help] [--hex]\n"
-          "                              [--interface=PARAMS] "
-          "--pconf=FN\n"
-          "                              [--raw] [--sa=SAS_ADDR] "
-          "[--save=SAV]\n"
-          "                              [--verbose] [--version] "
+          "smp_zoned_broadcast [--expected=EX] [--fszg=FS] [--help]\n"
+          "                           [--hex] [--interface=PARAMS] "
+          "[--raw]\n"
+          "                           [--sa=SAS_ADDR] [--szg=ZGL] "
+          "[--type=BT]\n"
+          "                           [--verbose] [--version] "
           "SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
+          "    --fszg=FS|-F FS        file FS contains one or more source "
+          "zone groups\n"
           "    --help|-h              print out usage message\n"
           "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --pconf=FN|-p FN       FN is a file containing zone "
-          "phy\n"
-          "                           configuration descriptors in hex; "
-          "required\n"
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
           "                           '0x' or trailing 'h'). Depending on "
           "the\n"
           "                           interface, may not be needed\n"
-          "    --save=SAV|-S SAV      SAV: 0 -> shadow (def); 1 -> "
-          "saved\n"
-          "                           2 -> shadow (and saved if "
-          "supported))\n"
-          "                           3 -> shadow and saved\n"
+          "    --szg=ZGL|-S ZGL       ZGL is a comma separated list of "
+          "source\n"
+          "                           zone groups for broadcast\n"
+          "    --type=BT|-t BT        BT is type of broadcast (def: 0 "
+          "which is\n"
+          "                           Broadcast(Change))\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP CONFIGURE ZONE PHY INFORMATION function\n"
+          "Performs a SMP ZONED BROADCAST function. Source zone groups "
+          "can be given\nin decimal (default) or hex with a '0x' prefix "
+          " or a 'h' suffix. Broadcast(Change)\nwill cause an SSP "
+          "initiator to run its discover protocol.\n"
           );
 }
 
-/* Read ASCII hex bytes from fname (a file named '-' taken as stdin).
+/* Read ASCII decimal bytes from fname (a file named '-' taken as stdin).
  * There should be either one entry per line or a comma, space or tab
- * separated list of bytes. The first ASCII hex string detected has its
- * length checked; if the length is 1 or 2 then bytes are expected to
- * be space, comma or tab separated; if the length is 3 or more then a
- * string of ACSII hex digits is expected, 2 per byte. Everything from
- * and including a '#' on a line is ignored.
- * Returns 0 if ok, or 1 if error. */
+ * separated list of bytes. By default decimal values are expected in
+ * the range from 0 to 255. With a "0x" prefix or a 'h' suffix hex values
+ * can be given in the range from 0x to 0xff. Everything from  and
+ * including a '#' on a line is ignored. Returns 0 if ok, or 1 if error. */
 static int
-f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
-          int max_arr_len)
+fd2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
+           int max_arr_len)
 {
     int fn_len, in_len, k, j, m;
-    int no_space = 0;
-    int checked_hexlen = 0;
-    unsigned int h;
+    int h;
     const char * lcp;
     FILE * fp;
     char line[512];
@@ -158,68 +156,49 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         in_len -= m;
         if ('#' == *lcp)
             continue;
-        if (! checked_hexlen) {
-            ++checked_hexlen;
-            k = strspn(lcp, "0123456789aAbBcCdDeEfF");
-            if (k > 2)
-                no_space = 1;
-        }
 
-        k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
+        k = strspn(lcp, "0123456789aAbBcCdDeEfFxXhH ,\t");
         if ((k < in_len) && ('#' != lcp[k])) {
-            fprintf(stderr, "f2hex_arr: syntax error at "
+            fprintf(stderr, "fd2hex_arr: syntax error at "
                     "line %d, pos %d\n", j + 1, m + k + 1);
             goto bad;
         }
-        if (no_space) {
-            for (k = 0; isxdigit(*lcp) && isxdigit(*(lcp + 1));
-                 ++k, lcp += 2) {
-                if (1 != sscanf(lcp, "%2x", &h)) {
-                    fprintf(stderr, "f2hex_arr: bad hex number in line "
-                            "%d, pos %d\n", j + 1, (int)(lcp - line + 1));
+        for (k = 0; k < 1024; ++k) {
+            h = smp_get_dhnum(lcp);
+            if ((h >= 0) && (h < 256)) {
+                if (h > 0xff) {
+                    fprintf(stderr, "fd2hex_arr: hex number "
+                            "larger than 0xff in line %d, pos %d\n",
+                            j + 1, (int)(lcp - line + 1));
                     goto bad;
                 }
                 if ((off + k) >= max_arr_len) {
-                    fprintf(stderr, "f2hex_arr: array length exceeded\n");
+                    fprintf(stderr, "fd2hex_arr: array length "
+                            "exceeded\n");
                     goto bad;
                 }
                 mp_arr[off + k] = h;
-            }
-            off += k;
-        } else {
-            for (k = 0; k < 1024; ++k) {
-                if (1 == sscanf(lcp, "%x", &h)) {
-                    if (h > 0xff) {
-                        fprintf(stderr, "f2hex_arr: hex number "
-                                "larger than 0xff in line %d, pos %d\n",
-                                j + 1, (int)(lcp - line + 1));
-                        goto bad;
-                    }
-                    if ((off + k) >= max_arr_len) {
-                        fprintf(stderr, "f2hex_arr: array length "
-                                "exceeded\n");
-                        goto bad;
-                    }
-                    mp_arr[off + k] = h;
-                    lcp = strpbrk(lcp, " ,\t");
-                    if (NULL == lcp)
-                        break;
+                if (! isxdigit(*lcp)) {
                     lcp += strspn(lcp, " ,\t");
-                    if ('\0' == *lcp)
-                        break;
-                } else {
-                    if ('#' == *lcp) {
-                        --k;
-                        break;
-                    }
-                    fprintf(stderr, "f2hex_arr: error in "
-                            "line %d, at pos %d\n", j + 1,
-                            (int)(lcp - line + 1));
-                    goto bad;
                 }
+                lcp = strpbrk(lcp, " ,\t");
+                if (NULL == lcp)
+                    break;
+                lcp += strspn(lcp, " ,\t");
+                if ('\0' == *lcp)
+                    break;
+            } else {
+                if ('#' == *lcp) {
+                    --k;
+                    break;
+                }
+                fprintf(stderr, "fd2hex_arr: error in "
+                        "line %d, at pos %d\n", j + 1,
+                        (int)(lcp - line + 1));
+                goto bad;
             }
-            off += (k + 1);
         }
+        off += (k + 1);
     }
     *mp_arr_len = off;
     fclose(fp);
@@ -239,12 +218,13 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, num_desc;
-    const char * pconf = NULL;
+    int res, c, k, len, n;
     int expected_cc = 0;
+    const char * fszg = NULL;
+    const char * zgl = NULL;
     int do_hex = 0;
+    int do_type = 0;
     int do_raw = 0;
-    int do_save = 0;
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
@@ -259,14 +239,12 @@ int main(int argc, char * argv[])
     char * cp;
     int ret = 0;
 
-    memset(smp_req, 0, sizeof(smp_req));
-    smp_req[0] = SMP_FRAME_TYPE_REQ;
-    smp_req[1] = SMP_FN_CONFIG_ZONE_PHY_INFO;
+    memset(smp_req, 0, sizeof smp_req);
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "E:hHI:p:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "E:F:hHI:rs:S:t:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -279,6 +257,9 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
+        case 'F':
+            fszg = optarg;
+            break;
         case 'h':
         case '?':
             usage();
@@ -289,9 +270,6 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
-            break;
-        case 'p':
-            pconf = optarg;
             break;
         case 'r':
             ++do_raw;
@@ -305,9 +283,12 @@ int main(int argc, char * argv[])
             sa = (unsigned long long)sa_ll;
             break;
         case 'S':
-            do_save = smp_get_num(optarg);
-            if ((do_save < 0) || (do_save > 3)) {
-                fprintf(stderr, "bad argument to '--save'\n");
+            zgl = optarg;
+            break;
+        case 't':
+            do_type = smp_get_dhnum(optarg);
+            if ((do_type < 0) || (do_type > 15)) {
+                fprintf(stderr, "bad argument to '--type'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -378,35 +359,65 @@ int main(int argc, char * argv[])
             }
         }
     }
-    if (NULL == pconf) {
-        fprintf(stderr, "--pconf=FN option is required (i.e. it's not "
-                "optional)\n");
-        return SMP_LIB_SYNTAX_ERROR;
+    len = 0;
+    if (fszg) {
+        if (zgl) {
+            fprintf(stderr, "can't have both --fszg and --szg "
+                    "options\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+        if (fd2hex_arr(fszg, smp_req + 8, &len, 255)) {
+            fprintf(stderr, "failed decoding --fszg=FS option\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+    } else if (zgl) {
+        for (k = 0; k < 256; ++k) {
+            n = smp_get_dhnum(zgl);
+            if ((n < 0) || (n > 255)) {
+                fprintf(stderr, "failed decoding --szg=ZGL option\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            smp_req[8 + k] = n;
+            cp = strchr(zgl, ',');
+            if (NULL == cp)
+                break;
+            zgl = cp + 1;
+        }
+        if (k > 255) {
+            fprintf(stderr, "failed decoding --szg option, max "
+                    "255 source zone groups\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        } else
+            len = k + 1;
     }
-    if (f2hex_arr(pconf, smp_req + 8, &len, sizeof(smp_req) - 12)) {
-        fprintf(stderr, "failed decoding --pconf=FN option\n");
+    if (0 == len) {
+        fprintf(stderr, "didn't detect any source zone group numbers "
+                        "in the input.\n");
+        fprintf(stderr, "Give --zgs=SGL or --fszg=FS option (e.g. "
+                "'--zgs=1')\n");
         return SMP_LIB_SYNTAX_ERROR;
-    }
-    num_desc = len / 4;
-    if (0 != (len % 4)) {
-        memset(smp_req + 8 + (4 * num_desc), 0, 4);
-        fprintf(stderr, "warning: pconf data not a multiple of 4, ignore "
-                "excess\n");
     }
 
+#if 0
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+#endif
 
-    smp_req[3] = num_desc + 1;
+    smp_req[0] = SMP_FRAME_TYPE_REQ;
+    smp_req[1] = SMP_FN_ZONED_BROADCAST,
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = (1 << 2) | (do_save & 0x3);    /* descriptor length is 1 dword */
-    smp_req[7] = num_desc;
+    smp_req[6] = do_type & 0xf;
+    smp_req[7] = len;
+    if ((len % 4))
+        len = ((len / 4) + 1) * 4;
+    smp_req[3] = (len / 4) + 1;
+    n = len + 8 + 4;
     if (verbose) {
-        fprintf(stderr, "    Configure zone phy information request:");
-        for (k = 0; k < (12 + (num_desc * 4)); ++k) {
+        fprintf(stderr, "    Zoned broadcast request:");
+        for (k = 0; k < n; ++k) {
             if (0 == (k % 16))
                 fprintf(stderr, "\n      ");
             else if (0 == (k % 8))
@@ -416,7 +427,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = 12 + (num_desc * 4);
+    smp_rr.request_len = n;
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(smp_resp);
     smp_rr.response = smp_resp;
@@ -462,7 +473,7 @@ int main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                fprintf(stderr, "Configure zone phy information result: %s\n",
+                fprintf(stderr, "Zoned broadcast result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
         }
@@ -483,7 +494,7 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Configure zone phy information result: %s\n", cp);
+        fprintf(stderr, "Zoned broadcast result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }

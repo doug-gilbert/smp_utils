@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.17 20110322";    /* spl-2 rev 0 */
+static char * version_str = "1.18 20110405";    /* spl-2 rev 0 */
 
 /* The original SMP definition (sas-r05.pdf) didn't have request
    and response length fields (they were reserved single byte fields).
@@ -271,9 +271,9 @@ dStrHex(const char* str, int len, int no_ascii)
 }
 
 /* If the number in 'buf' can be decoded or the multiplier is unknown
-   then -1 is returned. Accepts a hex prefix (0x or 0X) or a decimal
-   multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
-   Main (SI) multipliers supported: K, M, G. */
+ * then -1 is returned. Accepts a hex prefix (0x or 0X) or suffix (h or
+ * H) or a decimal multiplier suffix (as per GNU's dd (since 2002: SI and
+ * IEC 60027-2)). Main (SI) multipliers supported: K, M, G. */
 int
 smp_get_num(const char * buf)
 {
@@ -304,6 +304,7 @@ smp_get_num(const char * buf)
         if (res > 3)
             c3 = toupper(c3);
         switch (toupper(c)) {
+        case ',':
         case 'C':
             return num;
         case 'W':
@@ -447,6 +448,32 @@ smp_get_llnum(const char * buf)
             return -1LL;
         }
     }
+}
+
+/* If the non-negative number in 'buf' can be decoded in decimal (default)
+ * or hex then it is returned, else -1 is returned. Skips leading and
+ * trailing spaces, tabs and commas. Hex numbers are indicated by a "0x"
+ * or "0X" prefix, or by a 'h' or 'H' suffix. */
+int
+smp_get_dhnum(const char * buf)
+{
+    int res, n, len;
+    unsigned int unum;
+
+    if ((NULL == buf) || ('\0' == buf[0]))
+        return -1;
+    buf += strspn(buf, " ,\t");
+    if (('0' == buf[0]) && ('X' == toupper(buf[1]))) {
+        res = sscanf(buf + 2, "%x", &unum);
+        return res ? (int)unum : -1;
+    }
+    len = strcspn(buf, " ,\t");
+    if ('H' == toupper(buf[len - 1])) {
+        res = sscanf(buf, "%x", &unum);
+        return res ? (int)unum : -1;
+    }
+    res = sscanf(buf, "%d", &n);
+    return res ? n : -1;
 }
 
 const char *

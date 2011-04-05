@@ -45,9 +45,9 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.17 20110322";    /* sas2r15 */
+static char * version_str = "1.18 20110405";    /* sas2r15 */
 
-#define SMP_FN_REPORT_GENERAL_RESP_LEN 84
+#define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
 
 static struct option long_options[] = {

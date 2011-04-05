@@ -47,7 +47,7 @@
  * its response.
  */
 
-static char * version_str = "1.00 20110401";
+static char * version_str = "1.01 20110403";
 
 
 static struct option long_options[] = {
@@ -55,6 +55,7 @@ static struct option long_options[] = {
         {"first", 1, 0, 'f'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
+        {"interface", 1, 0, 'I'},
         {"numzg", 1, 0, 'n'},
         {"permf", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
@@ -444,6 +445,8 @@ int main(int argc, char * argv[])
         for (k = 0; k < (20 + (num_desc * desc_len)); ++k) {
             if (0 == (k % 16))
                 fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
         }
         fprintf(stderr, "\n");

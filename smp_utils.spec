@@ -54,8 +54,8 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
-* Mon Mar 14 2011 - dgilbert at interlog dot com
-- corrections for SAS-2, SPL
+* Tue Apr 05 2011 - dgilbert at interlog dot com
+- add zoning for SAS-2, SPL
   * smp_utils-0.96
 * Tue Oct 27 2009 - dgilbert at interlog dot com
 - discover changes in spl-r04

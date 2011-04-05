@@ -208,6 +208,13 @@ extern int smp_get_num(const char * buf);
    t T TiB  *(2**40); TB *(10**12); p P PiB  *(2**50); PB  *(10**15) . */
 extern long long smp_get_llnum(const char * buf);
 
+/* If the non-negative number in 'buf' can be decoded in decimal (default)
+ * or hex then it is returned, else -1 is returned. Skips leading and
+ * trailing spaces, tabs and commas. Hex numbers are indicated by a "0x"
+ * or "0X" prefix, or by a 'h' or 'H' suffix. */
+int
+smp_get_dhnum(const char * buf);
+
 
 #ifdef __cplusplus
 }
