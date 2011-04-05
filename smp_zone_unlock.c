@@ -46,7 +46,7 @@
  * This utility issues a ZONE UNLOCK function and outputs its response.
  */
 
-static char * version_str = "1.00 20110331";
+static char * version_str = "1.01 20110403";
 
 
 static struct option long_options[] = {
@@ -54,6 +54,7 @@ static struct option long_options[] = {
         {"expected", 1, 0, 'E'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
+        {"interface", 1, 0, 'I'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},

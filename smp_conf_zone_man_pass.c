@@ -32,8 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
+#include <ctype.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -43,19 +43,21 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a CONFIGURE ZONE PHY INFORMATION function and outputs
- * its response.
+ * This utility issues a CONFIGURE ZONE MANAGER PASSWORD function and
+ * outputs its response.
  */
 
-static char * version_str = "1.01 20110403";
+static char * version_str = "1.00 20110403";
 
 
 static struct option long_options[] = {
         {"expected", 1, 0, 'E'},
+        {"fpass", 1, 0, 'F'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
-	{"interface", 1, 0, 'I'},
-        {"pconf", 1, 0, 'p'},
+        {"new-fpass", 1, 0, 'N'},
+        {"new-pass", 1, 0, 'n'},
+        {"password", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"save", 1, 0, 'S'},
@@ -67,24 +69,33 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_zone_phy_info [--expected=EX] [--help] [--hex]\n"
+          "smp_conf_zone_man_pass [--expected=EX] [--fpass=FP] [--help] "
+          "[--hex]\n"
           "                              [--interface=PARAMS] "
-          "--pconf=FN\n"
-          "                              [--raw] [--sa=SAS_ADDR] "
-          "[--save=SAV]\n"
-          "                              [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "[--new-fpass=NF]\n"
+          "                              [--new-pass=NP] [--password=PA] "
+          "[--raw]\n"
+          "                              [--sa=SAS_ADDR] [--save=SAV] "
+          "[--verbose]\n"
+          "                              [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
+          "    --fpass=FP|-F FP       file FP contains password, in hex or "
+          "ASCII\n"
           "    --help|-h              print out usage message\n"
           "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --pconf=FN|-p FN       FN is a file containing zone "
-          "phy\n"
-          "                           configuration descriptors in hex; "
-          "required\n"
+          "    --new-fpass=NF|-N NF    file NF contains new password, in "
+          "hex or\n"
+          "                           ASCII\n"
+          "    --new-pass=NP|-n NP    new password NP in ASCII, padded with "
+          "NULLs to\n"
+          "                           be 32 bytes long (def: all NULLs)\n"
+          "    --password=PA|-P PA    password PA in ASCII, padded with "
+          "NULLs to\n"
+          "                           be 32 bytes long (def: all NULLs)\n"
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -98,7 +109,7 @@ static void usage()
           "                           3 -> shadow and saved\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP CONFIGURE ZONE PHY INFORMATION function\n"
+          "Performs a SMP CONFIGURE ZONE MANAGER PASSWORD function\n"
           );
 }
 
@@ -108,8 +119,13 @@ static void usage()
  * length checked; if the length is 1 or 2 then bytes are expected to
  * be space, comma or tab separated; if the length is 3 or more then a
  * string of ACSII hex digits is expected, 2 per byte. Everything from
- * and including a '#' on a line is ignored.
- * Returns 0 if ok, or 1 if error. */
+ * and including a '#' on a line is ignored. If the first non-space
+ * character on a line is quote or double quote then the ASCII string
+ * up to the next quote or double quote on that line is translated to
+ * binary (with each ASCII character translated to the binary byte
+ * equivalent). Only the first such quoted ASCII string is translated.
+ * If '-1' is detected at the start of a line then the rest of the
+ * map_arr is filled with bytes of 0xff. Returns 0 if ok, or 1 if error. */
 static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
           int max_arr_len)
@@ -119,6 +135,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
     int checked_hexlen = 0;
     unsigned int h;
     const char * lcp;
+    char * cp;
     FILE * fp;
     char line[512];
     int off = 0;
@@ -158,6 +175,10 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         in_len -= m;
         if ('#' == *lcp)
             continue;
+        if (('\'' == *lcp) || ('"' == *lcp))
+            goto astring;
+        if (('-' == *lcp) && ('1' == *(lcp + 1)))
+            goto minus1;
         if (! checked_hexlen) {
             ++checked_hexlen;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF");
@@ -224,10 +245,36 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
     *mp_arr_len = off;
     fclose(fp);
     return 0;
+astring:
+    cp = strchr(lcp + 1, *lcp);
+    if (NULL == cp) {
+        fprintf(stderr, "f2hex_arr: unterminated ASCII string on line "
+                "%d, starts: %s\n", j + 1, lcp);
+        goto bad;
+    }
+    k = (cp - lcp) - 1;
+    if (k > 0) {
+        if ((off + k) > max_arr_len) {
+            fprintf(stderr, "f2hex_arr: array length exceeded\n");
+            goto bad;
+        }
+        memcpy(mp_arr + off, lcp + 1, k);
+    }
+    off += k;
+    *mp_arr_len = off;
+    fclose(fp);
+    return 0;
+minus1:
+    for (k = off; k < max_arr_len; ++k)
+        mp_arr[k] = 0xff;
+    *mp_arr_len = k;
+    fclose(fp);
+    return 0;
 bad:
     fclose(fp);
     return 1;
 }
+
 
 static void dStrRaw(const char* str, int len)
 {
@@ -239,19 +286,28 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, num_desc;
-    const char * pconf = NULL;
+    int res, c, k, len;
     int expected_cc = 0;
+    const char * fpass = NULL;
+    const char * nfpass = NULL;
     int do_hex = 0;
-    int do_raw = 0;
     int do_save = 0;
+    unsigned char password[32];
+    unsigned char npassword[32];
+    int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[1028];
+    unsigned char smp_req[] = {
+                SMP_FRAME_TYPE_REQ, SMP_FN_CONFIG_ZONE_MANAGER_PASS,
+                0, 0x11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
@@ -259,14 +315,13 @@ int main(int argc, char * argv[])
     char * cp;
     int ret = 0;
 
-    memset(smp_req, 0, sizeof(smp_req));
-    smp_req[0] = SMP_FRAME_TYPE_REQ;
-    smp_req[1] = SMP_FN_CONFIG_ZONE_PHY_INFO;
+    memset(password, 0, sizeof password);
+    memset(npassword, 0, sizeof npassword);
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "E:hHI:p:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "E:F:hHI:n:N:P:rs:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -279,6 +334,9 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
+        case 'F':
+            fpass = optarg;
+            break;
         case 'h':
         case '?':
             usage();
@@ -290,8 +348,26 @@ int main(int argc, char * argv[])
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
             break;
-        case 'p':
-            pconf = optarg;
+        case 'n':
+            len = (int)strlen(optarg);
+            if (len > 32) {
+                fprintf(stderr, "argument to '--new-pass' too long; "
+                        "max 32 got %d\n", len);
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            memcpy(npassword , optarg, len);
+            break;
+        case 'N':
+            nfpass = optarg;
+            break;
+        case 'P':
+            len = (int)strlen(optarg);
+            if (len > 32) {
+                fprintf(stderr, "argument to '--password' too long; "
+                        "max 32 got %d\n", len);
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            memcpy(password , optarg, len);
             break;
         case 'r':
             ++do_raw;
@@ -378,20 +454,27 @@ int main(int argc, char * argv[])
             }
         }
     }
-    if (NULL == pconf) {
-        fprintf(stderr, "--pconf=FN option is required (i.e. it's not "
-                "optional)\n");
-        return SMP_LIB_SYNTAX_ERROR;
+    if (fpass) {
+        if (password[0]) {
+            fprintf(stderr, "can't have both --fpass and --password "
+                    "options\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+        if (f2hex_arr(fpass, password, &len, sizeof(password))) {
+            fprintf(stderr, "failed decoding --fpass=FP option\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
     }
-    if (f2hex_arr(pconf, smp_req + 8, &len, sizeof(smp_req) - 12)) {
-        fprintf(stderr, "failed decoding --pconf=FN option\n");
-        return SMP_LIB_SYNTAX_ERROR;
-    }
-    num_desc = len / 4;
-    if (0 != (len % 4)) {
-        memset(smp_req + 8 + (4 * num_desc), 0, 4);
-        fprintf(stderr, "warning: pconf data not a multiple of 4, ignore "
-                "excess\n");
+    if (nfpass) {
+        if (npassword[0]) {
+            fprintf(stderr, "can't have both --new-pass and --new-fpass "
+                    "options\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+        if (f2hex_arr(nfpass, npassword, &len, sizeof(npassword))) {
+            fprintf(stderr, "failed decoding --new-fpass=FP option\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
@@ -399,14 +482,14 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    smp_req[3] = num_desc + 1;
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = (1 << 2) | (do_save & 0x3);    /* descriptor length is 1 dword */
-    smp_req[7] = num_desc;
+    smp_req[6] = do_save & 0x3;
+    memcpy(smp_req + 8, password, 32);
+    memcpy(smp_req + 40, npassword, 32);
     if (verbose) {
-        fprintf(stderr, "    Configure zone phy information request:");
-        for (k = 0; k < (12 + (num_desc * 4)); ++k) {
+        fprintf(stderr, "    Configure zone manager password request:");
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
             if (0 == (k % 16))
                 fprintf(stderr, "\n      ");
             else if (0 == (k % 8))
@@ -416,7 +499,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = 12 + (num_desc * 4);
+    smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(smp_resp);
     smp_rr.response = smp_resp;
@@ -462,8 +545,9 @@ int main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                fprintf(stderr, "Configure zone phy information result: %s\n",
-                        smp_get_func_res_str(smp_resp[2], sizeof(b), b));
+                fprintf(stderr, "Configure zone manager password result: "
+                        "%s\n", smp_get_func_res_str(smp_resp[2],
+                        sizeof(b), b));
             ret = smp_resp[2];
         }
         goto err_out;
@@ -483,7 +567,7 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Configure zone phy information result: %s\n", cp);
+        fprintf(stderr, "Configure zone manager password result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }

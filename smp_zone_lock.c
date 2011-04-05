@@ -46,7 +46,7 @@
  * This utility issues a ZONE LOCK function and outputs its response.
  */
 
-static char * version_str = "1.00 20110331";
+static char * version_str = "1.01 20110403";
 
 
 static struct option long_options[] = {
@@ -55,6 +55,7 @@ static struct option long_options[] = {
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"inactivity", 1, 0, 'i'},
+        {"interface", 1, 0, 'I'},
         {"password", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
@@ -74,10 +75,10 @@ static void usage()
           "  where:\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
-          "    --fpass=FP|-F FP     file FP contains password, in hex or "
+          "    --fpass=FP|-F FP       file FP contains password, in hex or "
           "ASCII\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
+          "    --help|-h              print out usage message\n"
+          "    --hex|-H               print response in hexadecimal\n"
           "    --inactivity=TL|-i TL    TL is inactivity time limit "
           "(units: 100ms)\n"
           "                             (def: 0 -> no time limit)\n"
@@ -86,14 +87,14 @@ static void usage()
           "    --password=PA|-P PA    password PA in ASCII, padded with "
           "NULLs to\n"
           "                           be 32 bytes long (def: all NULLs)\n"
-          "    --raw|-r             output response in binary\n"
+          "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
+          "                           '0x' or trailing 'h'). Depending on "
           "the\n"
-          "                         interface, may not be needed\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "                           interface, may not be needed\n"
+          "    --verbose|-v           increase verbosity\n"
+          "    --version|-V           print version string and exit\n\n"
           "Performs a SMP ZONE LOCK function\n"
           );
 }
@@ -109,7 +110,8 @@ static void usage()
  * up to the next quote or double quote on that line is translated to
  * binary (with each ASCII character translated to the binary byte
  * equivalent). Only the first such quoted ASCII string is translated.
- * Returns 0 if ok, or 1 if error. */
+ * If '-1' is detected at the start of a line then the rest of the
+ * map_arr is filled with bytes of 0xff. Returns 0 if ok, or 1 if error. */
 static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
           int max_arr_len)
@@ -161,6 +163,8 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
             continue;
         if (('\'' == *lcp) || ('"' == *lcp))
             goto astring;
+        if (('-' == *lcp) && ('1' == *(lcp + 1)))
+            goto minus1;
         if (! checked_hexlen) {
             ++checked_hexlen;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF");
@@ -244,6 +248,12 @@ astring:
     }
     off += k;
     *mp_arr_len = off;
+    fclose(fp);
+    return 0;
+minus1:
+    for (k = off; k < max_arr_len; ++k)
+        mp_arr[k] = 0xff;
+    *mp_arr_len = k;
     fclose(fp);
     return 0;
 bad:
@@ -414,7 +424,7 @@ int main(int argc, char * argv[])
     }
     if (fpass) {
         if (password[0]) {
-            fprintf(stderr, "can't have both --fpass and --pasword "
+            fprintf(stderr, "can't have both --fpass and --password "
                     "options\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -437,8 +447,10 @@ int main(int argc, char * argv[])
     if (verbose) {
         fprintf(stderr, "    Zone lock request:");
         for (k = 0; k < (int)sizeof(smp_req); ++k) {
- 	    if (0 == (k % 16))
+            if (0 == (k % 16))
                 fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
         }
         fprintf(stderr, "\n");
