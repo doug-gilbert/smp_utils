@@ -1,0 +1,116 @@
+.TH SMP_REP_ZONE_PERM_TBL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.SH NAME
+smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
+.SH SYNOPSIS
+.B smp_rep_zone_perm_tbl
+[\fI\-\-append\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-nocomma\fR] [\fI\-\-num=MD\fR]
+[\fI\-\-permf=FN\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-start=SS\fR] [\fI\-\-type=RT\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) REPORT ZONE PERMISSION TABLE function
+request to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR
+and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR
+may be deduced from the \fISMP_DEVICE\fR. The mpt interface uses
+\fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
+additional \fI,N\fR to differentiate between HBAs if there are multiple
+present.
+.PP
+This SMP function returns zone permission descriptors which represent rows
+of the zone permission table. There is a row for each source zone group
+starting at zone group 0 and finishing at zone group 127 or zone group 255.
+Due to the SMP response size restriction of 1028 bytes (including trailing
+CRC), not all the zone permission table rows can be returned in one
+REPORT ZONE PERMISSION TABLE function response. So multiple function calls
+may be required with the \fI\-\-start=SS\fR option being used on the latter
+calls to specify the next starting source zone group.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+maximum connection time limit.
+.TP
+\fB\-a\fR, \fB\-\-append\fR
+used in conjunction with \fI\-\-permf=FN\fR to append to \fIFN\fR if it
+already exists. If \fIFN\fR does not exist then it is created.
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-N\fR, \fB\-\-nocomma\fR
+output each zone group descriptor as a long string of hexadecimal digits,
+two digits per byte. Default action is to output a comma separated list of
+hexadecimal ASCII bytes for each zone group descriptor.
+.TP
+\fB\-n\fR, \fB\-\-num\fR=\fIMD\fR
+where \fIMD\fR is the maximum number of descriptors that can be reported
+in the response. The default value is 63. 63 is the maximum number of "128
+zone groups" sized descriptors that can fit in one response. If the expander
+is using "256 zone groups" sized descriptors then a maximum of 31 descriptors
+can fit in one response.
+.TP
+\fB\-P\fR, \fB\-\-permf\fR=\fIFN\fR
+\fIFN\fR is a file to write the zone permission descriptors to. The default
+action is to output the zone permissions descriptors to stdout. Note that the
+whole permissions table may not fit in one response. If the \fIFN\fR exists
+then it is truncated prior to the write unless \fI\-\-append\fR is given. To
+append to the existing \fIFN\fR add the \fI\-\-append\fR option.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. The mpt interface needs
+this option and it will typically be an expander's SAS address. The
+\fISAS_ADDR\fR is in decimal but most SAS addresses are shown in hexadecimal.
+To give a number in hexadecimal either prefix it with '0x' or put a
+trailing 'h' on it.
+.TP
+\fB\-S\fR, \fB\-\-start\fR=\fISS\fR
+starting (lowest numbered) source zone group (default: zone group 0).
+.TP
+\fB\-t\fR, \fB\-\-type\fR=\fIRT\fR
+set the 'report type' field in the SMP request. \fIRT\fR may take these
+values: 0 for report current values (default); 1 for report the shadow
+values; 2 for report saved values; 3 for report default values.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH NOTES
+There are some examples of the \fI\-\-permf=FN\fR format in the examples
+directory. Note the need for symmetry: if Z[s,d] is set then so should
+be Z[d,s] (e.g. if Z[2,8]=1 then so should Z[8,2]=1). It also seems to
+be practical to set Z[s,s] (e.g. if zone group 8 is used then Z[8,8]=1).
+.SH CONFORMING TO
+The SMP REPORT ZONE PERMISSION TABLE function was introduced in SAS\-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2011 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_conf_zone_perm_tbl, smp_zone_lock(smp_utils)

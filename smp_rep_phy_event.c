@@ -46,9 +46,9 @@
  * response.
  */
 
-static char * version_str = "1.00 20110322";
+static char * version_str = "1.01 20110409";
 
-#define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1024 + 8)
+#define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
 
 
 static struct option long_options[] = {
@@ -443,7 +443,6 @@ int main(int argc, char * argv[])
                 smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
-
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);

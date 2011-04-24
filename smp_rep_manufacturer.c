@@ -316,7 +316,6 @@ int main(int argc, char * argv[])
                 smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
-
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
