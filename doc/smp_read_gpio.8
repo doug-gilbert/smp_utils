@@ -1,4 +1,4 @@
-.TH SMP_READ_GPIO "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_READ_GPIO "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_read_gpio \- invoke READ GPIO REGISTER SMP function
 .SH SYNOPSIS
@@ -10,8 +10,8 @@ smp_read_gpio \- invoke READ GPIO REGISTER SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) READ GPIO REGISTER request to a SMP
-target. The SMP target is identified by the \fISMP_DEVICE\fR and the
+Sends a SAS Management Protocol (SMP) READ GPIO REGISTER function request to
+a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
 \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be deduced
 from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
@@ -25,6 +25,13 @@ that lives in a host bus adapter (HBA) and allows SMP to manipulate
 the sideband signals on wide internal cables. To stop other initiators
 in a multi\-initiator domain from accessing those sideband signals,
 the virtual SMP (target) port is not indicated in a DISCOVER response.
+.PP
+In SAS\-2 this function was made obsolete and seemingly replaced by a
+function called READ GPIO REGISTER ENHANCED with a reference to the
+same SFF document. However the author can find no version of SFF\-8485
+that defines the READ GPIO REGISTER ENHANCED function. In SAS\-2.1
+both the READ GPIO REGISTER and READ GPIO REGISTER ENHANCED functions
+were dropped.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -80,7 +87,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2009 Douglas Gilbert
+Copyright \(co 2006\-2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

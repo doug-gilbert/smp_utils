@@ -34,20 +34,21 @@ REPORT PHY SATA                       1, 2             smp_rep_phy_sata
 REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
 REPORT SELF-CONFIGURATION STATUS      2    
 REPORT ZONE MANAGER PASSWORD          2    
-REPORT ZONE PERMISSION TABLE          2    
+REPORT ZONE PERMISSION TABLE          2                smp_rep_zone_perm_tbl
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
 WRITE GPIO REGISTER ENHANCED          SFF-8485*
 ZONE ACTIVATE                         2                smp_zone_activate
 ZONE LOCK                             2                smp_zone_lock
 ZONE UNLOCK                           2                smp_zone_unlock
-ZONED BROADCAST                       2    
+ZONED BROADCAST                       2                smp_zoned_broadcast
 
 *  in sas2r15 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
-   (rev 0.7).
+   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r00) these 4 functions
+   have been dropped (i.e. they no longer appear)
 
 There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
-replacing 2 obsoleted in SFF-8485). smp_utils currently implements 22
+replacing 2 obsoleted in SFF-8485). smp_utils currently implements 24
 functions.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
@@ -69,4 +70,4 @@ announced by t10.
 
 
 Doug Gilbert
-3rd April 2011
+24th April 2011
