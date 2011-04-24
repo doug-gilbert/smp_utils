@@ -47,10 +47,15 @@
  * its response.
  */
 
-static char * version_str = "1.01 20110403";
+static char * version_str = "1.01 20110424";
+
+// #define DUMMY_TEST 1
+
+static unsigned char full_perm_tbl[32 * 256];
 
 
 static struct option long_options[] = {
+        {"deduce", 0, 0, 'd'},
         {"expected", 1, 0, 'E'},
         {"first", 1, 0, 'f'},
         {"help", 0, 0, 'h'},
@@ -69,15 +74,18 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_zone_perm_tbl [--expected=EX] [--first=SS] [--help]\n"
-          "                              [--hex] [--interface=PARAMS] "
-          "[--numzg=NG]\n"
-          "                              --permf=FN [--raw] "
+          "smp_conf_zone_perm_tbl [--deduce] [--expected=EX] [--first=SS]\n"
+          "                              [--help] [--hex] "
+          "[--interface=PARAMS]\n"
+          "                              [--numzg=NG] --permf=FN [--raw] "
           "[--sa=SAS_ADDR]\n"
           "                              [--save=SAV] [--verbose] "
           "[--version]\n"
           "                              SMP_DEVICE[,N]\n"
           "  where:\n"
+          "    --deduce|-d            deduce number of zone groups from "
+          "number\n"
+          "                           of bytes on active FN lines\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
           "    --first=SS|-f SS       starting (first) source zone group "
@@ -106,7 +114,8 @@ static void usage()
           "                           3 -> shadow and saved\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP CONFIGURE ZONE PERMISSION TABLE function\n"
+          "Performs one of more SMP CONFIGURE ZONE PERMISSION TABLE "
+          "functions\n"
           );
 }
 
@@ -120,11 +129,12 @@ static void usage()
  * Returns 0 if ok, or 1 if error. */
 static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
-          int max_arr_len)
+          int max_arr_len, int * numzg256p)
 {
     int fn_len, in_len, k, j, m;
     int no_space = 0;
     int checked_hexlen = 0;
+    int numzg256 = 0;
     unsigned int h;
     const char * lcp;
     FILE * fp;
@@ -193,6 +203,8 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
                 }
                 mp_arr[off + k] = h;
             }
+            if (k > 16)
+                ++numzg256;
             off += k;
         } else {
             for (k = 0; k < 1024; ++k) {
@@ -226,11 +238,15 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
                     goto bad;
                 }
             }
+            if (k > 15)
+                ++numzg256;
             off += (k + 1);
         }
     }
     *mp_arr_len = off;
     fclose(fp);
+    if (numzg256p)
+        *numzg256p = !! numzg256;
     return 0;
 bad:
     fclose(fp);
@@ -247,12 +263,15 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, num_desc, desc_len;
+    int res, c, k, j, len, num_desc, numd, desc_len, numzg256;
+    int max_desc_per_req;
     const char * permf = NULL;
+    int deduce = 0;
     int expected_cc = 0;
     int first = 0;
     int do_hex = 0;
     int num_zg = 128;
+    int num_zg_given = 0;
     int do_raw = 0;
     int do_save = 0;
     int verbose = 0;
@@ -269,19 +288,19 @@ int main(int argc, char * argv[])
     char * cp;
     int ret = 0;
 
-    memset(smp_req, 0, sizeof(smp_req));
-    smp_req[0] = SMP_FRAME_TYPE_REQ;
-    smp_req[1] = SMP_FN_CONFIG_ZONE_PERMISSION_TBL;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "E:f:hHI:n:P:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "dE:f:hHI:n:P:rs:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'd':
+            ++deduce;
+            break;
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
@@ -320,6 +339,7 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--numzg'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++num_zg_given;
             break;
         case 'P':
             permf = optarg;
@@ -414,114 +434,141 @@ int main(int argc, char * argv[])
                 "optional)\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
-    if (f2hex_arr(permf, smp_req + 16, &len, sizeof(smp_req) - 20)) {
+    if (deduce && num_zg_given) {
+        fprintf(stderr, "can't give both --deduce and --numzg=\n");
+        return SMP_LIB_SYNTAX_ERROR;
+    }
+    if (f2hex_arr(permf, full_perm_tbl, &len, sizeof full_perm_tbl,
+                  &numzg256)) {
         fprintf(stderr, "failed decoding --permf=FN option\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
+    if (deduce && numzg256)
+        num_zg = 256;
     desc_len = (128 == num_zg) ? 16 : 32;
     num_desc = len / desc_len;
-    if (0 != (len % desc_len)) {
-        memset(smp_req + 16 + (desc_len * num_desc), 0, 4);
+    if (0 != (len % desc_len))
         fprintf(stderr, "warning: permf data not a multiple of %d bytes, "
                 "ignore excess\n", desc_len);
-    }
+    max_desc_per_req = (128 == num_zg) ? 63 : 31;
 
+#ifdef DUMMY_TEST
+#else
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+#endif
 
-    smp_req[3] = (num_desc * (desc_len / 4)) + 3;
-    smp_req[4] = (expected_cc >> 8) & 0xff;
-    smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = first;
-    smp_req[7] = num_desc;
-    smp_req[8] = (do_save & 0x3);
-    if (256 == num_zg)
-        smp_req[8] |= 0x40;
-    smp_req[9] = (256 == num_zg) ? 8 : 4;
-    if (verbose) {
-        fprintf(stderr, "    Configure zone permission table request:");
-        for (k = 0; k < (20 + (num_desc * desc_len)); ++k) {
-            if (0 == (k % 16))
-                fprintf(stderr, "\n      ");
-            else if (0 == (k % 8))
-                fprintf(stderr, " ");
-            fprintf(stderr, "%02x ", smp_req[k]);
+    for (j = 0; j < num_desc; j += max_desc_per_req) {
+        numd = num_desc - j;
+        if (numd > max_desc_per_req)
+            numd = max_desc_per_req;
+        memset(smp_req, 0, sizeof(smp_req));
+        smp_req[0] = SMP_FRAME_TYPE_REQ;
+        smp_req[1] = SMP_FN_CONFIG_ZONE_PERMISSION_TBL;
+        smp_req[3] = (numd * (desc_len / 4)) + 3;
+        smp_req[4] = (expected_cc >> 8) & 0xff;
+        smp_req[5] = expected_cc & 0xff;
+        smp_req[6] = first + j;
+        smp_req[7] = numd;
+        smp_req[8] = (do_save & 0x3);
+        if (256 == num_zg)
+            smp_req[8] |= 0x40;
+        smp_req[9] = (256 == num_zg) ? 8 : 4;
+        memcpy(smp_req + 16, full_perm_tbl + (j * desc_len), numd * desc_len);
+        if (verbose) {
+            fprintf(stderr, "    Configure zone permission table request:");
+            for (k = 0; k < (20 + (numd * desc_len)); ++k) {
+                if (0 == (k % 16))
+                    fprintf(stderr, "\n      ");
+                else if (0 == (k % 8))
+                    fprintf(stderr, " ");
+                fprintf(stderr, "%02x ", smp_req[k]);
+            }
+            fprintf(stderr, "\n");
         }
-        fprintf(stderr, "\n");
-    }
-    memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = 20 + (num_desc * desc_len);
-    smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(smp_resp);
-    smp_rr.response = smp_resp;
-    res = smp_send_req(&tobj, &smp_rr, verbose);
+        memset(&smp_rr, 0, sizeof(smp_rr));
+        smp_rr.request_len = 20 + (numd * desc_len);
+        smp_rr.request = smp_req;
+        smp_rr.max_response_len = sizeof(smp_resp);
+        smp_rr.response = smp_resp;
+#ifdef DUMMY_TEST
+        memset(smp_resp, 0, sizeof smp_resp);
+        smp_resp[0] = SMP_FRAME_TYPE_RESP;
+        smp_resp[1] = smp_req[1];
+        smp_rr.act_response_len = 8;
+        res = 0;
+#else
+        res = smp_send_req(&tobj, &smp_rr, verbose);
+#endif
 
-    if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
-        ret = -1;
-        goto err_out;
-    }
-    if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
-        ret = -1;
-        goto err_out;
-    }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    len = smp_resp[3];
-    if ((0 == len) && (0 == smp_resp[2])) {
-        len = smp_get_func_def_resp_len(smp_resp[1]);
-        if (len < 0) {
-            len = 0;
-            if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+        if (res) {
+            fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+            if (0 == verbose)
+                fprintf(stderr, "    try adding '-v' option for more debug\n");
+            ret = -1;
+            goto err_out;
         }
-    }
-    len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex || do_raw) {
-        if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
-        else
-            dStrRaw((const char *)smp_resp, len);
-        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+        if (smp_rr.transport_err) {
+            fprintf(stderr, "smp_send_req transport_error=%d\n",
+                    smp_rr.transport_err);
+            ret = -1;
+            goto err_out;
+        }
+        if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
+            fprintf(stderr, "response too short, len=%d\n",
+                    smp_rr.act_response_len);
             ret = SMP_LIB_CAT_MALFORMED;
-        else if (smp_resp[1] != smp_req[1])
+            goto err_out;
+        }
+        len = smp_resp[3];
+        if ((0 == len) && (0 == smp_resp[2])) {
+            len = smp_get_func_def_resp_len(smp_resp[1]);
+            if (len < 0) {
+                len = 0;
+                if (verbose > 0)
+                    fprintf(stderr, "unable to determine response length\n");
+            }
+        }
+        len = 4 + (len * 4);    /* length in bytes, excluding 4 byte CRC */
+        if (do_hex || do_raw) {
+            if (do_hex)
+                dStrHex((const char *)smp_resp, len, 1);
+            else
+                dStrRaw((const char *)smp_resp, len);
+            if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+                ret = SMP_LIB_CAT_MALFORMED;
+            else if (smp_resp[1] != smp_req[1])
+                ret = SMP_LIB_CAT_MALFORMED;
+            else if (smp_resp[2]) {
+                if (verbose)
+                    fprintf(stderr, "Configure zone permission table result: "
+                            "%s\n", smp_get_func_res_str(smp_resp[2],
+                                                         sizeof(b), b));
+                ret = smp_resp[2];
+            }
+            goto err_out;
+        }
+        if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
+            fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                    smp_resp[0]);
             ret = SMP_LIB_CAT_MALFORMED;
-        else if (smp_resp[2]) {
-            if (verbose)
-                fprintf(stderr, "Configure zone permission table result: %s\n",
-                        smp_get_func_res_str(smp_resp[2], sizeof(b), b));
+            goto err_out;
+        }
+        if (smp_resp[1] != smp_req[1]) {
+            fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                    smp_req[1], smp_resp[1]);
+            ret = SMP_LIB_CAT_MALFORMED;
+            goto err_out;
+        }
+        if (smp_resp[2]) {
+            cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
+            fprintf(stderr, "Configure zone permission table result: %s\n",
+                    cp);
             ret = smp_resp[2];
+            goto err_out;
         }
-        goto err_out;
-    }
-    if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-
-    }
-    if (smp_resp[2]) {
-        cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Configure zone permission table result: %s\n", cp);
-        ret = smp_resp[2];
-        goto err_out;
     }
 err_out:
     res = smp_initiator_close(&tobj);
