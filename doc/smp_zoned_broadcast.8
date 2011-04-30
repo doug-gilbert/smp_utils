@@ -4,9 +4,9 @@ smp_zoned_broadcast \- invoke ZONED BROADCAST SMP function
 .SH SYNOPSIS
 .B smp_zoned_broadcast
 [\fI\-\-expected=EX\fR] [\fI\-\-fszg=FS\fR] [\fI\-\-help\fR]
-[\fI\-\-hex\fR] [\fI\-\-inactivity=TL\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-szg=ZGL\fR]
-[\fI\-\-type=BT\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR]
+[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-szg=ZGL\fR] [\fI\-\-type=BT\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -17,6 +17,12 @@ SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
 be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
+.PP
+This function requires zoning to be enabled. To send a Broadcast (Change)
+in the absence of zoning, the least intrusive way seems to be to use
+a PHY CONTROL request to send a link reset to an expander phy.
+Broadcast (Change) should cause a management application client behind a SMP
+initiator port (e.g. a SAS HBA) to start a discover process.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
@@ -28,6 +34,8 @@ value. When \fIEX\fR is greater than zero then if the value doesn't match
 the expander change count of the SMP target (i.e. the expander) when
 the request arrives then the target ignores the request and sets a
 function result of "invalid expander change count" in the response.
+In SPL\-1 this field is marked as "restricted (for expected expander
+change count)".
 .TP
 \fB\-F\fR, \fB\-\-fszg\fR=\fIFS\fR
 where \fIFS\fR is the name of a file which contains one or more source
@@ -67,10 +75,10 @@ be given.
 .TP
 \fB\-t\fR, \fB\-\-type\fR=\fIBT\fR
 \fIBT\fR is the broadcast type, an integer in the range 0 (default) to 15.
-Broadcast(Change) corresponds to 0 and will cause SSP initiators that
-receeive it to do their discover process. Some other broadcast type values
-are 3: Broadcast(SES), 4: Broadcast(Expander), 5: Broadcast(Aysnchronous
-event) and 8: Broadcast(Zone Activate). \fIBT\fR may be decimal (default)
+Broadcast (Change) corresponds to 0 and will cause SMP initiators that
+receive it to do their discover process. Some other broadcast type values
+are 3: Broadcast (SES), 4: Broadcast (Expander), 5: Broadcast (Aysnchronous
+event) and 8: Broadcast (Zone Activate). \fIBT\fR may be decimal (default)
 or hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR

@@ -289,7 +289,7 @@ int main(int argc, char * argv[])
                                0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
-    unsigned char smp_resp[8];
+    unsigned char smp_resp[20];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
@@ -298,6 +298,7 @@ int main(int argc, char * argv[])
 
     memset(password, 0, sizeof password);
     memset(device_name, 0, sizeof device_name);
+    memset(smp_resp, 0, sizeof smp_resp);
     while (1) {
         int option_index = 0;
 
@@ -439,6 +440,7 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    smp_req[2] = (sizeof(smp_resp) - 8) / 4;
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
     smp_req[6] = (inact_tl >> 8) & 0xff;
@@ -524,8 +526,19 @@ int main(int argc, char * argv[])
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
         fprintf(stderr, "Zone lock result: %s\n", cp);
         ret = smp_resp[2];
+        if (smp_resp[8] | smp_resp[9] | smp_resp[10] | smp_resp[11]) {
+            fprintf(stderr, "Active zone manager SAS address (hex): ");
+            for (k = 0; k < 8; ++k)
+                fprintf(stderr, "%02x", smp_resp[8 + k]);
+            fprintf(stderr, "\n");
+        }
         goto err_out;
     }
+    printf("Active zone manager SAS address (hex): ");
+    for (k = 0; k < 8; ++k)
+        printf("%02x", smp_resp[8 + k]);
+    printf("\n");
+
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {

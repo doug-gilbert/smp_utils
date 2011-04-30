@@ -46,10 +46,11 @@
  * response.
  */
 
-static char * version_str = "1.01 20110403";
+static char * version_str = "1.02 20110429";
 
 
 static struct option long_options[] = {
+        {"disable", 0, 0, 'd'},
         {"ena-dis", 1, 0, 'e'},
         {"expected", 1, 0, 'E'},
         {"help", 0, 0, 'h'},
@@ -66,16 +67,18 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_ena_dis_zoning [--ena-dis=ED] [--expected=EX] [--help] "
-          "[--hex]\n"
-          "                          [--interface=PARAMS] [--raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                          [--save=SAV] [--verbose] [--version]\n"
-          "                          SMP_DEVICE[,N]\n"
+          "smp_ena_dis_zoning [--disable] [--ena-dis=ED] [--expected=EX] "
+          "[--help]\n"
+          "                          [--hex] [--interface=PARAMS] [--raw]\n"
+          "                          [--sa=SAS_ADDR] [--save=SAV] "
+          "[--verbose]\n"
+          "                          [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --ena-dis=ED|-e ED     ED: 0 -> no change (def); 1 -> "
-          "enable\n"
-          "                           2 -> disable\n"
+          "    --disable|-d           disable zoning (equivalent to "
+          "'--ena-dis=2')\n"
+          "    --ena-dis=ED|-e ED     ED: 0 -> no change; 1 -> enable "
+          "zoning (def)\n"
+          "                           2 -> disable zoning\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
           "    --help|-h              print out usage message\n"
@@ -95,7 +98,8 @@ static void usage()
           "                           3 -> shadow and saved\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP ENABLE DISABLE ZONING function\n"
+          "Performs a SMP ENABLE DISABLE ZONING function. Default action "
+          "(when no\noptions given) is to enable zoning.\n"
           );
 }
 
@@ -110,7 +114,9 @@ static void dStrRaw(const char* str, int len)
 int main(int argc, char * argv[])
 {
     int res, c, k, len;
-    int ena_dis = 0;
+    int disable = 0;
+    int ena_dis = 1;    /* what is the point of ena_dis=0 (no change)? */
+    int ena_dis_given = 0;
     int expected_cc = 0;
     int do_hex = 0;
     int do_raw = 0;
@@ -134,18 +140,22 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "e:E:hHI:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "de:E:hHI:rs:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'd':
+            ++disable;
+            break;
         case 'e':
             ena_dis = smp_get_num(optarg);;
             if ((ena_dis < 0) || (ena_dis > 3)) {
                 fprintf(stderr, "bad argument to '--ena-dis'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++ena_dis_given;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -249,6 +259,11 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
+    }
+    if (disable && ena_dis_given && (2 != ena_dis)) {
+        fprintf(stderr, "'--disable' and '--ena-dis=ED' contradict, use "
+                "one or other\n");
+        return SMP_LIB_SYNTAX_ERROR;
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,

@@ -3,7 +3,7 @@
 smp_rep_general \- invoke REPORT GENERAL SMP function
 .SH SYNOPSIS
 .B smp_rep_general
-[\fI\-\-change_report\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
@@ -19,10 +19,8 @@ differentiate between HBAs if there are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
-\fB\-c\fR, \fB\-\-change_report\fR
-reports (prints to stdout) the value of the expander change count
-field from the response. The value is printed in decimal and is
-obtained from a 16 bit field.
+\fB\-b\fR, \fB\-\-brief\fR
+reports (prints to stdout) only a few important fields from the response.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
