@@ -22,7 +22,7 @@ PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
 READ GPIO REGISTER ENHANCED           SFF-8485*
-REPORT BROADCAST                      2                smp_zoned_broadcast
+REPORT BROADCAST                      2 
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
@@ -33,7 +33,7 @@ REPORT PHY EVENT LIST                 2                smp_rep_phy_event_list
 REPORT PHY SATA                       1, 2             smp_rep_phy_sata
 REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
 REPORT SELF-CONFIGURATION STATUS      2    
-REPORT ZONE MANAGER PASSWORD          2    
+REPORT ZONE MANAGER PASSWORD          2                smp_rep_zone_man_pass
 REPORT ZONE PERMISSION TABLE          2                smp_rep_zone_perm_tbl
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
 WRITE GPIO REGISTER ENHANCED          SFF-8485*
@@ -53,11 +53,8 @@ functions.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
-SAS-1.1 standard (ANSI INCITS 417-2006). The most recent draft of SAS-2
-is sas2r15.pdf and is being submitted for approval.
-
-At this time all SMP functions introduced in the original standard
-and SAS-1.1 have corresponding smp_utils utilities.
+SAS-1.1 standard (ANSI INCITS 417-2006). The sas2r15.pdf draft is taken
+to represent the SAS-2 standard (ANSI INCITS 457-2010).
 
 Now there is a SAS-2.1 standard at the draft stage and it has been
 split into 2 documents. The document containing the SMP functions
@@ -70,4 +67,4 @@ announced by t10.
 
 
 Doug Gilbert
-24th April 2011
+28th April 2011

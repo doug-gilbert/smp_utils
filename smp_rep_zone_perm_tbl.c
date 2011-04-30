@@ -46,12 +46,20 @@
  * its response.
  */
 
-static char * version_str = "1.00 20110424";
+static char * version_str = "1.00 20110428";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
 
+/* Leave the following define commented out unless testing */
 // #define DUMMY_TEST 1
+
+static char * decode_rtype[] = {
+        "current",
+        "shadow",
+        "saved",
+        "default",
+};
 
 static char * decode_numzg[] = {
         "128",
@@ -60,7 +68,7 @@ static char * decode_numzg[] = {
         "? ?",
 };
 
-static int numzg_len[] = {
+static int numzg_blen[] = {
         16,
         32,
         0,
@@ -72,6 +80,7 @@ static struct option long_options[] = {
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
+        {"multiple", 0, 0, 'm'},
         {"num", 1, 0, 'n'},
         {"nocomma", 0, 0, 'N'},
         {"permf", 1, 0, 'P'},
@@ -90,9 +99,9 @@ static void usage()
     fprintf(stderr, "Usage: "
           "smp_rep_zone_perm_tbl [--append] [--help] [--hex] "
           "[--interface=PARAMS]\n"
-          "                             [--nocomma] [--num=MD] [--permf=FN] "
-          "[--raw]\n"
-          "                             [--sa=SAS_ADDR] [--start=SS] "
+          "                             [--multiple] [--nocomma] [--num=MD] "
+          "[--permf=FN]\n"
+          "                             [--raw] [--sa=SAS_ADDR] [--start=SS] "
           "[--type=RT]\n"
           "                             [--verbose] [--version] "
           "SMP_DEVICE[,N]\n"
@@ -102,11 +111,16 @@ static void usage()
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --multiple|-m        issue multiple function requests until "
+          "all\n"
+          "                         available descriptors (from SS) are "
+          "read\n"
           "    --nocomma|-N         output descriptors as long string of "
           "hex\n"
           "                         (default: bytes comma separated)\n"
-          "    --num=MD|-n MD       maximum number of descriptors (default: "
-          "63)\n"
+          "    --num=MD|-n MD       maximum number of descriptors in one "
+          "response\n"
+          "                         (default: 63)\n"
           "    --permf=FN|-P FN     write descriptors to file FN (default: "
           "write\n"
           "                         to stdout)\n"
@@ -123,7 +137,7 @@ static void usage()
           "                         1 -> shadow; 2 -> saved; 3 -> default\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP REPORT ZONE PERMISSION TABLE function\n"
+          "Perform one or more SMP REPORT ZONE PERMISSION TABLE functions\n"
           );
 }
 
@@ -138,11 +152,14 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len, desc_len, num_desc, numzg;
+    int res, c, k, j, m, len, desc_len, num_desc, numzg, max_sszg;
+    int desc_per_resp, first, rtype;
     int do_append = 0;
     int do_hex = 0;
+    int multiple = 0;
     int nocomma = 0;
-    int maxnum = DEF_MAX_NUM_DESC;
+    int mndesc = DEF_MAX_NUM_DESC;
+    int mndesc_given = 0;
     const char * permf = NULL;
     int do_raw = 0;
     int report_type = 0;
@@ -153,8 +170,7 @@ int main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ZONE_PERMISSION_TBL,
-                               0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned char smp_req[12];
     unsigned char smp_resp[SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
@@ -169,7 +185,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "ahHI:n:NP:rs:S:t:vV", long_options,
+        c = getopt_long(argc, argv, "ahHI:mn:NP:rs:S:t:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -190,14 +206,19 @@ int main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'n':
-           maxnum = smp_get_num(optarg);
-           if ((maxnum < 0) || (maxnum > 63)) {
+           mndesc = smp_get_num(optarg);
+           if ((mndesc < 0) || (mndesc > 63)) {
                 fprintf(stderr, "bad argument to '--num=', expect 0 to "
                         "63\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            if (0 == maxnum)
-                maxnum = DEF_MAX_NUM_DESC;
+            if (0 == mndesc)
+                mndesc = DEF_MAX_NUM_DESC;
+            else
+                ++mndesc_given;
+            break;
+        case 'm':
+            ++multiple;
             break;
         case 'N':
             ++nocomma;
@@ -300,6 +321,11 @@ int main(int argc, char * argv[])
             }
         }
     }
+    if (multiple && mndesc_given) {
+        fprintf(stderr, "--multiple and --num clash, give one or the "
+                "other\n");
+        return SMP_LIB_SYNTAX_ERROR;
+    }
 
 #ifdef DUMMY_TEST
 #else
@@ -308,118 +334,6 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 #endif
-
-    len = (sizeof(smp_resp) - 8) / 4;
-    smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
-    smp_req[4] = report_type & 0x3;
-    smp_req[6] = sszg & 0xff;
-    smp_req[7] = maxnum & 0xff;
-    if (verbose) {
-        fprintf(stderr, "    Report zone permission table request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
-            fprintf(stderr, "%02x ", smp_req[k]);
-        fprintf(stderr, "\n");
-    }
-    memset(&smp_rr, 0, sizeof(smp_rr));
-    smp_rr.request_len = sizeof(smp_req);
-    smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(smp_resp);
-    smp_rr.response = smp_resp;
-#ifdef DUMMY_TEST
-    res = 0;
-    {
-  #if 0
-        unsigned char rr[] = {
-            0x41, 0x4, 0, 3, 0x77, 0x88, 0x80, 0x40,
-            0, 0, 0, 0, 0, 8, 0, 0,
-            0, 0, 0, 0,};
-  #else
-        // unsigned char rr[] = {
-            // 0x41, 0x4, 0, 0xb, 0x1, 0x1, 0x80, 0x40,
-            // 0, 0, 0, 0, 0, 8, 0, 1,
-            // 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,6,
-            // 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,7,
-            // 0, 0, 0, 0,};
-        unsigned char rr[] = {
-            0x41, 0x4, 0, 0xb, 0x1, 0x1, 0x3, 0x0,
-            0, 0, 0, 0, 0, 4, 0, 2,
-            0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,6,
-            0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,7,
-            0, 0, 0, 0,};
-  #endif
-
-        rr[6] |= report_type & 0x3;
-        memcpy(smp_resp, rr, sizeof rr);
-        smp_rr.act_response_len  = sizeof rr;
-    }
-#else
-    res = smp_send_req(&tobj, &smp_rr, verbose);
-#endif
-
-    if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
-        ret = -1;
-        goto err_out;
-    }
-    if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
-        ret = -1;
-        goto err_out;
-    }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    len = smp_resp[3];
-    if ((0 == len) && (0 == smp_resp[2])) {
-        len = smp_get_func_def_resp_len(smp_resp[1]);
-        if (len < 0) {
-            len = 0;
-            if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
-        }
-    }
-    len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (do_hex || do_raw) {
-        if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
-        else
-            dStrRaw((const char *)smp_resp, len);
-        if (SMP_FRAME_TYPE_RESP != smp_resp[0])
-            ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[1] != smp_req[1])
-            ret = SMP_LIB_CAT_MALFORMED;
-        if (smp_resp[2]) {
-            ret = smp_resp[2];
-            if (verbose)
-                fprintf(stderr, "Report zone permission table result: %s\n",
-                        smp_get_func_res_str(ret, sizeof(b), b));
-        }
-        goto err_out;
-    }
-    if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
-        ret = SMP_LIB_CAT_MALFORMED;
-        goto err_out;
-    }
-    if (smp_resp[2]) {
-        cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Report zone permission table result: %s\n", cp);
-        ret = smp_resp[2];
-        goto err_out;
-    }
     if (permf) {
         foutp = fopen(permf, (do_append ? "a" : "w"));
         if (NULL == foutp) {
@@ -429,41 +343,254 @@ int main(int argc, char * argv[])
             goto err_out;
         }
     }
-    fprintf(foutp, "# Report zone permission table response:\n");
-    res = (smp_resp[4] << 8) + smp_resp[5];
-    if (verbose || res)
-        fprintf(foutp, "#  Expander change count: %d\n", res);
-    fprintf(foutp, "#  zone locked: %d\n", !! (0x80 & smp_resp[6]));
-    fprintf(foutp, "#  report type: %d\n", 0x3 & smp_resp[6]);
-    numzg = (0xc0 & smp_resp[7]) >> 6;
-    fprintf(foutp, "#  number of zone groups: %d (%s)\n", numzg,
-            decode_numzg[numzg]);
-    desc_len = smp_resp[13] * 4;
-    if (verbose) {
-        fprintf(foutp, "#  zone permission descriptor length: %d dwords\n",
-                smp_resp[13]);
-        fprintf(foutp, "#  starting source zone group: %d\n", smp_resp[14]);
-    }
-    num_desc = smp_resp[15];
-    fprintf(foutp, "#  number of zone permission descriptors: %d\n",
-            num_desc);
-    if (0 == numzg_len[numzg]) {
-        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
+    max_sszg = 256;
+    desc_per_resp = 63;
 
-    }
-    descp = smp_resp + 16;
-    for (k = 0; k < num_desc; ++k, descp += desc_len) {
-        for (j = 0; j < desc_len; ++j) {
-            if (nocomma)
-                fprintf(foutp, "%02x", descp[j]);
-            else {
-                if (0 == j)
-                    fprintf(foutp, "%x", descp[j]);
-                else
-                    fprintf(foutp, ",%x", descp[j]);
+    for (j = sszg, first = 1; j < max_sszg; j +=  desc_per_resp) {
+        memset(smp_req, 0, sizeof smp_req);
+        smp_req[0] = SMP_FRAME_TYPE_REQ;
+        smp_req[1] = SMP_FN_REPORT_ZONE_PERMISSION_TBL;
+        len = (sizeof(smp_resp) - 8) / 4;
+        smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
+        smp_req[3] = 0x1;
+        smp_req[4] = report_type & 0x3;
+        smp_req[6] = j & 0xff;
+        numzg = max_sszg - j;
+        if (desc_per_resp < numzg)
+            numzg = desc_per_resp;
+        if (mndesc < numzg)
+            numzg = mndesc;
+        smp_req[7] = numzg & 0xff;
+        if (verbose) {
+            fprintf(stderr, "    Report zone permission table request: ");
+            for (k = 0; k < (int)sizeof(smp_req); ++k)
+                fprintf(stderr, "%02x ", smp_req[k]);
+            fprintf(stderr, "\n");
+        }
+        memset(&smp_rr, 0, sizeof(smp_rr));
+        smp_rr.request_len = sizeof(smp_req);
+        smp_rr.request = smp_req;
+        smp_rr.max_response_len = sizeof(smp_resp);
+        smp_rr.response = smp_resp;
+#ifdef DUMMY_TEST
+        res = 0;
+        {
+  #if 0
+            unsigned char rr[] = {
+                0x41, 0x4, 0, 3, 0x77, 0x88, 0x80, 0x40,
+                0, 0, 0, 0, 0, 8, 0, 0,
+                0, 0, 0, 0,};
+  #else
+            // unsigned char rr[] = {
+                // 0x41, 0x4, 0, 0xb, 0x1, 0x1, 0x80, 0x40,
+                // 0, 0, 0, 0, 0, 8, 0, 1,
+                // 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,6,
+                // 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,7,
+                // 0, 0, 0, 0,};
+            unsigned char rr[] = {
+                0x41, 0x4, 0, 0xb, 0x1, 0x1, 0x0, 0x0,
+                0, 0, 0, 0, 0, 4, 0, 63,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x0,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x4,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x5,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x6,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x7,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x8,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x9,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xa,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xb,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xc,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xd,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xe,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0xf,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x10,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x11,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x12,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x13,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x14,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x15,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x16,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x17,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x18,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x19,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1a,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1b,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1c,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1d,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1e,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x1f,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x20,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x21,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x22,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x23,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x24,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x25,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x26,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x27,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x28,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x29,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2a,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2b,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2c,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2d,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2e,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x2f,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x30,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x31,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x32,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x33,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x34,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x35,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x36,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x37,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x38,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x39,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3a,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3b,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3c,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3d,
+                0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x3e,
+                /* max 63 "128 zgroups" descriptors */
+                0, 0, 0, 0,};
+  #endif
+
+            rr[6] |= report_type & 0x3;
+            if (j > 127) {
+                rr[14] = 0;
+                rr[15] = 0;
+            } else {
+                rr[14] = j;
+                rr[15] = numzg;
+                if ((j + numzg) > 128)
+                    rr[15] = 128 - j;
+            }
+            memcpy(smp_resp, rr, sizeof rr);
+            smp_rr.act_response_len  = sizeof rr;
+        }
+#else
+        res = smp_send_req(&tobj, &smp_rr, verbose);
+#endif
+
+        if (res) {
+            fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+            if (0 == verbose)
+                fprintf(stderr, "    try adding '-v' option for more debug\n");
+            ret = -1;
+            goto err_out;
+        }
+        if (smp_rr.transport_err) {
+            fprintf(stderr, "smp_send_req transport_error=%d\n",
+                    smp_rr.transport_err);
+            ret = -1;
+            goto err_out;
+        }
+        if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
+            fprintf(stderr, "response too short, len=%d\n",
+                    smp_rr.act_response_len);
+            ret = SMP_LIB_CAT_MALFORMED;
+            goto err_out;
+        }
+        len = smp_resp[3];
+        if ((0 == len) && (0 == smp_resp[2])) {
+            len = smp_get_func_def_resp_len(smp_resp[1]);
+            if (len < 0) {
+                len = 0;
+                if (verbose > 0)
+                    fprintf(stderr, "unable to determine response length\n");
             }
         }
-        fprintf(foutp, "\n");
+        len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+        if (do_hex || do_raw) {
+            if (do_hex)
+                dStrHex((const char *)smp_resp, len, 1);
+            else
+                dStrRaw((const char *)smp_resp, len);
+            if (SMP_FRAME_TYPE_RESP != smp_resp[0])
+                ret = SMP_LIB_CAT_MALFORMED;
+            if (smp_resp[1] != smp_req[1])
+                ret = SMP_LIB_CAT_MALFORMED;
+            if (smp_resp[2]) {
+                ret = smp_resp[2];
+                if (verbose)
+                    fprintf(stderr, "Report zone permission table result: %s\n",
+                            smp_get_func_res_str(ret, sizeof(b), b));
+            }
+            goto err_out;
+        }
+        if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
+            fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                    smp_resp[0]);
+            ret = SMP_LIB_CAT_MALFORMED;
+            goto err_out;
+        }
+        if (smp_resp[1] != smp_req[1]) {
+            fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                    smp_req[1], smp_resp[1]);
+            ret = SMP_LIB_CAT_MALFORMED;
+            goto err_out;
+        }
+        if (smp_resp[2]) {
+            cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
+            fprintf(stderr, "Report zone permission table result: %s\n", cp);
+            ret = smp_resp[2];
+            goto err_out;
+        }
+        numzg = (0xc0 & smp_resp[7]) >> 6;
+        desc_len = smp_resp[13] * 4;
+        num_desc = smp_resp[15];
+        rtype = 0x3 & smp_resp[6];
+        if (first) {
+            first = 0;
+            if (0 == numzg) {
+                max_sszg = 128;
+                desc_per_resp = 63;
+            } else {
+                max_sszg = 256;
+                desc_per_resp = 31;
+            }
+            fprintf(foutp, "# Report zone permission table response:\n");
+            res = (smp_resp[4] << 8) + smp_resp[5];
+            if (verbose || res)
+                fprintf(foutp, "#  Expander change count: %d\n", res);
+            fprintf(foutp, "#  zone locked: %d\n", !! (0x80 & smp_resp[6]));
+            fprintf(foutp, "#  report type: %d [%s]\n", rtype,
+                    decode_rtype[rtype]);
+            fprintf(foutp, "#  number of zone groups: %d (%s)\n", numzg,
+                    decode_numzg[numzg]);
+            if (verbose) {
+                fprintf(foutp, "#  zone permission descriptor length: %d "
+                        "dwords\n", smp_resp[13]);
+                fprintf(foutp, "#  starting source zone group%s: %d\n",
+                        (multiple ? " (of first request)" : ""),
+                        smp_resp[14]);
+            }
+            fprintf(foutp, "#  number of zone permission descriptors: %d\n",
+                    num_desc);
+            if (0 == numzg_blen[numzg]) {
+                fprintf(stderr, "unexpected number of zone groups: %d\n",
+                        numzg);
+                goto err_out;
+            }
+        }
+        descp = smp_resp + 16;
+        for (k = 0; k < num_desc; ++k, descp += desc_len) {
+            for (m = 0; m < desc_len; ++m) {
+                if (nocomma)
+                    fprintf(foutp, "%02x", descp[m]);
+                else {
+                    if (0 == m)
+                        fprintf(foutp, "%x", descp[m]);
+                    else
+                        fprintf(foutp, ",%x", descp[m]);
+                }
+            }
+            fprintf(foutp, "\n");
+        }
+        if ((0 == multiple) || (mndesc < desc_per_resp))
+            break;
     }
 
 err_out:

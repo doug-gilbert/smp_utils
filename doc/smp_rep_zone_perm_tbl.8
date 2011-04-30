@@ -4,20 +4,20 @@ smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
 .SH SYNOPSIS
 .B smp_rep_zone_perm_tbl
 [\fI\-\-append\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-nocomma\fR] [\fI\-\-num=MD\fR]
-[\fI\-\-permf=FN\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-start=SS\fR] [\fI\-\-type=RT\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-multiple\fR] [\fI\-\-nocomma\fR]
+[\fI\-\-num=MD\fR] [\fI\-\-permf=FN\fR] [\fI\-\-raw\fR]
+[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-start=SS\fR] [\fI\-\-type=RT\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) REPORT ZONE PERMISSION TABLE function
-request to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR
-and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR
-may be deduced from the \fISMP_DEVICE\fR. The mpt interface uses
-\fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
-additional \fI,N\fR to differentiate between HBAs if there are multiple
-present.
+Sends one or more SAS Management Protocol (SMP) REPORT ZONE PERMISSION TABLE
+function requests to a SMP target. The SMP target is identified by the
+\fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface,
+the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt
+interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and
+needs the additional \fI,N\fR to differentiate between HBAs if there are
+multiple present.
 .PP
 This SMP function returns zone permission descriptors which represent rows
 of the zone permission table. There is a row for each source zone group
@@ -27,6 +27,13 @@ CRC), not all the zone permission table rows can be returned in one
 REPORT ZONE PERMISSION TABLE function response. So multiple function calls
 may be required with the \fI\-\-start=SS\fR option being used on the latter
 calls to specify the next starting source zone group.
+.PP
+The \fI\-\-multiple\fR option will send multiple REPORT ZONE PERMISSION
+TABLE requests until all source zone groups (or starting from
+\fI\-\-start=SS\fR) are output. This option is the most convenient way
+to output the whole zone permission table. In the absence of the
+\fI\-\-multiple\fR option only one REPORT ZONE PERMISSION TABLE request is
+sent.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
@@ -34,14 +41,6 @@ maximum connection time limit.
 \fB\-a\fR, \fB\-\-append\fR
 used in conjunction with \fI\-\-permf=FN\fR to append to \fIFN\fR if it
 already exists. If \fIFN\fR does not exist then it is created.
-.TP
-\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
-set the 'expected expander change count' field in the SMP request.
-The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
-value. When \fIEX\fR is greater than zero then if the value doesn't match
-the expander change count of the SMP target (i.e. the expander) when
-the request arrives then the target ignores the request and sets a
-function result of "invalid expander change count" in the response.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -54,6 +53,12 @@ interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
+\fB\-m\fR, \fB\-\-multiple\fR
+starting at source zone group 0 (or \fISS\fR), multiple REPORT ZONE
+PERMISSION TABLE requests are issued until the last (127th and 255th)
+source zone descriptor is output. This option should not be given
+together with the \fI\-\-num=MD\fR option.
+.TP
 \fB\-N\fR, \fB\-\-nocomma\fR
 output each zone group descriptor as a long string of hexadecimal digits,
 two digits per byte. Default action is to output a comma separated list of
@@ -61,10 +66,11 @@ hexadecimal ASCII bytes for each zone group descriptor.
 .TP
 \fB\-n\fR, \fB\-\-num\fR=\fIMD\fR
 where \fIMD\fR is the maximum number of descriptors that can be reported
-in the response. The default value is 63. 63 is the maximum number of "128
-zone groups" sized descriptors that can fit in one response. If the expander
-is using "256 zone groups" sized descriptors then a maximum of 31 descriptors
-can fit in one response.
+in the one response. The default value is 63. 63 is the maximum number
+of "128 zone groups" sized descriptors that can fit in one response. If the
+expander is using "256 zone groups" sized descriptors then a maximum of 31
+descriptors can fit in one response. This option should not be given
+together with the \fI\-\-multiple\fR option.
 .TP
 \fB\-P\fR, \fB\-\-permf\fR=\fIFN\fR
 \fIFN\fR is a file to write the zone permission descriptors to. The default
