@@ -16,7 +16,8 @@ EXECS = smp_rep_general smp_rep_manufacturer smp_discover smp_phy_control \
 	smp_rep_phy_event smp_rep_phy_event_list smp_zone_lock \
 	smp_ena_dis_zoning smp_zone_unlock smp_zone_activate \
 	smp_conf_zone_phy_info smp_conf_zone_perm_tbl \
-	smp_conf_zone_man_pass smp_zoned_broadcast smp_rep_zone_perm_tbl
+	smp_conf_zone_man_pass smp_zoned_broadcast smp_rep_zone_perm_tbl \
+	smp_rep_zone_man_pass
 
 MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_discover.8 smp_phy_control.8 smp_rep_phy_err_log.8 \
@@ -27,7 +28,7 @@ MAN_PGS = smp_utils.8 smp_rep_general.8 smp_rep_manufacturer.8 \
 	  smp_ena_dis_zoning.8 smp_zone_unlock.8 smp_zone_activate.8 \
 	  smp_conf_zone_phy_info.8 smp_conf_zone_perm_tbl.8 \
 	  smp_conf_zone_man_pass.8 smp_zoned_broadcast.8 \
-	  smp_rep_zone_perm_tbl.8
+	  smp_rep_zone_perm_tbl.8 smp_rep_zone_man_pass.8
 
 MAN_PREF = man8
 
@@ -154,6 +155,9 @@ smp_zoned_broadcast: smp_zoned_broadcast.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 smp_rep_zone_perm_tbl: smp_rep_zone_perm_tbl.o libsmp.a
+	$(LD) -o $@ $(LDFLAGS) $^
+
+smp_rep_zone_man_pass: smp_rep_zone_man_pass.o libsmp.a
 	$(LD) -o $@ $(LDFLAGS) $^
 
 install: $(EXECS)

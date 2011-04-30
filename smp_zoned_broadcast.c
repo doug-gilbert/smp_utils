@@ -48,6 +48,7 @@
 
 static char * version_str = "1.00 20110424";
 
+/* Leave the following define commented out unless testing */
 // #define DUMMY_TEST 1
 
 

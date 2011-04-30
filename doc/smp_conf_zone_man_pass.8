@@ -30,10 +30,10 @@ the request arrives then the target ignores the request and sets a
 function result of "invalid expander change count" in the response.
 .TP
 \fB\-F\fR, \fB\-\-fpass\fR=\fIFP\fR
-where \fIFP\fR is a filename which contains the existing password. The
-password may be in ASCII in which case it is on one line surrounded by either
-single quotes are double quotes. Alternatively the password may be given in
-ASCII hexadecimal; either as bytes separated by space, tab, comma or
+where \fIFP\fR is the name of a file which contains the existing password.
+The password may be in ASCII in which case it is on one line surrounded by
+either single quotes are double quotes. Alternatively the password may be
+given in ASCII hexadecimal; either as bytes separated by space, tab, comma or
 newline, or as longer strings of hexadecimal bytes in which every 2 digits
 represents a byte. Empty lines and those starting with "#" are ignored.
 A line starting with '-1' causes all remaining bytes in the password
@@ -51,8 +51,8 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-N\fR, \fB\-\-new\-fpass\fR=\fINF\fR
-where \fINF\fR is a filename which contains the new password. The format
-of this file is the same as the file given in \fI\-\-fpass=FP\fR.
+where \fINF\fR is the name of a file which contains the new password. The
+format of this file is the same as the file given in \fI\-\-fpass=FP\fR.
 .TP
 \fB\-n\fR, \fB\-\-new\-pass\fR=\fINP\fR
 where \fINP\fR is the new zone manager password which may be up to 32
@@ -89,6 +89,9 @@ increase the verbosity of the output. Can be used multiple times.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH NOTES
+Hexadecimal bytes (or longer hexadecimal strings) should not have a
+leading "0x" or trailing "h" decoration.
+.PP
 The "well known" DISABLE password is 32 bytes of 0xff. The new password
 can only be DISABLED if physical presence is supported and asserted.
 .SH CONFORMING TO
@@ -103,4 +106,4 @@ Copyright \(co 2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_zone_lock, smp_zone_activate, smp_zone_unlock(smp_utils)
+.B smp_utils, smp_zone_lock, smp_rep_zone_man_pass(smp_utils)
