@@ -15,6 +15,12 @@ SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
 be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
+.PP
+This function, if successful, will cause various zoning related shadow
+values (e.g. zone permission table and zone phy information) to be copied
+to the corresponding current values. If the saving to "saved" values option
+has been selected then the various zoning related shadow values will also
+be copied to the corresponding saved values.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.

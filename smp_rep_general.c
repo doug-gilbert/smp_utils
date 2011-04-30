@@ -45,13 +45,13 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.18 20110405";    /* sas2r15 */
+static char * version_str = "1.19 20110429";    /* sas2r15 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
 
 static struct option long_options[] = {
-        {"change_report", 0, 0, 'c'},
+        {"brief", 0, 0, 'b'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -74,8 +74,7 @@ usage()
           "                       [--verbose] [--version] [--zero]"
           "SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --change_report|-c   report expander change count "
-          "only\n"
+          "    --brief|-b           only report important settings\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
@@ -107,8 +106,9 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
-    int res, c, k, len, sas2;
-    int do_change = 0;
+    int res, c, k, len, sas2, zsupp, psupp;
+    int do_brief = 0;
+    int do_full = 1;
     int do_hex = 0;
     int phy_id = 0;
     int do_raw = 0;
@@ -133,14 +133,15 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "chHI:p:rs:vVz", long_options,
+        c = getopt_long(argc, argv, "bhHI:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
-        case 'c':
-            ++do_change;
+        case 'b':
+            ++do_brief;
+            do_full = 0;
             break;
         case 'h':
         case '?':
@@ -334,18 +335,18 @@ main(int argc, char * argv[])
         goto err_out;
     }
     sas2 = !! (smp_resp[3]);
-    if (do_change) {
-        printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
-        goto err_out;
-    }
-    printf("Report general response:\n");
-    printf("  expander change count: %d\n",
-           (smp_resp[4] << 8) + smp_resp[5]);
-    printf("  expander route indexes: %d\n",
-           (smp_resp[6] << 8) + smp_resp[7]);
+
+    if (do_full) {
+        printf("Report general response:\n");
+        printf("  expander change count: %d\n",
+               (smp_resp[4] << 8) + smp_resp[5]);
+        printf("  expander route indexes: %d\n",
+               (smp_resp[6] << 8) + smp_resp[7]);
+    } else
+        printf("Report general, brief response:\n");
     printf("  long response: %d\n", !!(smp_resp[8] & 0x80));
     printf("  number of phys: %d\n", smp_resp[9]);
-    if (sas2 || (verbose > 3)) {
+    if (do_full && (sas2 || (verbose > 3))) {
         printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
         printf("  zone configuring: %d\n", !!(smp_resp[10] & 0x40));
         printf("  self configuring: %d\n", !!(smp_resp[10] & 0x20));
@@ -353,54 +354,71 @@ main(int argc, char * argv[])
         printf("  open reject retry supported: %d\n", !!(smp_resp[10] & 0x8));
         printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
     }
-    printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
-    /* following "externally" word added in SAS-2 */
-    printf("  externally configurable route table: %d\n",
-           !!(smp_resp[10] & 0x1));
-    if (smp_resp[12]) { /* assume naa-5 present */
-        /* not in SAS-1; in SAS-1.1 and SAS-2 */
-        printf("  enclosure logical identifier (hex): ");
-        for (k = 0; k < 8; ++k)
-            printf("%02x", smp_resp[12 + k]);
-        printf("\n");
+    if (do_full || (smp_resp[10] & 0x2))
+        printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
+    if (do_full) {
+        /* following "externally" word added in SAS-2 */
+        printf("  externally configurable route table: %d\n",
+               !!(smp_resp[10] & 0x1));
+        if (smp_resp[12]) { /* assume naa-5 present */
+            /* not in SAS-1; in SAS-1.1 and SAS-2 */
+            printf("  enclosure logical identifier (hex): ");
+            for (k = 0; k < 8; ++k)
+                printf("%02x", smp_resp[12 + k]);
+            printf("\n");
+        }
+        if ((0 == smp_resp[12]) && verbose)
+            printf("  enclosure logical identifier <empty>\n");
+        if (len < 36)
+            goto err_out;
+        printf("  STP bus inactivity timer: %d (unit: 100ms)\n",
+               (smp_resp[30] << 8) + smp_resp[31]);
+        printf("  STP maximum connect time: %d (unit: 100ms)\n",
+               (smp_resp[32] << 8) + smp_resp[33]);
+        printf("  STP SMP I_T nexus loss time: %d (unit: ms)\n",
+               (smp_resp[34] << 8) + smp_resp[35]);
+        if (len < 40)
+            goto err_out;
+    } else {
+        if (len < 40)
+            goto err_out;
     }
-    if ((0 == smp_resp[12]) && verbose)
-        printf("  enclosure logical identifier <empty>\n");
-    if (len < 36)
-        goto err_out;
-    printf("  STP bus inactivity timer: %d (unit: 100ms)\n",
-           (smp_resp[30] << 8) + smp_resp[31]);
-    printf("  STP maximum connect time: %d (unit: 100ms)\n",
-           (smp_resp[32] << 8) + smp_resp[33]);
-    printf("  STP SMP I_T nexus loss time: %d (unit: ms)\n",
-           (smp_resp[34] << 8) + smp_resp[35]);
-    if (len < 40)
-        goto err_out;
-    printf("  number of zone groups: %d (0->128, 1->256)\n",
-           ((smp_resp[36] & 0xc0) >> 6));
-    printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
-    printf("  physical presence supported: %d\n", !!(smp_resp[36] & 0x8));
-    printf("  physical presence asserted: %d\n", !!(smp_resp[36] & 0x4));
-    printf("  zoning supported: %d\n", !!(smp_resp[36] & 0x2));
-    printf("  zoning enabled: %d\n", !!(smp_resp[36] & 0x1));
-    printf("  saving: %d\n", !!(smp_resp[37] & 0x10));
-    printf("  saving zone manager password supported: %d\n",
-           !!(smp_resp[37] & 0x8));
-    printf("  saving zone phy information supported: %d\n",
-           !!(smp_resp[37] & 0x4));
-    printf("  saving zone permission table supported: %d\n",
-           !!(smp_resp[37] & 0x2));
-    printf("  saving zoning enabled supported: %d\n",
-           !!(smp_resp[37] & 0x1));
-    printf("  maximum number of routed SAS addresses: %d\n",
-           (smp_resp[38]  << 8) + smp_resp[39]);
-    if (len < 48)
-        goto err_out;
-    printf("  active zone manager SAS address (hex): ");
-    for (k = 0; k < 8; ++k)
-        printf("%02x", smp_resp[40 + k]);
-    printf("\n");
-    if (len < 50)
+    zsupp = !!(smp_resp[36] & 0x2);
+    if (zsupp || do_full) {
+        printf("  number of zone groups: %d (0->128, 1->256)\n",
+               ((smp_resp[36] & 0xc0) >> 6));
+        printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
+        psupp = !!(smp_resp[36] & 0x8);
+        if (do_full)
+            printf("  physical presence supported: %d\n", psupp);
+        if (psupp || do_full)
+            printf("  physical presence asserted: %d\n",
+                   !!(smp_resp[36] & 0x4));
+        if (do_full)
+            printf("  zoning supported: %d\n", zsupp);
+        printf("  zoning enabled: %d\n", !!(smp_resp[36] & 0x1));
+        if (do_full || (smp_resp[37] & 0x10))
+            printf("  saving: %d\n", !!(smp_resp[37] & 0x10));
+        if (do_full) {
+            printf("  saving zone manager password supported: %d\n",
+                   !!(smp_resp[37] & 0x8));
+            printf("  saving zone phy information supported: %d\n",
+                   !!(smp_resp[37] & 0x4));
+            printf("  saving zone permission table supported: %d\n",
+                   !!(smp_resp[37] & 0x2));
+            printf("  saving zoning enabled supported: %d\n",
+                   !!(smp_resp[37] & 0x1));
+            printf("  maximum number of routed SAS addresses: %d\n",
+                   (smp_resp[38]  << 8) + smp_resp[39]);
+            if (len < 48)
+                goto err_out;
+            printf("  active zone manager SAS address (hex): ");
+            for (k = 0; k < 8; ++k)
+                printf("%02x", smp_resp[40 + k]);
+            printf("\n");
+        }
+    }
+    if ((len < 50) || do_brief)
         goto err_out;
     printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
            (smp_resp[48]  << 8) + smp_resp[49]);

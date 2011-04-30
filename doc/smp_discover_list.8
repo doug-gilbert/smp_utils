@@ -123,12 +123,16 @@ separator. For example a SAS host adapter wi11 most likely appear
 as: "i(SSP+STP+SMP)". This completes the information about the
 attached phy, hence the closing right bracket.
 .PP
-Finally, if appropriate, the negotiated physical link rate is shown in
+If appropriate, the negotiated physical link rate is shown in
 gigabits per second. Here is an example of a line for expander
 phy identifier 11 connected to a SATA target (or SATA "device" to use
 the t13.org term):
 .PP
   phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
+.PP
+If the expander supports zoning (i.e. REPORT GENERAL response bit
+for 'zoning supported' is set) and a phy's zone group is other than zg 1
+then the phy's zone group is shown (e.g. "ZG:2").
 .SH CONFORMING TO
 The SMP DISCOVER LIST function was introduced in SAS\-2 .
 .SH AUTHORS

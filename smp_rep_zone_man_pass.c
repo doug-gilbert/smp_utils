@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.00 20110428";
+static char * version_str = "1.00 20110429";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 
@@ -58,8 +58,8 @@ static struct option long_options[] = {
         {"interface", 1, 0, 'I'},
         {"phex", 0, 0, 'p'},
         {"raw", 0, 0, 'r'},
+        {"report", 1, 0, 'R'},
         {"sa", 1, 0, 's'},
-        {"type", 1, 0, 't'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -71,9 +71,9 @@ static void usage()
           "smp_rep_zone_man_pass [--fpass=FP] [--help] [--hex]\n"
           "                             [--interface=PARAMS] [--phex] "
           "[--raw]\n"
-          "                             [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                             SMP_DEVICE[,N]\n"
+          "                             [--report=RT] [--sa=SAS_ADDR] "
+          "[--verbose]\n"
+          "                             [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --fpass=FP|-F FP     FP is file to write password to\n"
           "                         (default: stdout)\n"
@@ -84,14 +84,14 @@ static void usage()
           "    --phex|-p            output password (only) in hex\n"
           "                         (default: ASCII between single quotes)\n"
           "    --raw|-r             output response in binary\n"
+          "    --report=RT|-R RT    report type: 0 (default) -> current\n"
+          "                         2 -> saved; 3 -> default manager "
+          "password\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
           "                         '0x' or trailing 'h'). Depending on "
           "the\n"
           "                         interface, may not be needed\n"
-          "    --type=RT|-t RT      report type: 0 (default) -> current\n"
-          "                         2 -> saved; 3 -> default manager "
-          "password\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT ZONE MANAGER PASSWORD function\n"
@@ -129,14 +129,14 @@ int main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
-    FILE * foutp = NULL;
+    FILE * foutp = stdout;
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "F:hHI:prs:t:vV", long_options,
+        c = getopt_long(argc, argv, "F:hHI:prR:s:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -162,6 +162,14 @@ int main(int argc, char * argv[])
         case 'r':
             ++do_raw;
             break;
+        case 'R':
+           rtype = smp_get_num(optarg);
+           if ((rtype < 0) || (rtype > 3)) {
+                fprintf(stderr, "bad argument to '--report=', expect 0 to "
+                        "3\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
@@ -169,14 +177,6 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
-            break;
-        case 't':
-           rtype = smp_get_num(optarg);
-           if ((rtype < 0) || (rtype > 3)) {
-                fprintf(stderr, "bad argument to '--type=', expect 0 to "
-                        "3\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
             break;
         case 'v':
             ++verbose;
@@ -334,7 +334,7 @@ int main(int argc, char * argv[])
     }
     if (fpass) {
         if ((1 == strlen(fpass)) && (0 == strcmp("-", fpass)))
-            foutp = stdout;
+            ;   /* accept "-" as synonym for stdout */
         else {
             foutp = fopen(fpass, "w");
             if (NULL == foutp) {
@@ -344,8 +344,7 @@ int main(int argc, char * argv[])
                 goto err_out;
             }
         }
-    } else
-        foutp = stdout;
+    }
 
     if (fpass) {
         fprintf(foutp, "# Report zone manager password response:\n");
@@ -369,7 +368,7 @@ int main(int argc, char * argv[])
     }
 
 err_out:
-    if (stdout != foutp) {
+    if (foutp && (stdout != foutp)) {
         fclose(foutp);
         foutp = NULL;
     }

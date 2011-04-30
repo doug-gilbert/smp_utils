@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.00 20110428";
+static char * version_str = "1.01 20110429";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -85,9 +85,9 @@ static struct option long_options[] = {
         {"nocomma", 0, 0, 'N'},
         {"permf", 1, 0, 'P'},
         {"raw", 0, 0, 'r'},
+        {"report", 1, 0, 'R'},
         {"sa", 1, 0, 's'},
         {"start", 1, 0, 'S'},
-        {"type", 1, 0, 't'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -101,10 +101,11 @@ static void usage()
           "[--interface=PARAMS]\n"
           "                             [--multiple] [--nocomma] [--num=MD] "
           "[--permf=FN]\n"
-          "                             [--raw] [--sa=SAS_ADDR] [--start=SS] "
-          "[--type=RT]\n"
-          "                             [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "                             [--raw] [--report=RT] "
+          "[--sa=SAS_ADDR]\n"
+          "                             [--start=SS] [--verbose] "
+          "[--version]\n"
+          "                         SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --append|-a          append to FN with '--permf' option\n"
           "    --help|-h            print out usage message\n"
@@ -125,6 +126,9 @@ static void usage()
           "write\n"
           "                         to stdout)\n"
           "    --raw|-r             output response in binary\n"
+          "    --report=RT|-R RT    report type (default: 0). 0 -> current;"
+          "\n"
+          "                         1 -> shadow; 2 -> saved; 3 -> default\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
           "                         '0x' or trailing 'h'). Depending on "
@@ -132,9 +136,6 @@ static void usage()
           "                         interface, may not be needed\n"
           "    --start=SS|-S SS     starting source zone group (default: "
           "0)\n"
-          "    --type=RT|-t RT      report type (default: 0). 0 -> current;"
-          "\n"
-          "                         1 -> shadow; 2 -> saved; 3 -> default\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Perform one or more SMP REPORT ZONE PERMISSION TABLE functions\n"
@@ -185,7 +186,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "ahHI:mn:NP:rs:S:t:vV", long_options,
+        c = getopt_long(argc, argv, "ahHI:mn:NP:rR:s:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -229,6 +230,14 @@ int main(int argc, char * argv[])
         case 'r':
             ++do_raw;
             break;
+        case 'R':
+           report_type = smp_get_num(optarg);
+           if ((report_type < 0) || (report_type > 3)) {
+                fprintf(stderr, "bad argument to '--report=', expect 0 to "
+                        "3\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
@@ -242,14 +251,6 @@ int main(int argc, char * argv[])
            if ((sszg < 0) || (sszg > 255)) {
                 fprintf(stderr, "bad argument to '--start=', expect 0 to "
                         "255\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            break;
-        case 't':
-           report_type = smp_get_num(optarg);
-           if ((report_type < 0) || (report_type > 3)) {
-                fprintf(stderr, "bad argument to '--type=', expect 0 to "
-                        "3\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -335,12 +336,16 @@ int main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 #endif
     if (permf) {
-        foutp = fopen(permf, (do_append ? "a" : "w"));
-        if (NULL == foutp) {
-            fprintf(stderr, "unable to open %s, error: %s\n", permf,
-                    safe_strerror(errno));
-            ret = SMP_LIB_FILE_ERROR;
-            goto err_out;
+        if ((1 == strlen(permf)) && (0 == strcmp("-", permf)))
+            ;
+        else {
+            foutp = fopen(permf, (do_append ? "a" : "w"));
+            if (NULL == foutp) {
+                fprintf(stderr, "unable to open %s, error: %s\n", permf,
+                        safe_strerror(errno));
+                ret = SMP_LIB_FILE_ERROR;
+                goto err_out;
+            }
         }
     }
     max_sszg = 256;
@@ -566,9 +571,12 @@ int main(int argc, char * argv[])
                 fprintf(foutp, "#  starting source zone group%s: %d\n",
                         (multiple ? " (of first request)" : ""),
                         smp_resp[14]);
-            }
-            fprintf(foutp, "#  number of zone permission descriptors: %d\n",
-                    num_desc);
+                fprintf(foutp, "#  number of zone permission descriptors%s: "
+                        "%d\n", (multiple ? " (of first request)" : ""),
+                        num_desc);
+            } else if (! multiple)
+                fprintf(foutp, "#  number of zone permission descriptors: "
+                        "%d\n", num_desc);
             if (0 == numzg_blen[numzg]) {
                 fprintf(stderr, "unexpected number of zone groups: %d\n",
                         numzg);
@@ -594,7 +602,7 @@ int main(int argc, char * argv[])
     }
 
 err_out:
-    if (stdout != foutp) {
+    if (foutp && (stdout != foutp)) {
         fclose(foutp);
         foutp = NULL;
     }
