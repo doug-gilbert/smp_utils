@@ -3,10 +3,10 @@
 smp_ena_dis_zoning \- invoke ENABLE DISABLE ZONING SMP function
 .SH SYNOPSIS
 .B smp_ena_dis_zoning
-[\fI\-\-ena\-dis=ED\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
-[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-save=SAV\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-disable\fR] [\fI\-\-ena\-dis=ED\fR] [\fI\-\-expected=EX\fR]
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-save=SAV\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -16,14 +16,26 @@ to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
 be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
+.PP
+If neither \fI\-\-disable\fR nor \fI\-\-ena\-dis=ED\fR options are given then
+enable zoning (i.e. "\-\-ena\-dis=1") is assumed.
+.PP
+This function does not change the state of the current zoning enabled flag (as
+seen in the REPORT GENERAL response). Such a state change will occur on a
+subsequent invocation of the ZONE ACTIVATE function.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
 .TP
+\fB\-d\fR, \fB\-\-disable\fR
+set the 'enable disable zoning' field in the SMP request to 2 which will
+disable zoning.
+.TP
 \fB\-e\fR, \fB\-\-ena\-dis\fR=\fIED\fR
 set the 'enable disable zoning' field in the SMP request. \fIED\fR may
-take these values: 0 for no change (default), 1 for enable and 2 for
-disable.
+take these values: 0 for no change, 1 for enable zoning (default) and 2 for
+disable zoning. If this option and the \fI\-\-disable\fR option are both
+given then they cannot contradict one another.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.

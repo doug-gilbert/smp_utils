@@ -6,7 +6,7 @@ smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
 [\fI\-\-append\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-multiple\fR] [\fI\-\-nocomma\fR]
 [\fI\-\-num=MD\fR] [\fI\-\-permf=FN\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-start=SS\fR] [\fI\-\-type=RT\fR]
+[\fI\-\-report=RT\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-start=SS\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -82,6 +82,11 @@ append to the existing \fIFN\fR add the \fI\-\-append\fR option.
 \fB\-r\fR, \fB\-\-raw\fR
 send the response to stdout in binary. All error messages are sent to stderr.
 .TP
+\fB\-R\fR, \fB\-\-report\fR=\fIRT\fR
+set the 'report type' field in the SMP request. \fIRT\fR may take these
+values: 0 for report current values (default); 1 for report the shadow
+values; 2 for report saved values; 3 for report default values.
+.TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. The mpt interface needs
 this option and it will typically be an expander's SAS address. The
@@ -91,11 +96,6 @@ trailing 'h' on it.
 .TP
 \fB\-S\fR, \fB\-\-start\fR=\fISS\fR
 starting (lowest numbered) source zone group (default: zone group 0).
-.TP
-\fB\-t\fR, \fB\-\-type\fR=\fIRT\fR
-set the 'report type' field in the SMP request. \fIRT\fR may take these
-values: 0 for report current values (default); 1 for report the shadow
-values; 2 for report saved values; 3 for report default values.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times.
