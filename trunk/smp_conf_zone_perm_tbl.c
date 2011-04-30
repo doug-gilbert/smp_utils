@@ -47,8 +47,9 @@
  * its response.
  */
 
-static char * version_str = "1.01 20110424";
+static char * version_str = "1.01 20110428";
 
+/* Leave the following define commented out unless testing */
 // #define DUMMY_TEST 1
 
 static unsigned char full_perm_tbl[32 * 256];
