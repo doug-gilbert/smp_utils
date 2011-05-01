@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.02 20110429";
+static char * version_str = "1.03 20110430";
 
 
 static struct option long_options[] = {
@@ -260,10 +260,13 @@ int main(int argc, char * argv[])
             }
         }
     }
-    if (disable && ena_dis_given && (2 != ena_dis)) {
-        fprintf(stderr, "'--disable' and '--ena-dis=ED' contradict, use "
-                "one or other\n");
-        return SMP_LIB_SYNTAX_ERROR;
+    if (disable) {
+        if (ena_dis_given && (2 != ena_dis)) {
+            fprintf(stderr, "'--disable' and '--ena-dis=ED' contradict, use "
+                    "one or other\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+        ena_dis = 2;
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
