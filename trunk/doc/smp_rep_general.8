@@ -3,7 +3,7 @@
 smp_rep_general \- invoke REPORT GENERAL SMP function
 .SH SYNOPSIS
 .B smp_rep_general
-[\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-brief\fR] [\fI\-\-changecount\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
@@ -21,6 +21,13 @@ Mandatory arguments to long options are mandatory for short options as well.
 .TP
 \fB\-b\fR, \fB\-\-brief\fR
 reports (prints to stdout) only a few important fields from the response.
+.TP
+\fB\-c\fR, \fB\-\-changecount\fR
+reports (prints to stdout) the value of the expander change count field from
+the response. The value is printed in decimal and is in the range 0 to
+65535. Only expanders compliant with SAS\-1.1 (and earlier) should yield
+0. [Expanders compliant with SAS\-2 (and later) should set the "long
+response" bit in the REPORT GENERAL response to 1.]
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.

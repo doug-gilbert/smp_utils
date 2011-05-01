@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.18 20110401";    /* spl2r00 */
+static char * version_str = "1.19 20110430";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -917,7 +917,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             break;
         }
         printf("%s", cp);
-        if ((len > 59) && !!(smp_resp[60] & 0x1))
+        if ((len > 59) && (smp_resp[60] & 0x1) && (1 != smp_resp[63]))
             printf("  ZG:%d\n", smp_resp[63]);
         else
             printf("\n");

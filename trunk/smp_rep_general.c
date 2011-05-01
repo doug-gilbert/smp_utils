@@ -52,6 +52,7 @@ static char * version_str = "1.19 20110429";    /* sas2r15 */
 
 static struct option long_options[] = {
         {"brief", 0, 0, 'b'},
+        {"changecount", 0, 0, 'c'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -68,13 +69,15 @@ static void
 usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_general [--change_report] [--help] [--hex]\n"
+          "smp_rep_general [--brief] [--changecount] [--help] [--hex]\n"
           "                       [--interface=PARAMS] [--raw] "
           "[--sa=SAS_ADDR]\n"
           "                       [--verbose] [--version] [--zero]"
           "SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --brief|-b           only report important settings\n"
+          "    --brief|-b           brief report, only important settings\n"
+          "    --changecount|-c     report expander change count "
+          "only\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
@@ -108,6 +111,7 @@ main(int argc, char * argv[])
 {
     int res, c, k, len, sas2, zsupp, psupp;
     int do_brief = 0;
+    int do_ccount = 0;
     int do_full = 1;
     int do_hex = 0;
     int phy_id = 0;
@@ -133,7 +137,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHI:p:rs:vVz", long_options,
+        c = getopt_long(argc, argv, "bchHI:p:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -142,6 +146,9 @@ main(int argc, char * argv[])
         case 'b':
             ++do_brief;
             do_full = 0;
+            break;
+        case 'c':
+            ++do_ccount;
             break;
         case 'h':
         case '?':
@@ -334,8 +341,12 @@ main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
-    sas2 = !! (smp_resp[3]);
 
+    if (do_ccount) {
+        printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
+        goto err_out;
+    }
+    sas2 = !! (smp_resp[3]);
     if (do_full) {
         printf("Report general response:\n");
         printf("  expander change count: %d\n",
