@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -64,7 +64,7 @@ The default action when this option is not given is to output multiple
 indented lines for each descriptor in the response.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
 This is the lowest numbered phy id to attempt fetch in the response.
 Note that due to the filter field setting, the first phy id in
 the response may be greater than the argument to this option.

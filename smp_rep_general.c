@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.19 20110429";    /* sas2r15 */
+static char * version_str = "1.19 20110501";    /* sas2r15 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -56,7 +56,6 @@ static struct option long_options[] = {
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
@@ -114,7 +113,6 @@ main(int argc, char * argv[])
     int do_ccount = 0;
     int do_full = 1;
     int do_hex = 0;
-    int phy_id = 0;
     int do_raw = 0;
     int verbose = 0;
     int do_zero = 0;
@@ -137,7 +135,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bchHI:p:rs:vVz", long_options,
+        c = getopt_long(argc, argv, "bchHI:rs:vVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -160,16 +158,6 @@ main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
-            break;
-        case 'p':
-           phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            if (verbose)
-                fprintf(stderr, "'--phy=<n>' option not needed so "
-                        "ignored\n");
             break;
         case 'r':
             ++do_raw;

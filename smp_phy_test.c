@@ -46,7 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.07 20110322"; /* sync with sas2r15 */
+static char * version_str = "1.08 20110501"; /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -81,33 +81,33 @@ usage()
           "[--spread=SP]\n"
           "                    [--verbose] [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --control=CO|-c CO    phy test pattern dwords control "
+          "    --control=CO|-c CO     phy test pattern dwords control "
           "(def: 0)\n"
-          "    --dwords=DW|-d DW    phy test pattern dwords (def:0)\n"
+          "    --dwords=DW|-d DW      phy test pattern dwords (def:0)\n"
           "    --expected=EX|-E EX    set expected expander change count "
           "to EX\n"
           "    --function=FN|-f FN    phy test function (def:0 -> stop)\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
+          "    --help|-h              print out usage message\n"
+          "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --linkrate=LR|-l LR    physical link rate (def: 9 -> "
           "3 Gbps)\n"
-          "    --pattern=PA|-P PA    phy test pattern (def: 2 -> "
+          "    --pattern=PA|-P PA     phy test pattern (def: 2 -> "
           "CJTPAT)\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
-          "    --raw|-r             output response in binary\n"
+          "    --phy=ID|-p ID         phy identifier (def: 0)\n"
+          "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
-          "    --sata|-t            set phy test function SATA bit "
+          "target (use leading\n"
+          "                                 '0x' or trailing 'h'). Depending "
+          "on the\n"
+          "                                 interface, may not be needed\n"
+          "    --sata|-t              set phy test function SATA bit "
           "(def: 0)\n"
-          "    --spread=SC|-S SC    set phy test function SCC to SC "
+          "    --spread=SC|-S SC      set phy test function SCC to SC "
           "(def: 0)\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "    --verbose|-v           increase verbosity\n"
+          "    --version|-V           print version string and exit\n\n"
           "Performs a SMP PHY TEST FUNCTION function\n"
           );
 }
@@ -143,10 +143,9 @@ main(int argc, char * argv[])
     char device_name[512];
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_PHY_TEST_FUNCTION,
-        0, 9,
+        0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, };
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
     unsigned char smp_resp[128];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
@@ -167,7 +166,8 @@ main(int argc, char * argv[])
         case 'c':
             do_control = smp_get_num(optarg);
             if ((do_control < 0) || (do_control > 255)) {
-                fprintf(stderr, "bad argument to '--control'\n");
+                fprintf(stderr, "bad argument to '--control', expect "
+                        "value from 0 to 255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -193,7 +193,8 @@ main(int argc, char * argv[])
         case 'f':
             do_function = smp_get_num(optarg);
             if ((do_function < 0) || (do_function > 255)) {
-                fprintf(stderr, "bad argument to '--function'\n");
+                fprintf(stderr, "bad argument to '--function', expect "
+                        "value from 0 to 255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -211,21 +212,24 @@ main(int argc, char * argv[])
         case 'l':
             linkrate = smp_get_num(optarg);
             if ((linkrate < 0) || (linkrate > 15)) {
-                fprintf(stderr, "bad argument to '--linkrate'\n");
+                fprintf(stderr, "bad argument to '--linkrate', expect "
+                        "value from 0 to 15\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'p':
             phy_id = smp_get_num(optarg);
-            if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+            if ((phy_id < 0) || (phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'P':
             pattern = smp_get_num(optarg);
             if ((pattern < 0) || (pattern > 255)) {
-                fprintf(stderr, "bad argument to '--pattern'\n");
+                fprintf(stderr, "bad argument to '--pattern', expect "
+                        "value from 0 to 255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -243,7 +247,8 @@ main(int argc, char * argv[])
         case 'S':
             do_ssc = smp_get_num(optarg);
             if ((do_ssc < 0) || (do_ssc > 3)) {
-                fprintf(stderr, "bad argument to '--spread'\n");
+                fprintf(stderr, "bad argument to '--spread', expect "
+                        "value from 0 to 3\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -319,10 +324,12 @@ main(int argc, char * argv[])
         }
     }
 
+#if 0
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+#endif
 
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
@@ -337,8 +344,13 @@ main(int argc, char * argv[])
         smp_req[20 + 7 - k] = dwords & 0xff;
     if (verbose) {
         fprintf(stderr, "    Phy test function request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
 

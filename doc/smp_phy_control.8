@@ -1,4 +1,4 @@
-.TH SMP_PHY_CONTROL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_PHY_CONTROL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_phy_control \- invoke PHY CONTROL SMP function
 .SH SYNOPSIS
@@ -38,7 +38,8 @@ Mandatory arguments to long options are mandatory for short options as well.
 specifies the attached device name (\fIADN\fR). The default value is 0 .
 The \fIADN\fR is in decimal but is likely to be a SAS address which is
 typically shown in hexadecimal. To specify a number in hexadecimal either
-prefix it with '0x' or put a trailing 'h' on it.
+prefix it with '0x' or put a trailing 'h' on it. This option is ignored
+by the expander unless the '\-\-op=sadn' option is also given.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.
@@ -74,14 +75,15 @@ specifies the operation to be performed on the given phy. The \fIOP\fR
 argument can be either numeric or a string. If a number is given, it is put
 into the 'phy operation' field of the request. Allowable strings are
 abbreviations of which only the first two characters need to match. The
-supported strings are: 'nop' (no operation), 'lr' (link reset), 'hr' (hard
-reset), 'dis' (disable phy), 'cel' (clear error log), 'ca' (clear
-affiliation), 'tspss' (transmit SATA port selection signal), 'citnl' (clear
-STP I_T nexus loss (bit)), and 'sadn' (set attached device name).  The
-default value is 0 (no operation).
+supported strings (with corresponding value in square brackets) are: 'nop'
+[0] (no operation), 'lr' [1] (link reset), 'hr' [2] (hard reset), 'dis'
+[3] (disable phy), 'cel' [5] (clear error log), 'ca' [6] (clear
+affiliation), 'tspss' [7] (transmit SATA port selection signal), 'citnl'
+[8] (clear STP I_T nexus loss (bit)), and 'sadn' [9] (set attached device
+name). The default value is 0 (no operation).
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
+phy identifier. \fIID\fR is a value between 0 and 154. Default is 0.
 .TP
 \fB\-P\fR, \fB\-\-pptv\fR=\fITI\fR
 partial pathway timeout value. The units are microseconds and the permitted

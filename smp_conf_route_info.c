@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.04 20110322";
+static char * version_str = "1.05 20110501";
 
 
 static struct option long_options[] = {
@@ -175,8 +175,9 @@ int main(int argc, char * argv[])
             break;
         case 'p':
             phy_id = smp_get_num(optarg);
-            if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+            if ((phy_id < 0) || (phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -298,8 +299,13 @@ int main(int argc, char * argv[])
     }
     if (verbose) {
         fprintf(stderr, "    Configure route information request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));

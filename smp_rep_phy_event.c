@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.01 20110409";
+static char * version_str = "1.01 20110501";
 
 #define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
 
@@ -279,8 +279,9 @@ int main(int argc, char * argv[])
             break;
         case 'p':
            phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+           if ((phy_id < 0) || (phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++phy_id_given;
