@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.05 20110320";    /* sync with sas2r15 */
+static char * version_str = "1.06 20110501";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -97,7 +97,7 @@ usage()
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
-          "(def: 1)\n"
+          "(def: 62)\n"
           "    --phy=ID|-p ID       phy identifier (def: 0) [starting "
           "phy id]\n"
           "    --raw|-r             output response in binary\n"
@@ -237,7 +237,7 @@ main(int argc, char * argv[])
     struct opts_t opts;
 
     memset(&opts, 0, sizeof(opts));
-    opts.do_num = 1;
+    opts.do_num = 62;   /* maximum fitting in one response */
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
@@ -278,8 +278,9 @@ main(int argc, char * argv[])
             break;
         case 'p':
            opts.phy_id = smp_get_num(optarg);
-           if ((opts.phy_id < 0) || (opts.phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+           if ((opts.phy_id < 0) || (opts.phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -382,13 +383,15 @@ main(int argc, char * argv[])
     num_desc = resp[11];
     sphy_id = resp[19];
     printf("Report expander route table response header:\n");
-    printf("  expander change count: %d\n", exp_cc);
-    printf("  expander route table change count: %d\n", exp_rtcc);
-    printf("  self configuring: %d\n", !!(resp[8] & 0x8));
-    printf("  zone configuring: %d\n", !!(resp[8] & 0x4));
-    printf("  configuring: %d\n", !!(resp[8] & 0x2));
-    printf("  zone enabled: %d\n", !!(resp[8] & 0x1));
-    printf("  expander route table descriptor length: %d dwords\n", desc_len);
+    if (! opts.do_brief) {
+        printf("  expander change count: %d\n", exp_cc);
+        printf("  expander route table change count: %d\n", exp_rtcc);
+        printf("  self configuring: %d\n", !!(resp[8] & 0x8));
+        printf("  zone configuring: %d\n", !!(resp[8] & 0x4));
+        printf("  configuring: %d\n", !!(resp[8] & 0x2));
+        printf("  zone enabled: %d\n", !!(resp[8] & 0x1));
+        printf("  expander route table descriptor length: %d dwords\n", desc_len);
+    }
     printf("  number of expander route table descriptors: %d\n", num_desc);
     printf("  first routed SAS address index: %d\n",
            (resp[12] << 8) + resp[13]);
@@ -407,7 +410,7 @@ main(int argc, char * argv[])
     }
     for (k = 0, err = 0; k < num_desc; ++k) {
         off = 32 + (k * (desc_len * 4));
-        printf("  descriptor %d:\n", k + 1);
+        printf("  descriptor index %d:\n", k);
         for (j = 0, ull = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;

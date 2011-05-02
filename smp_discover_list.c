@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.12 20110401";    /* spl2r00 */
+static char * version_str = "1.12 20110501";    /* spl2r00 */
 
 
 static struct option long_options[] = {
@@ -209,7 +209,7 @@ smp_get_reason(int val, int b_len, char * b)
     case 3: snprintf(b, b_len, "SMP phy control requested");
          break;
     case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
-    case 5: snprintf(b, b_len, "error in multiplexing sequence"); break;
+    case 5: snprintf(b, b_len, "error in multiplexing (MUX) sequence"); break;
     case 6: snprintf(b, b_len, "I_T nexus loss timeout STP/SATA"); break;
     case 7: snprintf(b, b_len, "break timeout timer expired"); break;
     case 8: snprintf(b, b_len, "phy test function stopped"); break;
@@ -936,8 +936,9 @@ main(int argc, char * argv[])
             break;
         case 'p':
            opts.phy_id = smp_get_num(optarg);
-           if ((opts.phy_id < 0) || (opts.phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+           if ((opts.phy_id < 0) || (opts.phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;

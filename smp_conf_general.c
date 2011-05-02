@@ -45,7 +45,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.02 20110322";
+static char * version_str = "1.03 20110501";
 
 
 static struct option long_options[] = {
@@ -78,30 +78,31 @@ static void usage()
           "[--version]\n"
           "                        SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --connect=CO|-c CO    STP maximum connect time limit "
+          "    --connect=CO|-c CO     STP maximum connect time limit "
           "(100 us)\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
-          "    --help|-h            print out usage message then exit\n"
-          "    --hex|-H             print response in hexadecimal\n"
+          "    --help|-h              print out usage message then exit\n"
+          "    --hex|-H               print response in hexadecimal\n"
           "    --inactivity=IN|-i IN    STP bus inactivity time "
           "limit (100 us)\n"
           "    --interface=PARAMS|-I PARAMS   specify or override "
           "interface\n"
-          "    --nexus=NE|-n NE     STP SMP I_T nexus loss time "
+          "    --nexus=NE|-n NE       STP SMP I_T nexus loss time "
           "(ms)\n"
-          "    --open=OP|-o OP      STP reject to open limit "
+          "    --open=OP|-o OP        STP reject to open limit "
           "(10 us)\n"
-          "    --raw|-r             output response in binary\n"
-          "    --reduced=RE|-R RE    initial time to reduced functionality "
+          "    --raw|-r               output response in binary\n"
+          "    --reduced=RE|-R RE     initial time to reduced functionality "
           "(100 ms)\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "                                 '0x' or trailing 'h'). Depending "
+          "on\n"
+          "                                 the interface, may not be "
+          "needed\n"
+          "    --verbose|-v           increase verbosity\n"
+          "    --version|-V           print version string and exit\n\n"
           "Performs a SMP CONFIGURE GENERAL function\n"
           );
 }
@@ -138,7 +139,7 @@ int main(int argc, char * argv[])
     char b[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_CONFIG_GENERAL,
                                0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0};
+                               0, 0, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[128];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
@@ -185,7 +186,8 @@ int main(int argc, char * argv[])
         case 'i':
             inactivity_val = smp_get_num(optarg);
             if ((inactivity_val < 0) || (inactivity_val > 65535)) {
-                fprintf(stderr, "bad argument to '--inactivity'\n");
+                fprintf(stderr, "bad argument to '--inactivity', expect "
+                        "value from 0 to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_inactivity;
@@ -193,7 +195,8 @@ int main(int argc, char * argv[])
         case 'n':
             nexus_val = smp_get_num(optarg);
             if ((nexus_val < 0) || (nexus_val > 65535)) {
-                fprintf(stderr, "bad argument to '--nexus'\n");
+                fprintf(stderr, "bad argument to '--nexus', expect "
+                        "value from 0 to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_nexus;
@@ -201,7 +204,8 @@ int main(int argc, char * argv[])
         case 'o':
             open_val = smp_get_num(optarg);
             if ((open_val < 0) || (open_val > 65535)) {
-                fprintf(stderr, "bad argument to '--open'\n");
+                fprintf(stderr, "bad argument to '--open', expect "
+                        "value from 0 to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_open;
@@ -212,7 +216,8 @@ int main(int argc, char * argv[])
         case 'R':
             reduced_val = smp_get_num(optarg);
             if ((reduced_val < 0) || (reduced_val > 255)) {
-                fprintf(stderr, "bad argument to '--reduced'\n");
+                fprintf(stderr, "bad argument to '--reduced', expect "
+                        "value from 0 to 255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_reduced;
@@ -327,8 +332,13 @@ int main(int argc, char * argv[])
     }
     if (verbose) {
         fprintf(stderr, "    Configure general request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));

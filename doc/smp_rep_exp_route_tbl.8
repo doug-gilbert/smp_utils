@@ -1,4 +1,4 @@
-.TH SMP_REP_EXP_ROUTE_TBL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_EXP_ROUTE_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_exp_route_tbl \- invoke REPORT EXPANDER ROUTE TABLE LIST SMP function
 .SH SYNOPSIS
@@ -38,9 +38,9 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-n\fR, \fB\-\-num\fR=\fINUM\fR
-maximum number of descriptors fetch (default is 1). Note that maximum SMP
-frame size is 1032 bytes (including a trailing 4 byte CRC) which may limit
-the number of descriptors that can be fetched to 62.
+maximum number of descriptors to fetch (default is 62). Note that maximum SMP
+frame size is 1028 bytes (including a trailing 4 byte CRC) so 62 descriptors
+is the maximum number that can fit in one response.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 starting phy identifier. \fIID\fR should be one of 0 (the default), 48 or

@@ -46,7 +46,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.11 20110322";
+static char * version_str = "1.12 20110501";
 
 
 static struct option long_options[] = {
@@ -86,45 +86,51 @@ static void usage()
           "[--verbose] [--version]\n"
           "                       SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --attached=ADN|-a ADN    attached device name\n"
-          "    --expected=EX|-E EX    set expected expander change count "
+          "    --attached=ADN|-a ADN    attached device name [a decimal "
+          "number,\n"
+          "                             use '0x' prefix for hex], (def: "
+          "0)\n"
+          "    --expected=EX|-E EX      set expected expander change count "
           "to EX\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
+          "                             (def: 0 (implies ignore))\n"
+          "    --help|-h                print out usage message\n"
+          "    --hex|-H                 print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --max=MA|-M MA       programmable maximum physical link "
+          "    --max=MA|-M MA           programmable maximum physical link "
           "speed\n"
-          "                         (8->1.5 Gbps, 9->3 Gbps, "
+          "                             (8->1.5 Gbps, 9->3 Gbps, "
           "10->6 Gbps)\n"
-          "    --min=MI|-m MI       programmable minimum physical link "
+          "    --min=MI|-m MI           programmable minimum physical link "
           "speed\n"
-          "    --sas_pa=CO|-q CO    Enable SAS Partial field; CO: 0->leave "
-          "(def), 1->\n"
-          "                         manage, 2->disable\n"
-          "    --sas_sl=CO|-l CO    Enable Slumber Partial field; for CO "
-          "see --sas_pa=\n"
-          "    --sata_pa=CO|-Q CO    Enable SATA Partial field; for CO "
-          "see --sas_pa=\n"
-          "    --sata_sl=CO|-L CO    Enable SATA Slumber field; for CO "
-          "see --sas_pa=\n"
-          "    --op=OP|-o OP        OP (operation) is a number or "
-          "abbreviation (from:\n"
-          "                         nop, lr, hr, dis, cel, ca, tspss, "
-          "citnl, sadn)\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
-          "    --pptv=TI|-P TI      partial pathway timeout value "
+          "    --sas_pa=CO|-q CO        Enable SAS Partial field; CO: "
+          "0->leave (def)\n"
+          "                             1->manage (enable), 2->disable\n"
+          "    --sas_sl=CO|-l CO        Enable Slumber Partial field\n"
+          "    --sata_pa=CO|-Q CO       Enable SATA Partial field\n"
+          "    --sata_sl=CO|-L CO       Enable SATA Slumber field\n"
+          "    --op=OP|-o OP            OP (operation) is a number or "
+          "abbreviation.\n"
+          "                             Default: 0 (nop). See below\n"
+          "    --phy=ID|-p ID           phy identifier (def: 0)\n"
+          "    --pptv=TI|-P TI          partial pathway timeout value "
           "(microseconds)\n"
-          "                         (if given sets UPPTV bit)\n"
-          "    --raw|-r             output response in binary\n"
+          "                             (if given sets UPPTV bit)\n"
+          "    --raw|-r                 output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the interface,\n"
-          "                         may not be needed\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP PHY CONTROL function\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
+          "    --verbose|-v             increase verbosity\n"
+          "    --version|-V             print version string and exit\n\n"
+          "Performs a SMP PHY CONTROL function. Operation codes (OP): "
+          "0,'nop'; 1,'lr'\n[link reset]; 2,'hr' [hard reset]; 3,'dis' "
+          "[disable]; 5,'cel' [clear error\nlog]; 6,'ca' [clear "
+          "affiliation]; 7,'tspss' [transmit SATA port selection\nsignal]; "
+          "8,'citnl' [clear STP I_T nexus loss]; 9,'sadn' [set attached\n"
+          "device name].\n"
           );
 }
 
@@ -296,8 +302,9 @@ int main(int argc, char * argv[])
             break;
         case 'p':
            phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+           if ((phy_id < 0) || (phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -425,8 +432,13 @@ int main(int argc, char * argv[])
     smp_req[34] = (sas_sl << 6) | (sas_pa << 4) | (sata_sl << 2) | sata_pa;
     if (verbose) {
         fprintf(stderr, "    Phy control request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
 
