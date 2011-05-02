@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.07 20110321";
+static char * version_str = "1.07 20110501";
 
 #define REP_ROUTE_INFO_RESP_LEN 44
 
@@ -335,16 +335,17 @@ int main(int argc, char * argv[])
         case 'H':
             ++do_hex;
             break;
-        case 'I':
-            strncpy(i_params, optarg, sizeof(i_params));
-            i_params[sizeof(i_params) - 1] = '\0';
-            break;
         case 'i':
            er_ind = smp_get_num(optarg);
            if ((er_ind < 0) || (er_ind > 65535)) {
-                fprintf(stderr, "inappropriate value after '--index'\n");
+                fprintf(stderr, "bad argument to '--index', expect "
+                        "value from 0 to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            break;
+        case 'I':
+            strncpy(i_params, optarg, sizeof(i_params));
+            i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'm':
             ++multiple;
@@ -352,14 +353,16 @@ int main(int argc, char * argv[])
         case 'n':
            do_num = smp_get_num(optarg);
            if ((do_num < 0) || (do_num > 16382)) {
-                fprintf(stderr, "inappropriate value after '--num'\n");
+                fprintf(stderr, "bad argument to '--num', expect "
+                        "value from 0 to 16382\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'p':
            phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 127)) {
-                fprintf(stderr, "inappropriate value after '--phy'\n");
+           if ((phy_id < 0) || (phy_id > 254)) {
+                fprintf(stderr, "bad argument to '--phy', expect "
+                        "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;

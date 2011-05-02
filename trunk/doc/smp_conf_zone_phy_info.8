@@ -1,4 +1,4 @@
-.TH SMP_CONF_ZONE_PHY_INFO "8" "March 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_ZONE_PHY_INFO "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_zone_phy_info \- invoke CONFIGURE ZONE PHY INFORMATION function
 .SH SYNOPSIS
@@ -76,6 +76,10 @@ increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.SH NOTES
+The expander phys that make up a wide port (2 or more attached to phys with
+the same SAS address) must be set to the same zone phy configuration
+settings (other than the phy id).
 .SH CONFORMING TO
 The SMP CONFIGURE ZONE PHY INFORMATION function was introduced in SAS\-2 .
 .SH AUTHORS
