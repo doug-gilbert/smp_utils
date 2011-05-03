@@ -15,6 +15,9 @@ Additionally there is a 'smp_utils' man page that contains common
 information, including options used by most or all utilities plus
 the various exit status values.
 
+There are examples of setting up and disabling zoning in the examples
+directory.
+
 
 The reference documents are:
   sas-r05.pdf          www.t10.org   draft prior to original SAS spec
@@ -30,4 +33,4 @@ SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-24th April 2011
+2nd May 2011
