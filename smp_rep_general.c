@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.19 20110501";    /* sas2r15 */
+static char * version_str = "1.19 20110502";    /* sas2r15 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -345,16 +345,18 @@ main(int argc, char * argv[])
         printf("Report general, brief response:\n");
     printf("  long response: %d\n", !!(smp_resp[8] & 0x80));
     printf("  number of phys: %d\n", smp_resp[9]);
-    if (do_full && (sas2 || (verbose > 3))) {
+    if (do_full && (sas2 || (verbose > 3)))
         printf("  table to table supported: %d\n", !!(smp_resp[10] & 0x80));
+    if (do_full || (smp_resp[10] & 0x40))
         printf("  zone configuring: %d\n", !!(smp_resp[10] & 0x40));
+    if (do_full || (smp_resp[10] & 0x20))
         printf("  self configuring: %d\n", !!(smp_resp[10] & 0x20));
+    if (do_full && (sas2 || (verbose > 3))) {
         printf("  STP continue AWT: %d\n", !!(smp_resp[10] & 0x10));
         printf("  open reject retry supported: %d\n", !!(smp_resp[10] & 0x8));
         printf("  configures others: %d\n", !!(smp_resp[10] & 0x4));
-    }
-    if (do_full || (smp_resp[10] & 0x2))
         printf("  configuring: %d\n", !!(smp_resp[10] & 0x2));
+    }
     if (do_full) {
         /* following "externally" word added in SAS-2 */
         printf("  externally configurable route table: %d\n",
@@ -417,18 +419,25 @@ main(int argc, char * argv[])
             printf("\n");
         }
     }
-    if ((len < 50) || do_brief)
+    if (len < 50)
         goto err_out;
-    printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
-           (smp_resp[48]  << 8) + smp_resp[49]);
+    if (do_full)
+        printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
+               (smp_resp[48]  << 8) + smp_resp[49]);
     if (len < 56)
         goto err_out;
-    printf("  first enclosure connector element index: %d\n", smp_resp[53]);
-    printf("  number of enclosure connector element indexes: %d\n",
-           smp_resp[54]);
+    if (do_full) {
+        printf("  first enclosure connector element index: %d\n",
+               smp_resp[53]);
+        printf("  number of enclosure connector element indexes: %d\n",
+               smp_resp[54]);
+    }
     if (len < 60)
         goto err_out;
-    printf("  reduced functionality: %d\n", !!(smp_resp[56] & 0x80));
+    if (do_full || (smp_resp[56] & 0x80))
+        printf("  reduced functionality: %d\n", !!(smp_resp[56] & 0x80));
+    if (do_brief)
+        goto err_out;
     printf("  time to reduced functionality: %d (unit: 100ms)\n",
            smp_resp[57]);
     printf("  initial time to reduced functionality: %d (unit: 100ms)\n",
