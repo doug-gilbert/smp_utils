@@ -46,7 +46,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.08 20110501"; /* sync with sas2r15 */
+static char * version_str = "1.08 20110505"; /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -324,12 +324,10 @@ main(int argc, char * argv[])
         }
     }
 
-#if 0
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
-#endif
 
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
