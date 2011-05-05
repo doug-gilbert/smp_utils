@@ -36,25 +36,29 @@
 
 static char * version_str = "1.18 20110405";    /* spl-2 rev 0 */
 
-/* The original SMP definition (sas-r05.pdf) didn't have request
-   and response length fields (they were reserved single byte fields).
-   So if zero is found in either field the original lengths
-   apply (as defined in the sas-r05.pdf document).
-   The unit of 'def_req_len' and 'def_resp_len' is dwords (4 bytes)
-   calculated by: ((len_bytes - 8) / 4) where 'len_bytes' includes
-   the 4 byte CRC at the end of each frame. The 4 byte CRC field
-   does not need to be set (just space allocated (for some pass
-   throughs)). */
+/* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
+ * and later, SMP responses should contain an accurate "response length"
+ * field. However is SAS-1.1 (sas1r10.pdf) the "response length field
+ * (byte 3) is always 0 irrespective of the response's length. There is
+ * a similar problem with the "request length" field in the request.
+ * So if zero is found in either the request/response fields this table
+ * is consulted.
+ * The units of 'def_req_len' and 'def_resp_len' are dwords (4 bytes)
+ * calculated by: ((len_bytes - 8) / 4) where 'len_bytes' includes
+ * the 4 byte CRC at the end of each frame. The 4 byte CRC field
+ * does not need to be set (just space allocated (for some pass
+ * throughs)). */
 struct smp_func_def_rrlen {
     int func;           /* '-1' for last entry */
-    int def_req_len;    /* if zero in request length field use this, unless */
+    int def_req_len;    /* if 0==<request_length> use this value, unless */
                         /*  -2 -> no default; -3 -> implicit length */
-    int def_resp_len;   /* if zero in response length field use this, unless */
+    int def_resp_len;   /* if 0==<response_length> use this value, unless */
                         /*  -2 -> no default; -3 -> implicit length */
-    /* N.B. Some recent functions have 0 length request or reponse lengths.
+    /* N.B. Some SAS-2 functions have 8 byte request or response lengths.
             This is noted by putting 0 in one of the two above fields. */
 };
 
+/* Positive request and response lengths match SAS-1.1 (sas1r10.pdf) */
 struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     /* in numerical order by 'func' */
     {SMP_FN_REPORT_GENERAL, 0, 6},

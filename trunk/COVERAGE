@@ -48,7 +48,7 @@ ZONED BROADCAST                       2                smp_zoned_broadcast
    have been dropped (i.e. they no longer appear)
 
 There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
-replacing 2 obsoleted in SFF-8485). smp_utils currently implements 24
+replacing 2 obsoleted in SFF-8485). smp_utils currently implements 26
 functions.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
@@ -67,4 +67,4 @@ announced by t10.
 
 
 Doug Gilbert
-28th April 2011
+5th May 2011
