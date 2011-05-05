@@ -48,13 +48,14 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.20 20110501";    /* spl2r00 */
+static char * version_str = "1.21 20110504";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
 
 
 struct opts_t {
+    int do_adn;
     int do_brief;
     int do_hex;
     int ign_zp;
@@ -71,6 +72,7 @@ struct opts_t {
 };
 
 static struct option long_options[] = {
+        {"adn", 0, 0, 'A'},
         {"brief", 0, 0, 'b'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
@@ -93,14 +95,17 @@ static void
 usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_discover [--brief] [--help] [--hex] [--ignore] "
-          "[--interface=PARAMS]\n"
-          "                    [--list] [--multiple] [--num=NUM] "
-          "[--phy=ID] [--raw]\n"
-          "                    [--sa=SAS_ADDR] [--summary] "
-          "[--verbose] [--version]\n"
-          "                        [--zero] SMP_DEVICE[,N]\n"
+          "smp_discover [--adn] [--brief] [--help] [--hex] [--ignore]\n"
+          "                    [--interface=PARAMS] [--list] [--multiple] "
+          "[--num=NUM]\n"
+          "                    [--phy=ID] [--raw] [--sa=SAS_ADDR] "
+          "[--summary]\n"
+          "                    [--verbose] [--version] [--zero] "
+          "SMP_DEVICE[,N]\n"
           "  where:\n"
+          "    --adn|-A             output attached device name in one "
+          "line per\n"
+          "                         phy mode (i.e. with --multiple)\n"
           "    --brief|-b           brief decoded output\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
@@ -117,10 +122,11 @@ usage()
           "phy id]\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                                 '0x' or trailing 'h'). Depending "
+          "on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --summary|-S         query phys, output 1 line for each "
           "active one,\n"
           "                         equivalent to '--multiple --brief' "
@@ -319,6 +325,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     char * cp;
     int len, res, k;
 
+    memset(resp, 0, max_resp_len);
     if (! optsp->do_zero) {     /* SAS-2 or later */
         len = (max_resp_len - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
@@ -722,13 +729,13 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 
 #define MAX_PHY_ID 8192
 
-/* Calls do_discover() multiple times. Returns 0 if ok, else function
- * result. */
+/* Calls do_discover() multiple times. Summarizes info into one
+ * line per phy. Returns 0 if ok, else function result. */
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
     unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
-    unsigned long long ull;
+    unsigned long long ull, adn;
     unsigned long long expander_sa;
     int res, len, k, j, num, off, plus, negot, adt;
     char b[256];
@@ -839,9 +846,21 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             printf("  phy %3d:%s:attached:[0000000000000000:00]\n", k, cp);
             continue;
         }
-        printf("  phy %3d:%s:attached:[%016llx:%02d %s%s", k, cp, ull,
-               smp_resp[32], smp_short_attached_device_type[adt],
-               ((smp_resp[43] & 0x80) ? " V" : ""));
+        if (optsp->do_adn) {
+            adn = 0;
+            for (j = 0; j < 8; ++j) {
+                if (j > 0)
+                    adn <<= 8;
+                adn |= smp_resp[52 + j];
+            }
+            printf("  phy %3d:%s:attached:[%016llx:%02d %016llx %s%s", k,
+                   cp, ull, smp_resp[32], adn,
+                   smp_short_attached_device_type[adt],
+                   ((smp_resp[43] & 0x80) ? " V" : ""));
+        } else
+            printf("  phy %3d:%s:attached:[%016llx:%02d %s%s", k, cp, ull,
+                   smp_resp[32], smp_short_attached_device_type[adt],
+                   ((smp_resp[43] & 0x80) ? " V" : ""));
         if (smp_resp[14] & 0xf) {
             off = 0;
             plus = 0;
@@ -897,7 +916,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             }
             printf("%s)", b);
         }
-        if (optsp->do_brief > 1) {
+        if ((optsp->do_brief > 1) || optsp->do_adn) {
             printf("]\n");
             continue;
         } else
@@ -944,12 +963,15 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHiI:lmn:p:rs:SvVz", long_options,
+        c = getopt_long(argc, argv, "AbhHiI:lmn:p:rs:SvVz", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'A':
+            ++opts.do_adn;
+            break;
         case 'b':
             ++opts.do_brief;
             break;
