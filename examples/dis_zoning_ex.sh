@@ -5,7 +5,11 @@
 # 'zoning_ex.sh' script. If run multiple times or without a
 # prior 'zoning_ex.sh' script, then this script is harmless.
 
-SMP_DEV="/dev/bsg/expander-6:0"
+if [ $1 ] ; then
+    SMP_DEV="$1"
+else
+    SMP_DEV="/dev/bsg/expander-6:0"
+fi
 
 # First a SMP ZONE LOCK function is required. Assume the zone manager
 # password is zero (i.e. all 32 bytes are zero) or disabled (i.e. all

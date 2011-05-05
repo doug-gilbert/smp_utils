@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_UTILS "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH SYNOPSIS
@@ -9,12 +9,20 @@ smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-smp_utils is a package of utilities. Each utility sends a Serial Attached
-SCSI (SAS) Management Protocol (SMP) request to a \fISMP_DEVICE\fR (a SMP
-target). If an error occurs then an error message is sent to stderr. If
-no error occurs, the response is decoded (the default), output in ASCII
-hex (when \fI\-\-hex\fR is given) or output in binary to stdout (when
-\fI\-\-raw\fR is given).
+Serial Attached SCSI (SAS) is a transport (or interconnect) used by
+storage systems. A SAS system is made up of Host Bus Adapters (HBAs
+typically containing SCSI initiators), disks (referred to in SCSI as
+both targets and logical units) and optionally some switching hardware
+called "expanders". Expanders are not SCSI devices so a new protocol was
+required to control and monitor them. Its full name is the SAS Management
+Protocol which is abbreviated to SMP.
+.PP
+smp_utils is a package of utilities. Each utility sends a SMP function
+request to a \fISMP_DEVICE\fR (a SMP target). Some utilities may invoke the
+same function more than once. If an error occurs then an error message is
+sent to stderr. If no error occurs, the response is decoded (the default),
+output in ASCII hex (when \fI\-\-hex\fR is given) or output in binary to
+stdout (when \fI\-\-raw\fR is given).
 .PP
 If \fISMP_DEVICE[,N]\fR is not given then the value in the environment
 variable SMP_UTILS_DEVICE is used.
@@ -33,7 +41,7 @@ SMP target has already been discovered which may not be the case for the
 initial discovery process).
 .PP
 Each utility in smp_utils attempts to work out which interface it has been
-given by examining the \fISMP_DEVICE\fR file. There are three interfaces
+given by examining the \fISMP_DEVICE\fR file. There are two interfaces
 supported currently:
 .TP
 \fBmpt\fR
@@ -54,13 +62,14 @@ at '/dev/mpt2ctl' with major 10 and minor 221.
 .TP
 \fBsgv4\fR (\fBsg\fR)
 This interface is more generic and supported in the linux 2.6.24 kernel
-and beyond. The SMP functions are passed to the kernel using a format
+and above. The SMP functions are passed to the kernel using a format
 known as "SCSI Generic Version 4" which gives this interface its
 name: "sgv4" or just "sg". The SAS transport layer within the SCSI
 sub-system unpacks the SMP requests and forwards them to SAS low level
 drivers that support this interface. The \fISMP_DEVICE\fR is either a
-member of the '/sys/class/bsg' directory or a device node made by the
-bsg driver. Such device nodes are dynamic (i.e. they don't have a fixed
+member of the '/sys/class/bsg' directory (e.g. /sys/class/bsg/expander\-6:0 )
+or a device node made for the bsg driver (e.g. /dev/bsg/expander\-6:0 ).
+Such device nodes are dynamic (i.e. they don't have a fixed
 major number) and should correspond to the major and minor numbers
 found in the 'sys/class/bsg/<smp_target_device>/dev' file.
 .SH ENVIRONMENT VARIABLES
@@ -165,9 +174,11 @@ In the Linux 2.6 kernel series the expander SAS address may well
 be in the sysfs tree but it is not always easy to find. Doing
 this search may help:
 .PP
-  # find /sys \-name "sas_device:expander*"
+  # find /sys \-name "*expander*"
 .PP
-Then change directory to any path found and call 'cat sas_address'
+That should show the suffix on any expanders that have been detected.
+Then a command like '/sys/class/sas_device/expander-6:0/sas_address'
+should show its SAS address.
 .PP
 Another approach is to work backwards from SCSI devices (i.e. logical
 units). The protocol specific port log page (log page 18h) contains
@@ -177,17 +188,23 @@ package could be used like this:
   # sg_logs \-\-page=18h /dev/sdb
 .PP
 Any given "attached SAS address" is either a HBA, an expander or 0
-indicating that port is not connected.
+indicating that port is not connected. An expander is indicated
+by "attached device type: expander device".
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO
-To date SAS has three generations. The first two generations are approved
-standards: the original SAS (SAS ANSI INCITS 376-2003) and SAS 1.1 (INCITS
-417-2006). SAS\-2 technical work is ongoing and at the time of writing the
-most recent draft is sas2r15.pdf (see section 10.4.3 for SMP functions).
-To avoid confusion, the three generations of SAS will be referred to in
-these man pages as SAS 1, 1.1 and 2 . Drafts, including those just prior to
-standardization can be found at the http://www.t10.org site.
+SAS has multiple generations. The first three generations are approved
+standards: the original SAS (ANSI INCITS 376-2003), SAS 1.1 (INCITS 417-2006)
+and SAS\-2 (ANSI INCITS 457-2010) . SAS\-2.1 technical work is ongoing and
+the has been split into two documents, the one of interest is called the SAS
+Protocol Layer (SPL) and  at the time of writing the most recent draft is
+spl\-r07.pdf (see section 9.4.3 for SMP functions). Technical work on SAS\-3
+has started with the SMP functions defined in the SPL\-2
+document (spl2r00.pdf). To avoid confusion, the multiple generations of SAS
+will be referred to in these man pages as SAS 1, 1.1, 2, 2.1 and 3 . Drafts,
+including those just prior to standardization can be found at the
+http://www.t10.org site. INCITS policy now requires a registration to view
+these drafts, a break from t10.org tradition.
 .PP
 The two utilities for reading and writing to GPIO registers, smp_read_gpio
 and smp_write_gpio, are defined in the Small Form Factor document SFF-8485
@@ -212,7 +229,4 @@ Copyright \(co 2006\-2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_conf_general, smp_conf_route_info, smp_discover, smp_discover_list,
-.B smp_phy_control, smp_phy_test, smp_read_gpio, smp_rep_exp_route_tbl,
-.B smp_rep_general, smp_rep_manufacturer, smp_rep_phy_err_log,
-.B smp_rep_phy_sata, smp_rep_route_info, smp_write_gpio, sg_logs(sg3_utils)
+.B sg_logs,sg_vpd(sg3_utils); sdparm(sdparm)

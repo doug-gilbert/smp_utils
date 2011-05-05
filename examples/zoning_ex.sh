@@ -11,12 +11,17 @@
 # also assume this script is executed in the same directory as
 # its helper files: pconf_8.txt, permf_8all.txt and permf_8isol.txt 
 
-# Set SMP_DEV to expander device (using bsg device node) and place
-# on the command line of each smp_utils invocation. If instead the
-# SMP_DEVICE environment variable is set (and exported), the SMP
-# device node is not needed on the command line. 
-# Users will probably need to change this value ....
-SMP_DEV="/dev/bsg/expander-6:0"
+# Set SMP_DEV to the first argument given to this script or the fixed
+# name shown below. This identifies an expander device (using a bsg
+# device node in the fixed name shown below)). Place SMP_DEV
+# on the command line of each smp_utils invocation. If the fixed name
+# below is used it will probably need to be changed (e.g. look at
+# 'ls /dev/bsg' output for available expander nodes).
+if [ $1 ] ; then
+    SMP_DEV="$1"
+else
+    SMP_DEV="/dev/bsg/expander-6:0"
+fi
 
 # First a SMP ZONE LOCK function is required. Assume the zone manager
 # password is zero (i.e. all 32 bytes are zero) or disabled (i.e. all
