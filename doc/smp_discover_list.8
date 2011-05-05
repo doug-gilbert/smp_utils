@@ -3,8 +3,8 @@
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
 .B smp_discover_list
-[\fI\-\-brief\fR] [\fI\-\-descriptor=TY\fR] [\fI\-\-filter=FI\fR]
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
+[\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-descriptor=TY\fR]
+[\fI\-\-filter=FI\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR] [\fI\-\-one\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-summary\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
@@ -12,23 +12,39 @@ smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) DISCOVER LIST function request to a
-SMP target and decodes or outputs the response. The SMP target is identified
-by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface,
-the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
-uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
-additional \fI,N\fR to differentiate between HBAs if there are multiple
-present.
+Sends one or more SAS Management Protocol (SMP) DISCOVER LIST function
+requests to a SMP target and decodes or outputs the responses. The SMP target
+is identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on
+the interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
+The mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
+and needs the additional \fI,N\fR to differentiate between HBAs if there are
+multiple present.
+.PP
+The DISCOVER LIST response may contain up to 8 descriptors when
+the "descriptor type" field in the request is set to
+0 (e.g. \fI\-\-descriptor=0\fR). The DISCOVER LIST response may contain up
+to 40 descriptors when the "descriptor type" field in the request is set to
+1 (e.g. \fI\-\-descriptor=1\fR). Multiple DISCOVER LIST requests will be
+made if more descriptors are requested (e.g. \fI\-\-summary\fR requests 254)
+and the previous response indicates that more descriptors may be available.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-A\fR, \fB\-\-adn\fR
+causes the "attached device name" field to be output when the
+\fI\-\-one\fR or \fI\-\-summary\fR option is also given. See the section
+below on SINGLE LINE PER PHY FORMAT. Note the "attached device name" field
+is not available in the short format (e.g. \fI\-\-descriptor=1\fR).
 .TP
 \fB\-b\fR, \fB\-\-brief\fR
 reduce the decoded response output.
 .TP
 \fB\-d\fR, \fB\-\-descriptor\fR=\fITY\fR
-DISCOVER response format as descriptor in the response. When \fITY\fR is 1
-use the short format (i.e. 24 byte per descriptor) descriptor in the
-response.
+set the "descriptor type" field in the request. When \fITY\fR is 0 then the
+120 byte response defined by the DISCOVER function response (less its CRC
+field) is placed in the descriptors of this function's response. When
+\fITY\fR is 1 the short format (i.e. 24 byte per descriptor) information
+is placed in the descriptors of this function's response.
 .TP
 \fB\-f\fR, \fB\-\-filter\fR=\fIFI\fR
 set the filter field in the request. When \fIFI\fR is 0 (default) fetch
@@ -61,7 +77,8 @@ LIST function (especially when '\-\-descriptor=0').
 \fB\-o\fR, \fB\-\-one\fR
 use one line (summarized) format for each descriptor in the response.
 The default action when this option is not given is to output multiple
-indented lines for each descriptor in the response.
+indented lines for each descriptor in the response. See the section
+below on SINGLE LINE PER PHY FORMAT.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
@@ -81,15 +98,18 @@ either prefix it with '0x' or put a trailing 'h' on it.
 .TP
 \fB\-S\fR, \fB\-\-summary\fR
 output a multi line summary, with one line per active phy. Checks up
-to 40 phys starting at phy identifier \fIID\fR (which defaults to 0).
-Equivalent to '-o -d 1 -n 40'.
+to 254 phys starting at phy identifier \fIID\fR (which defaults to 0).
+Equivalent to '-o -d 1 -n 254' unless the \fI\-\-adn\fR option was also
+given, in which case it is equivalent to '-o -d 0 -n 254' . See the
+section below on SINGLE LINE PER
+PHY FORMAT.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
-.SH SINGLE LINE FORMAT
+.SH SINGLE LINE PER PHY FORMAT
 The \fI\-\-one\fR option causes SMP DISCOVER LIST descriptors to be
 compressed to a header section followed by one line per phy. To save
 space SAS addresses are shown in hex without a '0x' prefix or 'h' suffix.
@@ -133,6 +153,14 @@ the t13.org term):
 If the expander supports zoning (i.e. REPORT GENERAL response bit
 for 'zoning supported' is set) and a phy's zone group is other than zg 1
 then the phy's zone group is shown (e.g. "ZG:2").
+.PP
+If the \fI\-\-adn\fR option is given then after the attached SAS address
+and the attached device's phy identifier are output an extra field is 
+inserted containing the "attached device name" field. For a SAS disk this
+should be its target device name (in NAA-5 format) and for a SATA disk its
+WWN (if provided, also in NAA-5 format). Also when the \fI\-\-adn\fR option
+is given the phy speed and zone group are not output in order to keep the
+line length reasonable.
 .SH CONFORMING TO
 The SMP DISCOVER LIST function was introduced in SAS\-2 .
 .SH AUTHORS
