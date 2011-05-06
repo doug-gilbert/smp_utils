@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.06 20110501";    /* sync with sas2r15 */
+static char * version_str = "1.07 20110506";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -98,18 +98,22 @@ usage()
           "interface\n"
           "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
           "(def: 62)\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0) [starting "
-          "phy id]\n"
+          "    --phy=ID|-p ID       starting phy identifier within bitmap "
+          "(def: 0)\n"
+          "                         [should be a multiple of 48]\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n");
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n");
     fprintf(stderr,
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP REPORT EXPANDER ROUTE TABLE LIST function\n"
+          "Performs a SMP REPORT EXPANDER ROUTE TABLE LIST function. "
+          "Each descriptor\nin the output contains: a routed SAS address, "
+          "a 48 bit phy bitmap and a\nzone group\n"
           );
 }
 
@@ -147,8 +151,13 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
     smp_req[19] = optsp->phy_id;
     if (optsp->verbose) {
         fprintf(stderr, "    Report expander route table request: ");
-        for (k = 0; k < (int)sizeof(smp_req); ++k)
+        for (k = 0; k < (int)sizeof(smp_req); ++k) {
+            if (0 == (k % 16))
+                fprintf(stderr, "\n      ");
+            else if (0 == (k % 8))
+                fprintf(stderr, " ");
             fprintf(stderr, "%02x ", smp_req[k]);
+        }
         fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));

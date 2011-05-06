@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.22 20110505";    /* spl2r00 */
+static char * version_str = "1.23 20110506";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -727,7 +727,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     return 0;
 }
 
-#define MAX_PHY_ID 8192
+#define MAX_PHY_ID 254
 
 /* Calls do_discover() multiple times. Summarizes info into one
  * line per phy. Returns 0 if ok, else function result. */
