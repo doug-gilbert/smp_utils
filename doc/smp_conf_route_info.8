@@ -18,6 +18,12 @@ The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
 .PP
+There are two expander route table types: phy-based and expander-based.
+The expander-based route table was introduced in SAS\-2 and supersedes the
+phy-based route tables. The CONFIGURE ROUTE INFORMATION function is
+associated with a phy-based route table. The REPORT ROUTE INFORMATION
+function is provided to report phy-based route table entries.
+.PP
 Each phy in a SAS expander that has an associated routing attribute
 of "table" has a router table. The number of rows (or entries) in
 each router table is given by the "expander route indexes" field
@@ -92,4 +98,4 @@ Copyright \(co 2006\-2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_rep_general(smp_utils), smp_rep_route_info(smp_utils)
+.B smp_utils, smp_rep_general, smp_rep_route_info(smp_utils)
