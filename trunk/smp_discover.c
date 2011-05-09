@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.23 20110506";    /* spl2r00 */
+static char * version_str = "1.24 20110508";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -106,7 +106,8 @@ usage()
           "    --adn|-A             output attached device name in one "
           "line per\n"
           "                         phy mode (i.e. with --multiple)\n"
-          "    --brief|-b           brief decoded output\n"
+          "    --brief|-b           less output, can be used multiple "
+          "times\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --ignore|-i          sets the Ignore Zone Group bit\n"
@@ -506,6 +507,8 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
     return 0;
 }
 
+/* Output (multiline) for a single phy. Return 0 on success, positive error
+ * number suitable for exit status if problems. */
 static int
 do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 {
@@ -737,10 +740,9 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
     unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull, adn;
     unsigned long long expander_sa;
-    int res, len, k, j, num, off, plus, negot, adt;
+    int res, ret, len, k, j, num, off, plus, negot, adt, zg;
     char b[256];
     int first = 1;
-    int ret;
     const char * cp;
 
     expander_sa = 0;
@@ -936,9 +938,13 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             break;
         }
         printf("%s", cp);
-        if ((len > 59) && (smp_resp[60] & 0x1) && (1 != smp_resp[63]))
-            printf("  ZG:%d\n", smp_resp[63]);
-        else
+        if (len > 63) {
+            zg = smp_resp[63];
+            if (((smp_resp[60] & 0x1) || zg) && (1 != zg))
+                printf("  ZG:%d\n", smp_resp[63]);
+            else
+                printf("\n");
+        } else
             printf("\n");
     }
     return 0;
@@ -1098,7 +1104,7 @@ main(int argc, char * argv[])
         }
     }
     if (opts.do_summary) {
-        opts.do_brief = 1;
+        ++opts.do_brief;
         opts.multiple = 1;
     }
 
