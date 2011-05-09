@@ -5,6 +5,8 @@
 # 'zoning_ex.sh' script. If run multiple times or without a
 # prior 'zoning_ex.sh' script, then this script is harmless.
 
+# If the SMP_DEV is not given on the command line then the string
+# below will probably need to change. Look at 'ls /dev/bsg' .
 if [ $1 ] ; then
     SMP_DEV="$1"
 else
