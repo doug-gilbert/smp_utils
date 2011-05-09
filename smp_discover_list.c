@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.13 20110504";    /* spl2r00 */
+static char * version_str = "1.15 20110508";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -113,8 +113,8 @@ usage()
           "    --adn|-A             output attached device name in one "
           "line per\n"
           "                         phy mode (i.e. with --one)\n"
-          "    --brief|-b           brief: short descriptors and abridged "
-          "output\n"
+          "    --brief|-b           brief: less output, can be used "
+          "multiple times\n"
           "    --descriptor=TY|-d TY    descriptor type:\n"
           "                         0 -> long (as in DISCOVER); 1 -> "
           "short (24 byte)\n"
@@ -146,7 +146,7 @@ usage()
     fprintf(stderr,
           "    --summary|-S         output 1 line per active phy; "
           "typically\n"
-          "                         equivalent to: '-o -d 1 -n 254'\n"
+          "                         equivalent to: '-o -d 1 -n 254 -b'\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs one or more SMP DISCOVER LIST functions. With "
@@ -762,7 +762,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
-    if ((0 == optsp->verbose) && (0 == adt))
+    if ((0 == optsp->verbose) && (0 == adt) && optsp->do_brief)
         return 0;
     switch (route_attr) {
     case 0:
@@ -874,7 +874,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("%s)", b);
     }
     printf("]");
-    if (! optsp->do_brief) {
+    if (optsp->do_brief < 2) {
         switch(negot) {
         case 8:
             cp = "  1.5 Gbps";
@@ -970,8 +970,9 @@ main(int argc, char * argv[])
             break;
         case 'n':
            opts.do_num = smp_get_num(optarg);
-           if (opts.do_num < 0) {
-                fprintf(stderr, "bad argument to '--num'\n");
+           if ((opts.do_num < 0) || (opts.do_num > 254)) {
+                fprintf(stderr, "bad argument to '--num', expect value "
+                        "from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -1076,9 +1077,8 @@ main(int argc, char * argv[])
             opts.desc_type = 0;
     }
     if (opts.do_summary) {
-        if (opts.do_adn)
-            ++opts.do_brief;
-        else
+        ++opts.do_brief;
+        if (0 == opts.do_adn)
             opts.desc_type = 1;
         opts.do_1line = 1;
         opts.do_num = 254;

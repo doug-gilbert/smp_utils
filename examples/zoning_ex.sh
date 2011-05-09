@@ -1,15 +1,12 @@
 #!/bin/sh
 
-# This is an example script showing a simple SAS-2 zoning example
-# using various smp_utils utilities.
+# This is an example script showing a SAS-2 zoning being set up 
+# by calling various smp_utils utilities.
 
-# Assume:
-#   phy_id 0: uplink to HBA on "active zone manager" machine
-#   phy_id 1: disk (SAS or SATA)
-#   phy_id 2: disk (SAS or SATA)
-#   phy_id 3: disk (SAS or SATA)
-# also assume this script is executed in the same directory as
-# its helper files: pconf_8.txt, permf_8all.txt and permf_8isol.txt 
+# This is a relatively generic script for setting up zoning. The
+# customization of the zone groups (who can access whom) is in the
+# PERMISSION_FILE while the mapping of expander phy_ids to zone
+# groups in in the PHYINFO_FILE.
 
 # Set SMP_DEV to the first argument given to this script or the fixed
 # name shown below. This identifies an expander device (using a bsg
@@ -21,6 +18,23 @@ if [ $1 ] ; then
     SMP_DEV="$1"
 else
     SMP_DEV="/dev/bsg/expander-6:0"
+fi
+
+# Assumptions are made in the zone permission table file and the zone phy
+# information file. The zone permission table file name is either the
+# second argument, or defaults:
+if [ $2 ] ; then
+    PERMISSION_FILE="$2"
+else
+    PERMISSION_FILE="permf_8i9t.txt"
+fi
+
+# the zone phy information file name is either the third argument, or
+# defaults:
+if [ $3 ] ; then
+    PHYINFO_FILE="$3"
+else
+    PHYINFO_FILE="pconf_2i2t.txt"
 fi
 
 # First a SMP ZONE LOCK function is required. Assume the zone manager
@@ -35,21 +49,6 @@ if [ $res -ne 0 ] ; then
 fi
 echo
 
-# Next a SMP CONFIGURE ZONE PHY INFORMATION function is sent.
-# Set up zone phy information descriptors and since --save=SAV is not
-# given, only the shadow values are updated (and won't be copied to the
-# saved value during the activate step).
-echo "smp_conf_zone_phy_info --pconf=pconf_8.txt $SMP_DEV"
-smp_conf_zone_phy_info --pconf=pconf_8.txt $SMP_DEV
-res=$?
-if [ $res -ne 0 ] ; then
-    echo "smp_conf_zone_phy_info failed with exit status: $res"
-    echo "N.B. about to unlock the zone"
-    smp_zone_unlock $SMP_DEV
-    exit $res
-fi
-echo
-
 # Then a SMP CONFIGURE ZONE PERMISSION TABLE function is sent.
 # Since --save=SAV is not given, only the shadow values are updated
 # (and won't be copied to the saved value during the activate step).
@@ -57,11 +56,26 @@ echo
 # to provide 128 zone group style descriptors (which is the default for
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
-echo "smp_conf_zone_perm_tbl --permf=permf_8isol.txt $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=permf_8isol.txt $SMP_DEV
+echo "smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE $SMP_DEV"
+smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"
+    echo "N.B. about to unlock the zone"
+    smp_zone_unlock $SMP_DEV
+    exit $res
+fi
+echo
+
+# Next a SMP CONFIGURE ZONE PHY INFORMATION function is sent.
+# Set up zone phy information descriptors and since --save=SAV is not
+# given, only the shadow values are updated (and won't be copied to the
+# saved value during the activate step).
+echo "smp_conf_zone_phy_info --pconf=$PHYINFO_FILE $SMP_DEV"
+smp_conf_zone_phy_info --pconf=$PHYINFO_FILE $SMP_DEV
+res=$?
+if [ $res -ne 0 ] ; then
+    echo "smp_conf_zone_phy_info failed with exit status: $res"
     echo "N.B. about to unlock the zone"
     smp_zone_unlock $SMP_DEV
     exit $res
