@@ -1,4 +1,4 @@
-.TH SMP_ZONE_LOCK "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_ZONE_LOCK "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_zone_lock \- invoke ZONE LOCK SMP function
 .SH SYNOPSIS
@@ -40,7 +40,7 @@ represents a byte. Empty lines and those starting with "#" are ignored.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-inactivity\fR=\fITL\fR
 sets the zone lock inactivity time limit to \fITL\fR which has units of
@@ -58,7 +58,8 @@ option. The default password is 32 NULLs (zero bytes) and \fIPA\fR is
 padded with NULLs to the right (to make it 32 bytes long in the request).
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. The mpt interface needs

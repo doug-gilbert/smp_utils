@@ -49,7 +49,7 @@ function result of "invalid expander change count" in the response.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
 expander route index. \fIIN\fR is a value between 0 and 65535. Default is 0.
@@ -64,7 +64,8 @@ man page for more information.
 phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-R\fR, \fB\-\-routed\fR=\fIR_SAS_ADDR\fR
 specifies the SAS address to be placed in a row (given by \fI\-\-index=IN\fR)
