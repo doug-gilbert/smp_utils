@@ -33,7 +33,7 @@ reduce the decoded response output.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
 \fIIN\fR is the starting routed SAS address index. The default value is 0.
@@ -54,7 +54,8 @@ default), or a multiple of 48. Note there is only one expnder route
 table per expander, not one per phy.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an

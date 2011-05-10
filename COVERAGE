@@ -22,7 +22,7 @@ PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
 READ GPIO REGISTER ENHANCED           SFF-8485*
-REPORT BROADCAST                      2 
+REPORT BROADCAST                      2                smp_rep_broadcast
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
@@ -42,18 +42,19 @@ ZONE LOCK                             2                smp_zone_lock
 ZONE UNLOCK                           2                smp_zone_unlock
 ZONED BROADCAST                       2                smp_zoned_broadcast
 
-*  in sas2r15 the non-ENHANCED versions are marked as obsolete but the
+*  in sas2r16 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
    (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r00) these 4 functions
-   have been dropped (i.e. they no longer appear)
+   are not defined (their function codes are "restricted").
 
-There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
-replacing 2 obsoleted in SFF-8485). smp_utils currently implements 26
-functions.
+There are 27 SMP functions defined in sas2r16.pdf plus 2 (or 4 since
+the latter 2 replace the former 2) defined in SFF-8485.
+smp_utils currently implements 27 functions (including 2 that are defined
+in SFF-8485).
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
-SAS-1.1 standard (ANSI INCITS 417-2006). The sas2r15.pdf draft is taken
+SAS-1.1 standard (ANSI INCITS 417-2006). The sas2r16.pdf draft is taken
 to represent the SAS-2 standard (ANSI INCITS 457-2010).
 
 Now there is a SAS-2.1 standard at the draft stage and it has been
@@ -67,4 +68,4 @@ announced by t10.
 
 
 Doug Gilbert
-5th May 2011
+9th May 2011

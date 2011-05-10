@@ -104,7 +104,8 @@ result of "invalid expander change count" in the response.
 output the usage message for the utility then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response in hexadecimal. This does not include the trailing
+CRC field.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. This option is usually not needed since the
@@ -118,7 +119,8 @@ it doesn't agree with the given \fIINTF\fR. If the user is really sure then
 adding a ',force' will force the utility to use the given interface.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response to stdout in binary. This does not include the trailing
+CRC field. All error messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an

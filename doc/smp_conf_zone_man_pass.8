@@ -1,4 +1,4 @@
-.TH SMP_CONF_ZONE_MAN_PASS "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_ZONE_MAN_PASS "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_zone_man_pass \- invoke CONFIGURE ZONE MANAGER PASSWORD function
 .SH SYNOPSIS
@@ -43,7 +43,7 @@ to be filled with 0xff.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -68,7 +68,8 @@ option. The default password is 32 NULLs (zero bytes) and \fIPA\fR is
 padded with NULLs to the right (to make it 32 bytes long in the request).
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. The mpt interface needs

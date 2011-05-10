@@ -8,6 +8,19 @@
 # PERMISSION_FILE while the mapping of expander phy_ids to zone
 # groups in in the PHYINFO_FILE.
 
+if [ "-h" = $1 -o "--help" = $1 ] ; then
+    echo "Usage: zoning_ex.sh [<smp_dev> [<permf> [<pconf>]]]"
+    echo "  where:"
+    echo "    <smp_dev>     expander device node"
+    echo "    <permf>       permission table file name"
+    echo "    <pconf>       phy information file name"
+    echo
+    echo "zoning_ex.sh sets up zoning on <smp_dev> according to data in the "
+    echo "<permf> and <pconf> files. If these are not given, they default"
+    echo "to values coded within this script which may need editing."
+    exit 0
+fi
+
 # Set SMP_DEV to the first argument given to this script or the fixed
 # name shown below. This identifies an expander device (using a bsg
 # device node in the fixed name shown below)). Place SMP_DEV

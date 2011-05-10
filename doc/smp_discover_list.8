@@ -56,7 +56,7 @@ phys attached to expanders or end devices.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-ignore\fR
 sets the Ignore Zone Group bit in the SMP Discover list request.
@@ -87,7 +87,8 @@ Note that due to the filter field setting, the first phy id in
 the response may be greater than the argument to this option.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an

@@ -1,4 +1,4 @@
-.TH SMP_CONF_ZONE_PERM_TBL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_ZONE_PERM_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERMISSION TABLE function
 .SH SYNOPSIS
@@ -63,7 +63,7 @@ will be adjusted to reflect those descriptors already sent.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -82,7 +82,8 @@ or as longer strings of hexadecimal bytes in which every 2 digits
 represents a byte. Empty lines and those starting with "#" are ignored.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. The mpt interface needs

@@ -5,6 +5,17 @@
 # 'zoning_ex.sh' script. If run multiple times or without a
 # prior 'zoning_ex.sh' script, then this script is harmless.
 
+if [ "-h" = $1 -o "--help" = $1 ] ; then
+    echo "Usage: dis_zoning_ex.sh [<smp_dev>]"
+    echo "  where:"
+    echo "    <smp_dev>     expander device node"
+    echo
+    echo "dis_zoning_ex.sh disables zoning on <smp_dev>. If zoning has "
+    echo "not been set up this script is harmless. If not given <smp_dev>"
+    echo "defaults to a value within this script which may need editing."
+    exit 0
+fi
+
 # If the SMP_DEV is not given on the command line then the string
 # below will probably need to change. Look at 'ls /dev/bsg' .
 if [ $1 ] ; then

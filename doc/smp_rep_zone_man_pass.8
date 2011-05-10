@@ -1,4 +1,4 @@
-.TH SMP_REP_ZONE_MAN_PASS "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_ZONE_MAN_PASS "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_zone_man_pass \- invoke REPORT ZONE MANAGER PASSWORD function
 .SH SYNOPSIS
@@ -30,8 +30,8 @@ to stdout.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal. To only see the password in hexadecimal
-use the \fI\-\-phex\fR option.
+output the response (less the CRC field) in hexadecimal. To only see the
+password in hexadecimal use the \fI\-\-phex\fR option.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -45,7 +45,8 @@ Note the hexadecimal bytes are output with a hex indication (i.e. there is
 nos leading "0x" nor trailing "h").
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-R\fR, \fB\-\-report\fR=\fIRT\fR
 set the 'report type' field in the SMP request. \fIRT\fR may take these

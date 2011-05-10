@@ -42,20 +42,19 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a REPORT PHY EVENT function and outputs its
- * response.
+ * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.02 20110509";
+static char * version_str = "1.00 20110509";
 
-#define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
+#define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
 
 static struct option long_options[] = {
+        {"broadcast", 1, 0, 'b'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
@@ -66,26 +65,29 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_phy_event [--help] [--hex] [--interface=PARAMS] "
-          "[--phy=ID]\n"
-          "                         [--raw] [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                         SMP_DEVICE[,N]\n"
+          "smp_rep_broadcast [--broadcast=BT] [--help] [--hex]\n"
+          "                         [--interface=PARAMS] [raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                         [--verbose] [--version] "
+          "SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
+          "    --broadcast=RT|-b RT    RT is report type (def: 0 "
+          "which is\n"
+          "                            Broadcast(Change))\n"
+          "    --help|-h               print out usage message\n"
+          "    --hex|-H                print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
-          "    --raw|-r             output response in binary\n"
+          "    --raw|-r                output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP REPORT PHY EVENT function\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending\n"
+          "                                 on the interface, may not be "
+          "needed\n"
+          "    --verbose|-v            increase verbosity\n"
+          "    --version|-V            print version string and exit\n\n"
+          "Performs a SMP REPORT BROADCAST function\n"
           );
 }
 
@@ -97,147 +99,12 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-/* from sas2r15 */
-static void
-show_phy_event_info(int pes, unsigned int val, unsigned int thresh_val)
-{
-    unsigned int u;
-
-    switch (pes) {
-    case 0:
-        printf("     No event\n");
-        break;
-    case 0x1:
-        printf("     Invalid word count: %u\n", val);
-        break;
-    case 0x2:
-        printf("     Running disparity error count: %u\n", val);
-        break;
-    case 0x3:
-        printf("     Loss of dword synchronization count: %u\n", val);
-        break;
-    case 0x4:
-        printf("     Phy reset problem count: %u\n", val);
-        break;
-    case 0x5:
-        printf("     Elasticity buffer overflow count: %u\n", val);
-        break;
-    case 0x6:
-        printf("     Received ERROR  count: %u\n", val);
-        break;
-    case 0x20:
-        printf("     Received address frame error count: %u\n", val);
-        break;
-    case 0x21:
-        printf("     Transmitted abandon-class OPEN_REJECT count: %u\n", val);
-        break;
-    case 0x22:
-        printf("     Received abandon-class OPEN_REJECT count: %u\n", val);
-        break;
-    case 0x23:
-        printf("     Transmitted retry-class OPEN_REJECT count: %u\n", val);
-        break;
-    case 0x24:
-        printf("     Received retry-class OPEN_REJECT count: %u\n", val);
-        break;
-    case 0x25:
-        printf("     Received AIP (WATING ON PARTIAL) count: %u\n", val);
-        break;
-    case 0x26:
-        printf("     Received AIP (WAITING ON CONNECTION) count: %u\n", val);
-        break;
-    case 0x27:
-        printf("     Transmitted BREAK count: %u\n", val);
-        break;
-    case 0x28:
-        printf("     Received BREAK count: %u\n", val);
-        break;
-    case 0x29:
-        printf("     Break timeout count: %u\n", val);
-        break;
-    case 0x2a:
-        printf("     Connection count: %u\n", val);
-        break;
-    case 0x2b:
-        printf("     Peak transmitted pathway blocked count: %u\n",
-               val & 0xff);
-        printf("         Peak value detector threshold: %u\n",
-               thresh_val & 0xff);
-        break;
-    case 0x2c:
-        u = val & 0xffff;
-        if (u < 0x8000)
-            printf("     Peak transmitted arbitration wait time (us): "
-                   "%u\n", u);
-        else
-            printf("     Peak transmitted arbitration wait time (ms): "
-                   "%u\n", 33 + (u - 0x8000));
-        u = thresh_val & 0xffff;
-        if (u < 0x8000)
-            printf("         Peak value detector threshold (us): %u\n",
-                   u);
-        else
-            printf("         Peak value detector threshold (ms): %u\n",
-                   33 + (u - 0x8000));
-        break;
-    case 0x2d:
-        printf("     Peak arbitration time (us): %u\n", val);
-        printf("         Peak value detector threshold: %u\n", thresh_val);
-        break;
-    case 0x2e:
-        printf("     Peak connection time (us): %u\n", val);
-        printf("         Peak value detector threshold: %u\n", thresh_val);
-        break;
-    case 0x40:
-        printf("     Transmitted SSP frame count: %u\n", val);
-        break;
-    case 0x41:
-        printf("     Received SSP frame count: %u\n", val);
-        break;
-    case 0x42:
-        printf("     Transmitted SSP frame error count: %u\n", val);
-        break;
-    case 0x43:
-        printf("     Received SSP frame error count: %u\n", val);
-        break;
-    case 0x44:
-        printf("     Transmitted CREDIT_BLOCKED count: %u\n", val);
-        break;
-    case 0x45:
-        printf("     Received CREDIT_BLOCKED count: %u\n", val);
-        break;
-    case 0x50:
-        printf("     Transmitted SATA frame count: %u\n", val);
-        break;
-    case 0x51:
-        printf("     Received SATA frame count: %u\n", val);
-        break;
-    case 0x52:
-        printf("     SATA flow control buffer overflow count: %u\n", val);
-        break;
-    case 0x60:
-        printf("     Transmitted SMP frame count: %u\n", val);
-        break;
-    case 0x61:
-        printf("     Received SMP frame count: %u\n", val);
-        break;
-    case 0x63:
-        printf("     Received SMP frame error count: %u\n", val);
-        break;
-    default:
-        printf("     Unknown phy event source: %d, val=%u, thresh_val=%u\n",
-               pes, val, thresh_val);
-        break;
-    }
-}
-
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, ped_len, num_ped, pes;
+    int res, c, k, j, len, bd_len, num_bd, btype_hdr;
     int do_hex = 0;
-    int phy_id = 0;
-    int phy_id_given = 0;
+    int btype = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -245,27 +112,34 @@ int main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_EVENT,
-                               0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[SMP_FN_REPORT_PHY_EVENT_RESP_LEN];
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_BROADCAST,
+                               0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned char smp_resp[SMP_FN_REPORT_BROADCAST_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
-    unsigned int pe_val, pvdt;
     char * cp;
-    unsigned char * pedp;
+    unsigned char * bdp;
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHI:p:rs:vV", long_options,
+        c = getopt_long(argc, argv, "b:hHI:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'b':
+            btype = smp_get_dhnum(optarg);
+            if ((btype < 0) || (btype > 15)) {
+                fprintf(stderr, "bad argument to '--broadcast', expect "
+                        "value from 0 to 15\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 'h':
         case '?':
             usage();
@@ -276,15 +150,6 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
-            break;
-        case 'p':
-           phy_id = smp_get_num(optarg);
-           if ((phy_id < 0) || (phy_id > 254)) {
-                fprintf(stderr, "bad argument to '--phy', expect "
-                        "value from 0 to 254\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            ++phy_id_given;
             break;
         case 'r':
             ++do_raw;
@@ -373,9 +238,9 @@ int main(int argc, char * argv[])
 
     len = (sizeof(smp_resp) - 8) / 4;
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
-    smp_req[9] = phy_id;
+    smp_req[4] = btype & 0xf;
     if (verbose) {
-        fprintf(stderr, "    Report phy event request: ");
+        fprintf(stderr, "    Report broadcast request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
@@ -428,7 +293,7 @@ int main(int argc, char * argv[])
         if (smp_resp[2]) {
             ret = smp_resp[2];
             if (verbose)
-                fprintf(stderr, "Report phy event result: %s\n",
+                fprintf(stderr, "Report broadcast result: %s\n",
                         smp_get_func_res_str(ret, sizeof(b), b));
         }
         goto err_out;
@@ -447,35 +312,43 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Report phy event result%s: %s\n",
-                (phy_id_given ? "" : " (for phy_id=0)"), cp);
+        fprintf(stderr, "Report broadcast result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
-    printf("Report phy event response:\n");
+    printf("Report broadcast response:\n");
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
-    printf("  phy identifier: %d\n", smp_resp[9]);
-    printf("  phy event descriptor length: %d dwords\n", smp_resp[14]);
-    ped_len = smp_resp[14] * 4;
-    num_ped = smp_resp[15];
-    printf("  number of phy event descriptors: %d\n", num_ped);
-    if (ped_len < 12) {
+    btype_hdr = smp_resp[6] & 0xf;
+    printf("  broadcast type: %d\n", btype_hdr);
+    printf("  broadcast descriptor length: %d dwords\n", smp_resp[10]);
+    bd_len = smp_resp[10] * 4;
+    num_bd = smp_resp[11];
+    printf("  number of broadcast descriptors: %d\n", num_bd);
+    if (bd_len < 8) {
         fprintf(stderr, "Unexpectedly low descriptor length: %d bytes\n",
-                ped_len);
+                bd_len);
         ret = -1;
         goto err_out;
     }
-    pedp = smp_resp + 16;
-    for (k = 0; k < num_ped; ++k, pedp += ped_len) {
+    bdp = smp_resp + 12;
+    for (k = 0; k < num_bd; ++k, bdp += bd_len) {
         printf("   Descriptor %d:\n", k + 1);
-        pes = pedp[3];
-        pe_val = (pedp[4] << 24) | (pedp[5] << 16) | (pedp[6] << 8) |
-                 pedp[7];
-        pvdt = (pedp[8] << 24) | (pedp[9] << 16) | (pedp[10] << 8) |
-               pedp[11];
-        show_phy_event_info(pes, pe_val, pvdt);
+        if (verbose || (btype_hdr != (bdp[0] & 0xf)))
+            printf("     broadcast type: %d\n", bdp[0] & 0xf);
+        if (0xff == bdp[1])
+            printf("     no specific phy id\n");
+        else
+            printf("     phy id: %d\n", bdp[1]);
+        printf("     broadcast reason: %d\n", bdp[2] & 0xf);
+        printf("     broadcast count: %d\n", (bdp[4] << 8) + bdp[5]);
+        if (verbose > 1) {
+            printf("     ");
+            for (j = 0; j < 8; ++j)
+                printf("%02x ", bdp[j]);
+            printf("\n");
+        }
     }
 
 err_out:

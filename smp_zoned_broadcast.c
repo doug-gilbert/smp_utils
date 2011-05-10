@@ -53,6 +53,7 @@ static char * version_str = "1.00 20110424";
 
 
 static struct option long_options[] = {
+        {"broadcast", 1, 0, 'b'},
         {"expected", 1, 0, 'E'},
         {"fszg", 1, 0, 'F'},
         {"help", 0, 0, 'h'},
@@ -61,7 +62,6 @@ static struct option long_options[] = {
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"szg", 1, 0, 'S'},
-        {"type", 1, 0, 't'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -70,40 +70,41 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_zoned_broadcast [--expected=EX] [--fszg=FS] [--help]\n"
-          "                           [--hex] [--interface=PARAMS] "
+          "smp_zoned_broadcast [--broadcast=BT] [--expected=EX] "
+          "[--fszg=FS]\n"
+          "                           [--help] [--hex] [--interface=PARAMS] "
           "[--raw]\n"
           "                           [--sa=SAS_ADDR] [--szg=ZGL] "
-          "[--type=BT]\n"
-          "                           [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "[--verbose]\n"
+          "                           [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --expected=EX|-E EX    set expected expander change "
+          "    --broadcast=BT|-b BT    BT is type of broadcast (def: 0 "
+          "which is\n"
+          "                            Broadcast(Change))\n"
+          "    --expected=EX|-E EX     set expected expander change "
           "count to EX\n"
-          "    --fszg=FS|-F FS        file FS contains one or more source "
+          "    --fszg=FS|-F FS         file FS contains one or more source "
           "zone groups\n"
-          "    --help|-h              print out usage message\n"
-          "    --hex|-H               print response in hexadecimal\n"
+          "    --help|-h               print out usage message\n"
+          "    --hex|-H                print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --raw|-r               output response in binary\n"
+          "    --raw|-r                output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                           '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                           interface, may not be needed\n"
-          "    --szg=ZGL|-S ZGL       ZGL is a comma separated list of "
+          "                                 '0x' or trailing 'h'). "
+          "Depending\n"
+          "                                 on the interface, may not be "
+          "needed\n"
+          "    --szg=ZGL|-S ZGL        ZGL is a comma separated list of "
           "source\n"
-          "                           zone groups for broadcast\n"
-          "    --type=BT|-t BT        BT is type of broadcast (def: 0 "
-          "which is\n"
-          "                           Broadcast(Change))\n"
-          "    --verbose|-v           increase verbosity\n"
-          "    --version|-V           print version string and exit\n\n"
+          "                            zone groups for broadcast\n"
+          "    --verbose|-v            increase verbosity\n"
+          "    --version|-V            print version string and exit\n\n"
           "Performs a SMP ZONED BROADCAST function. Source zone groups "
           "can be given\nin decimal (default) or hex with a '0x' prefix "
-          " or a 'h' suffix. Broadcast(Change)\nwill cause an SSP "
-          "initiator to run its discover protocol.\n"
+          " or a 'h' suffix.\nBroadcast(Change) will cause an SMP "
+          "initiator to run its discover process.\n"
           );
 }
 
@@ -226,7 +227,7 @@ int main(int argc, char * argv[])
     const char * fszg = NULL;
     const char * zgl = NULL;
     int do_hex = 0;
-    int do_type = 0;
+    int btype = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -247,12 +248,19 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "E:F:hHI:rs:S:t:vV", long_options,
+        c = getopt_long(argc, argv, "b:E:F:hHI:rs:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'b':
+            btype = smp_get_dhnum(optarg);
+            if ((btype < 0) || (btype > 15)) {
+                fprintf(stderr, "bad argument to '--broadcast'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            break;
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
@@ -287,13 +295,6 @@ int main(int argc, char * argv[])
             break;
         case 'S':
             zgl = optarg;
-            break;
-        case 't':
-            do_type = smp_get_dhnum(optarg);
-            if ((do_type < 0) || (do_type > 15)) {
-                fprintf(stderr, "bad argument to '--type'\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
             break;
         case 'v':
             ++verbose;
@@ -396,7 +397,7 @@ int main(int argc, char * argv[])
     if (0 == len) {
         fprintf(stderr, "didn't detect any source zone group numbers "
                         "in the input.\n");
-        fprintf(stderr, "Give --szg=SGL or --fszg=FS option (e.g. "
+        fprintf(stderr, "Give --szg=ZGL or --fszg=FS option (e.g. "
                 "'--szg=1')\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
@@ -413,7 +414,7 @@ int main(int argc, char * argv[])
     smp_req[1] = SMP_FN_ZONED_BROADCAST,
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = do_type & 0xf;
+    smp_req[6] = btype & 0xf;
     smp_req[7] = len;
     if ((len % 4))
         len = ((len / 4) + 1) * 4;

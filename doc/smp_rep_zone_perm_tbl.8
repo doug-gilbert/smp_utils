@@ -1,4 +1,4 @@
-.TH SMP_REP_ZONE_PERM_TBL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_ZONE_PERM_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
 .SH SYNOPSIS
@@ -46,7 +46,7 @@ already exists. If \fIFN\fR does not exist then it is created.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -80,7 +80,8 @@ then it is truncated prior to the write unless \fI\-\-append\fR is given. To
 append to the existing \fIFN\fR add the \fI\-\-append\fR option.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-R\fR, \fB\-\-report\fR=\fIRT\fR
 set the 'report type' field in the SMP request. \fIRT\fR may take these
