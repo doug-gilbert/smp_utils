@@ -1,4 +1,4 @@
-.TH SMP_CONF_GENERAL "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_GENERAL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 .SH SYNOPSIS
@@ -39,7 +39,7 @@ function result of "invalid expander change count" in the response.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-inactivity\fR=\fIIN\fR
 sets the "update STP bus inactivity time limit" flag and the
@@ -65,7 +65,8 @@ corresponding "STP reject to open limit" field to \fIOP\fR. Unit of
 \fIOP\fR is 10 microseconds.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-R\fR, \fB\-\-reduced\fR=\fIRE\fR
 sets the "update Initial time to reduced functionality" flag and the

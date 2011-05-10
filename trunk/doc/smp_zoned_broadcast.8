@@ -1,11 +1,11 @@
-.TH SMP_ZONED_BROADCAST "8" "April 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_ZONED_BROADCAST "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_zoned_broadcast \- invoke ZONED BROADCAST SMP function
 .SH SYNOPSIS
 .B smp_zoned_broadcast
-[\fI\-\-expected=EX\fR] [\fI\-\-fszg=FS\fR] [\fI\-\-help\fR]
-[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-szg=ZGL\fR] [\fI\-\-type=BT\fR]
+[\fI\-\-broadcast=BT\fR] [\fI\-\-expected=EX\fR] [\fI\-\-fszg=FS\fR]
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-szg=ZGL\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
@@ -26,6 +26,13 @@ initiator port (e.g. a SAS HBA) to start a discover process.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
+.TP
+\fB\-b\fR, \fB\-\-broadcast\fR=\fIBT\fR
+\fIBT\fR is the broadcast type, an integer in the range 0 (default) to 15.
+Broadcast (Change) corresponds to 0 and will cause SMP initiators that
+receive it to do their discover process. Other known broadcast types are
+listed in the NOTES section. \fIBT\fR may be decimal (default) or
+hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.
@@ -49,7 +56,7 @@ newline. Empty lines and those starting with "#" are ignored.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response in hexadecimal.
+output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -57,7 +64,8 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response to stdout in binary. All error messages are sent to stderr.
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. The mpt interface needs
@@ -73,19 +81,34 @@ list \fIZGL\fR. The may be decimal (default) or hexadecimal prefixed by '0x'
 range 0 to 255. Either this option or \fI\-\-fszg=FS\fR (but not both) should
 be given.
 .TP
-\fB\-t\fR, \fB\-\-type\fR=\fIBT\fR
-\fIBT\fR is the broadcast type, an integer in the range 0 (default) to 15.
-Broadcast (Change) corresponds to 0 and will cause SMP initiators that
-receive it to do their discover process. Some other broadcast type values
-are 3: Broadcast (SES), 4: Broadcast (Expander), 5: Broadcast (Aysnchronous
-event) and 8: Broadcast (Zone Activate). \fIBT\fR may be decimal (default)
-or hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
-.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.SH NOTES
+The following is a list of broadcast types:
+.br
+0        Broadcast (Change)
+.br
+1        Broadcast (Reserved change 0)
+.br
+2        Broadcast (Reserved change 1)
+.br
+3        Broadcast (SES)
+.br
+4        Broadcast (Expander)
+.br
+5        Broadcast (Asynchronous event)
+.br
+6        Broadcast (Reserved 3)
+.br
+7        Broadcast (Reserved 4)
+.br
+8        Broadcast (Zone activate)
+.PP
+The remaining zone types (9 to 15) may be issued by the ZONED BROADCAST
+function.
 .SH CONFORMING TO
 The SMP ZONED BROADCAST function was introduced in SAS\-2 .
 .SH AUTHORS

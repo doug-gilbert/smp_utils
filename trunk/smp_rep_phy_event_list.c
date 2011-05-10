@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.01 20110409";
+static char * version_str = "1.02 20110509";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
@@ -465,7 +465,7 @@ int main(int argc, char * argv[])
     ped_len = smp_resp[10] * 4;
     num_ped = smp_resp[15];
     printf("  number of phy event descriptors: %d\n", num_ped);
-    if (ped_len < 8) {
+    if (ped_len < 12) {
         fprintf(stderr, "Unexpectedly low descriptor length: %d bytes\n",
                 ped_len);
         ret = -1;
