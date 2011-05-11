@@ -8,7 +8,7 @@
 # PERMISSION_FILE while the mapping of expander phy_ids to zone
 # groups in in the PHYINFO_FILE.
 
-if [ "-h" = $1 -o "--help" = $1 ] ; then
+if [ "-h" = $1 ] || [ "--help" = $1 ] ; then
     echo "Usage: zoning_ex.sh [<smp_dev> [<permf> [<pconf>]]]"
     echo "  where:"
     echo "    <smp_dev>     expander device node"

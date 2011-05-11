@@ -42,18 +42,21 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a REPORT BROADCAST function and outputs its response.
+ * This utility issues a REPORT SELF-CONFIGURATION STATUS function and
+ * outputs its response.
  */
 
 static char * version_str = "1.00 20110510";
 
-#define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
+#define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
+
+#define MAX_SCSD_PER_RESP ((1024 - 20) / 16)
 
 
 static struct option long_options[] = {
-        {"broadcast", 1, 0, 'b'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
+        {"index", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
@@ -65,17 +68,17 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_broadcast [--broadcast=BT] [--help] [--hex]\n"
-          "                         [--interface=PARAMS] [raw] "
+          "smp_rep_self_conf_stat [--help] [--hex] [--index=SDI]\n"
+          "                              [--interface=PARAMS] [raw] "
           "[--sa=SAS_ADDR]\n"
-          "                         [--verbose] [--version] "
+          "                              [--verbose] [--version] "
           "SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --broadcast=RT|-b RT    RT is report type (def: 0 "
-          "which is\n"
-          "                            Broadcast(Change))\n"
           "    --help|-h               print out usage message\n"
           "    --hex|-H                print response in hexadecimal\n"
+          "    --index=SDI|-i SDI      SDI is starting self-configuration "
+          "status\n"
+          "                            descriptor index (def: 1)\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --raw|-r                output response in binary\n"
@@ -87,7 +90,7 @@ static void usage()
           "needed\n"
           "    --verbose|-v            increase verbosity\n"
           "    --version|-V            print version string and exit\n\n"
-          "Performs a SMP REPORT BROADCAST function\n"
+          "Performs a SMP REPORT SELF-CONFIGURATION STATUS function\n"
           );
 }
 
@@ -102,9 +105,10 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len, bd_len, num_bd, btype_hdr;
+    int res, c, k, j, len, sscsd_ind, last_scsd_ind, scsd_len, num_scsd;
+    int tot_num_scsd;
     int do_hex = 0;
-    int btype = 0;
+    int index = 1;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -112,40 +116,40 @@ int main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_BROADCAST,
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_SELF_CONFIG,
                                0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[SMP_FN_REPORT_BROADCAST_RESP_LEN];
+    unsigned char smp_resp[SMP_FN_REPORT_SELF_CONFIG_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
-    unsigned char * bdp;
+    unsigned char * scsdp;
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "b:hHI:rs:vV", long_options,
+        c = getopt_long(argc, argv, "hHi:I:rs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
-        case 'b':
-            btype = smp_get_dhnum(optarg);
-            if ((btype < 0) || (btype > 15)) {
-                fprintf(stderr, "bad argument to '--broadcast', expect "
-                        "value from 0 to 15\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
-            break;
         case 'h':
         case '?':
             usage();
             return 0;
         case 'H':
             ++do_hex;
+            break;
+        case 'i':
+            index = smp_get_dhnum(optarg);
+            if ((index < 0) || (index > 65535)) {
+                fprintf(stderr, "bad argument to '--index', expect "
+                        "value from 0 to 65535\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
@@ -238,9 +242,10 @@ int main(int argc, char * argv[])
 
     len = (sizeof(smp_resp) - 8) / 4;
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
-    smp_req[4] = btype & 0xf;
+    smp_req[6] = (index >> 8) & 0xff;
+    smp_req[7] = index & 0xff;
     if (verbose) {
-        fprintf(stderr, "    Report broadcast request: ");
+        fprintf(stderr, "    Report self-configuration status request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
@@ -293,8 +298,8 @@ int main(int argc, char * argv[])
         if (smp_resp[2]) {
             ret = smp_resp[2];
             if (verbose)
-                fprintf(stderr, "Report broadcast result: %s\n",
-                        smp_get_func_res_str(ret, sizeof(b), b));
+                fprintf(stderr, "Report self-configuration status result: "
+                        "%s\n", smp_get_func_res_str(ret, sizeof(b), b));
         }
         goto err_out;
     }
@@ -312,41 +317,53 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Report broadcast result: %s\n", cp);
+        fprintf(stderr, "Report self-configuration status result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
-    printf("Report broadcast response:\n");
+    printf("Report self-configuration status response:\n");
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
-    btype_hdr = smp_resp[6] & 0xf;
-    printf("  broadcast type: %d\n", btype_hdr);
-    printf("  broadcast descriptor length: %d dwords\n", smp_resp[10]);
-    bd_len = smp_resp[10] * 4;
-    num_bd = smp_resp[11];
-    printf("  number of broadcast descriptors: %d\n", num_bd);
-    if (bd_len < 8) {
+    sscsd_ind = (smp_resp[6] << 8) + smp_resp[7];
+    printf("  starting self-configuration status descriptor index: %d\n",
+           sscsd_ind);
+    tot_num_scsd = (smp_resp[8] << 8) + smp_resp[9];
+    printf("  total number of self-configuration status descriptors: %d\n",
+           tot_num_scsd);
+    last_scsd_ind = (smp_resp[10] << 8) + smp_resp[11];
+    printf("  last self-configuration status descriptor index: %d\n",
+           last_scsd_ind);
+    printf("  self-configuration status descriptor length: %d dwords\n",
+           smp_resp[12]);
+    if (16 == smp_resp[12]) {
+        printf("      <<assume that value is not dwords but bytes>>\n");
+        scsd_len = smp_resp[12];
+    } else
+        scsd_len = smp_resp[12] * 4;
+    num_scsd = smp_resp[19];
+    printf("  number of self-configuration status descriptors: %d\n",
+           num_scsd);
+    if (scsd_len < 16) {
         fprintf(stderr, "Unexpectedly low descriptor length: %d bytes\n",
-                bd_len);
+                scsd_len);
         ret = -1;
         goto err_out;
     }
-    bdp = smp_resp + 12;
-    for (k = 0; k < num_bd; ++k, bdp += bd_len) {
-        printf("   Descriptor %d:\n", k + 1);
-        if (verbose || (btype_hdr != (bdp[0] & 0xf)))
-            printf("     broadcast type: %d\n", bdp[0] & 0xf);
-        if (0xff == bdp[1])
-            printf("     no specific phy id\n");
-        else
-            printf("     phy id: %d\n", bdp[1]);
-        printf("     broadcast reason: %d\n", bdp[2] & 0xf);
-        printf("     broadcast count: %d\n", (bdp[4] << 8) + bdp[5]);
+    scsdp = smp_resp + 20;
+    for (k = 0; k < num_scsd; ++k, scsdp += scsd_len) {
+        printf("   Descriptor %d [index=%d]:\n", k + 1, sscsd_ind + k);
+        printf("     status: 0x%x\n", scsdp[0]);
+        printf("     final: %d\n", scsdp[1] & 1);
+        printf("     phy id: %d\n", scsdp[3]);
+        printf("     sas address: 0x");
+        for (j = 0; j < 8; ++j)
+            printf("%02x", scsdp[8 + j]);
+        printf("\n");
         if (verbose > 1) {
-            printf("     ");
-            for (j = 0; j < bd_len; ++j)
-                printf("%02x ", bdp[j]);
+            printf("     in hex: ");
+            for (j = 0; j < scsd_len; ++j)
+                printf("%02x ", scsdp[j]);
             printf("\n");
         }
     }

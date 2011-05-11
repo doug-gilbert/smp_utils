@@ -5,7 +5,7 @@
 # 'zoning_ex.sh' script. If run multiple times or without a
 # prior 'zoning_ex.sh' script, then this script is harmless.
 
-if [ "-h" = $1 -o "--help" = $1 ] ; then
+if [ "-h" = $1 ] || [ "--help" = $1 ] ; then
     echo "Usage: dis_zoning_ex.sh [<smp_dev>]"
     echo "  where:"
     echo "    <smp_dev>     expander device node"
