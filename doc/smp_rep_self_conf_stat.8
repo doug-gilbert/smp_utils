@@ -3,9 +3,9 @@
 smp_rep_self_conf_stat \- invoke REPORT SELF-CONFIGURATION STATUS SMP function
 .SH SYNOPSIS
 .B smp_rep_self_conf_stat
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=SDI\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR]
+[\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=SDI\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-one\fR] [\fI\-\-raw\fR]
+[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -20,6 +20,10 @@ present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 maximum connection time limit.
+.TP
+\fB\-b\fR, \fB\-\-brief\fR
+lessen the amount of header information output and compress each self
+confuration status descriptor to one line of output.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -42,6 +46,10 @@ interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
+\fB\-o\fR, \fB\-\-one\fR
+If multiple self-configuration status descriptors are found, then only
+output the first one.
+.TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response (less the CRC field) to stdout in binary. All error
 messages are sent to stderr.
@@ -58,6 +66,13 @@ increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.SH NOTES
+The "last self-configuration status descriptor index" field in the response
+seems to indicate the lowest index of the last "clump" of status descriptors
+placed in the expander's storage. This utility flags that descriptor in its
+output with a ">>>" indication. For brief output the descriptor line starts
+with ">>>" while for normal output (i.e. when \fI\-\-brief\fR not given) the
+index has ">>>" placed in front of it.
 .SH CONFORMING TO
 The SMP REPORT SELF-CONFIGURATION STATUS function was introduced in SAS\-2 .
 .SH AUTHORS
