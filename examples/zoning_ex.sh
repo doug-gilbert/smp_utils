@@ -8,6 +8,7 @@
 # PERMISSION_FILE while the mapping of expander phy_ids to zone
 # groups in in the PHYINFO_FILE.
 
+if [ $1 ] ; then
 if [ "-h" = $1 ] || [ "--help" = $1 ] ; then
     echo "Usage: zoning_ex.sh [<smp_dev> [<permf> [<pconf>]]]"
     echo "  where:"
@@ -19,6 +20,7 @@ if [ "-h" = $1 ] || [ "--help" = $1 ] ; then
     echo "<permf> and <pconf> files. If these are not given, they default"
     echo "to values coded within this script which may need editing."
     exit 0
+fi
 fi
 
 # Set SMP_DEV to the first argument given to this script or the fixed
