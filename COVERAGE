@@ -32,7 +32,7 @@ REPORT PHY EVENT                      2                smp_rep_phy_event
 REPORT PHY EVENT LIST                 2                smp_rep_phy_event_list
 REPORT PHY SATA                       1, 2             smp_rep_phy_sata
 REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
-REPORT SELF-CONFIGURATION STATUS      2    
+REPORT SELF-CONFIGURATION STATUS      2                smp_rep_self_conf_stat
 REPORT ZONE MANAGER PASSWORD          2                smp_rep_zone_man_pass
 REPORT ZONE PERMISSION TABLE          2                smp_rep_zone_perm_tbl
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
@@ -49,7 +49,7 @@ ZONED BROADCAST                       2                smp_zoned_broadcast
 
 There are 27 SMP functions defined in sas2r16.pdf plus 2 (or 4 since
 the latter 2 replace the former 2) defined in SFF-8485.
-smp_utils currently implements 27 functions (including 2 that are defined
+smp_utils currently implements 28 functions (including 2 that are defined
 in SFF-8485).
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
@@ -64,8 +64,8 @@ of changes have been made to the SMP functions in the SPL draft.
 Work is ongoing on a SAS-3 standard in which a phy can run up to
 12 Gbps. The document containing the SMP functions corresponding
 to SAS-3 is called SPL-2 and the first draft was recently
-announced by t10.
+placed on the t10 ftp site.
 
 
 Doug Gilbert
-9th May 2011
+10th May 2011
