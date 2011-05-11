@@ -46,18 +46,18 @@
  * outputs its response.
  */
 
-static char * version_str = "1.00 20110510";
+static char * version_str = "1.00 20110511";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
-#define MAX_SCSD_PER_RESP ((1024 - 20) / 16)
-
 
 static struct option long_options[] = {
+        {"brief", 0, 0, 'b'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"one", 0, 0, 'o'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
@@ -68,12 +68,13 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_self_conf_stat [--help] [--hex] [--index=SDI]\n"
-          "                              [--interface=PARAMS] [raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                              [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "smp_rep_self_conf_stat [--brief] [--help] [--hex] [--index=SDI]\n"
+          "                              [--interface=PARAMS] [--one] [raw]\n"
+          "                              [--sa=SAS_ADDR] [--verbose] "
+          "[--version]\n"
+          "                              SMP_DEVICE[,N]\n"
           "  where:\n"
+          "    --brief|-b              lessen the amount output\n"
           "    --help|-h               print out usage message\n"
           "    --hex|-H                print response in hexadecimal\n"
           "    --index=SDI|-i SDI      SDI is starting self-configuration "
@@ -81,6 +82,7 @@ static void usage()
           "                            descriptor index (def: 1)\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --one|-o                only output first descriptor\n"
           "    --raw|-r                output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -102,13 +104,73 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
+static char *
+find_status_description(int status, char * buff, int buff_len)
+{
+    const char * cp = NULL;
+
+    switch (status) {
+    case 0x0: cp = "reserved"; break;
+    case 0x1: cp = "error not related to a specific layer"; break;
+    case 0x2: cp = "trying to connect to SMP target {SA}"; break;
+    case 0x3: cp = "route table full, unable to add {SA}"; break;
+    case 0x4: cp = "expander out of resources"; break;
+    case 0x20: cp = "error reported by phy layer"; break;
+    case 0x21: cp = "all phys including {PI} lost dword sync"; break;
+    case 0x40: cp = "error reported by link layer"; break;
+    case 0x41: cp = "open timeout timer expired"; break;
+    case 0x42: cp = "received an abandon-class open-reject"; break;
+    case 0x43: cp = "vendor specific number of retry-class"; break;
+    case 0x44: cp = "I_T nexus loss occurred"; break;
+    case 0x45: cp = "connection request, received break"; break;
+    case 0x46: cp = "SMP response frame CRC error"; break;
+    case 0x60: cp = "error reported by port layer"; break;
+    case 0x61: cp = "SMP response frame timeout"; break;
+    case 0x80: cp = "error reported by SMP transport layer"; break;
+    case 0xa0: cp = "error reported by management app layer"; break;
+    case 0xa1: cp = "SMP response frame is too short"; break;
+    case 0xa2: cp = "SMP response contains invalid fields"; break;
+    case 0xa3: cp = "SMP response contains inconsistent fields"; break;
+    case 0xa4: cp = "{SA} has configuring bit set"; break;
+    case 0xa5: cp = "{SA} has self configuring bit set"; break;
+    case 0xa6: cp = "{SA} has zone configuring bit set"; break;
+    default:
+        if (status < 0x20)
+            cp = "reserved for status not related to specific layer";
+        else if (status < 0x40)
+            cp = "reserved for status reported by phy layer";
+        else if (status < 0x60)
+            cp = "reserved for status reported by link layer";
+        else if (status < 0x80)
+            cp = "reserved for status reported by port layer";
+        else if (status < 0xa0)
+            cp = "reserved for status reported by SMP transport layer";
+        else if (status < 0xc0)
+            cp = "reserved for status reported by management app layer";
+        else if (status < 0xe0)
+            cp = "reserved";
+        else
+            cp = "vendor specific";
+    }
+    if (buff) {
+        if (cp && (buff_len > 0)) {
+            strncpy(buff, cp, buff_len - 1);
+            buff[buff_len - 1] = '\0';
+        } else if (buff_len > 0)
+            buff[0] = '\0';
+    }
+    return buff;
+}
+
 
 int main(int argc, char * argv[])
 {
     int res, c, k, j, len, sscsd_ind, last_scsd_ind, scsd_len, num_scsd;
-    int tot_num_scsd;
+    int tot_num_scsd, ind, status;
+    int do_brief = 0;
     int do_hex = 0;
     int index = 1;
+    int do_one = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -123,6 +185,7 @@ int main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
+    const char * last_recp;
     unsigned char * scsdp;
     int ret = 0;
 
@@ -130,12 +193,15 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHi:I:rs:vV", long_options,
+        c = getopt_long(argc, argv, "bhHi:I:ors:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'b':
+            ++do_brief;
+            break;
         case 'h':
         case '?':
             usage();
@@ -154,6 +220,9 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
+            break;
+        case 'o':
+            ++do_one;
             break;
         case 'r':
             ++do_raw;
@@ -326,18 +395,22 @@ int main(int argc, char * argv[])
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
     sscsd_ind = (smp_resp[6] << 8) + smp_resp[7];
-    printf("  starting self-configuration status descriptor index: %d\n",
-           sscsd_ind);
+    if (0 == do_brief)
+        printf("  starting self-configuration status descriptor index: %d\n",
+               sscsd_ind);
     tot_num_scsd = (smp_resp[8] << 8) + smp_resp[9];
     printf("  total number of self-configuration status descriptors: %d\n",
            tot_num_scsd);
     last_scsd_ind = (smp_resp[10] << 8) + smp_resp[11];
-    printf("  last self-configuration status descriptor index: %d\n",
-           last_scsd_ind);
-    printf("  self-configuration status descriptor length: %d dwords\n",
-           smp_resp[12]);
+    if (0 == do_brief) {
+        printf("  last self-configuration status descriptor index: %d\n",
+               last_scsd_ind);
+        printf("  self-configuration status descriptor length: %d dwords\n",
+               smp_resp[12]);
+    }
     if (16 == smp_resp[12]) {
-        printf("      <<assume that value is not dwords but bytes>>\n");
+        if (0 == do_brief)
+            printf("      <<assume that value is not dwords but bytes>>\n");
         scsd_len = smp_resp[12];
     } else
         scsd_len = smp_resp[12] * 4;
@@ -351,12 +424,20 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     scsdp = smp_resp + 20;
-    for (k = 0; k < num_scsd; ++k, scsdp += scsd_len) {
-        printf("   Descriptor %d [index=%d]:\n", k + 1, sscsd_ind + k);
-        printf("     status: 0x%x\n", scsdp[0]);
-        printf("     final: %d\n", scsdp[1] & 1);
-        printf("     phy id: %d\n", scsdp[3]);
-        printf("     sas address: 0x");
+    for (k = 0, ind = sscsd_ind; k < num_scsd; ++k, scsdp += scsd_len) {
+        status = scsdp[0];
+        last_recp = (ind == last_scsd_ind) ? ">>> " : "";
+        if (do_brief)
+            printf("    %s%d [%d]: status=0x%x flag=%d pi=%d sa=0x",
+                   last_recp, k + 1, ind, status, scsdp[1] & 1, scsdp[3]);
+        else {
+            printf("   Descriptor %d [%sindex=%d]:\n", k + 1, last_recp, ind);
+            printf("     status: %s [0x%x]\n",
+                   find_status_description(status, b, sizeof(b)), status);
+            printf("     final: %d\n", scsdp[1] & 1);
+            printf("     phy id: %d\n", scsdp[3]);
+            printf("     sas address: 0x");
+        }
         for (j = 0; j < 8; ++j)
             printf("%02x", scsdp[8 + j]);
         printf("\n");
@@ -366,6 +447,12 @@ int main(int argc, char * argv[])
                 printf("%02x ", scsdp[j]);
             printf("\n");
         }
+        if (ind > 0xfffe)
+            ind = 1;
+        else
+            ++ind;
+        if (do_one)
+            break;
     }
 
 err_out:

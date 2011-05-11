@@ -19,7 +19,8 @@
 # ZG9 initiators can talk to ZG17 + ZG24 targets; etc until
 # ZG15 initiators can talk to ZG23 + ZG24 targets.
 # So initiators (ZG8-15) can talk to ZG24 targets.
-# Additionally ZG8 can access ZG2-3 (so can send zoning and phy changes).
+# Also ZG8 can access ZG2-3 (so can send zoning and phy changes)
+# and ZG9 can access ZG3 (so ZG9 (and ZG8) can send ZONED BROADCAST)
 #
 # N.B. Since SCSI is big endian, the lower bit positions are to the right.
 # Let initiators see themselves (so ZP[8,8]=1 etc).
@@ -32,7 +33,7 @@
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
 ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,1,2
-0,0,0,0,0,0,0,0 0,0,0,0,0,0,1,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,3,2
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
