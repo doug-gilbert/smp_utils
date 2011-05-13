@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.24 20110508";    /* spl2r00 */
+static char * version_str = "1.25 20110512";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -740,7 +740,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
     unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull, adn;
     unsigned long long expander_sa;
-    int res, ret, len, k, j, num, off, plus, negot, adt, zg;
+    int ret, len, k, j, num, off, plus, negot, adt, zg;
     char b[256];
     int first = 1;
     const char * cp;
@@ -785,19 +785,18 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             if (optsp->sa_given && (optsp->sa != expander_sa))
                 printf("  <<< Warning: reported expander address is not the "
                        "one requested >>>\n");
-            printf("Device <%016llx>, expander%s:\n", expander_sa,
-                   (optsp->do_brief ? " (only connected phys shown)" : ""));
+            printf("Device <%016llx>, expander:\n", expander_sa);
         }
         if (optsp->do_hex || optsp->do_raw)
             continue;
 
-        res = ((0x70 & smp_resp[12]) >> 4);
-        if ((optsp->do_brief > 0) && (0 == res))
-            continue;
         if (optsp->do_list) {
             do_single_list(smp_resp, len, 0, optsp->do_brief);
             continue;
         }
+        adt = ((0x70 & smp_resp[12]) >> 4);
+        if ((optsp->do_brief > 1) && (0 == adt))
+            continue;
 
         negot = smp_resp[13] & 0xf;
         switch(smp_resp[44] & 0xf) {
@@ -834,6 +833,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                    cp);
             continue;
         }
+        if ((optsp->do_brief > 0) && (0 == adt))
+            continue;
         if (k != smp_resp[9])
             fprintf(stderr, ">> requested phy_id=%d differs from response "
                     "phy=%d\n", k, smp_resp[9]);
@@ -843,7 +844,6 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                 ull <<= 8;
             ull |= smp_resp[24 + j];
         }
-        adt = ((0x70 & smp_resp[12]) >> 4);
         if ((0 == adt) || (adt > 3)) {
             printf("  phy %3d:%s:attached:[0000000000000000:00]\n", k, cp);
             continue;
