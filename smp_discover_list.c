@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.15 20110508";    /* spl2r00 */
+static char * version_str = "1.16 20110512";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -762,8 +762,9 @@ decode_1line(const unsigned char * resp, int offset, int desc,
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
-    if ((0 == optsp->verbose) && (0 == adt) && optsp->do_brief)
+    if ((0 == optsp->verbose) && (0 == adt) && (optsp->do_brief > 1))
         return 0;
+
     switch (route_attr) {
     case 0:
         cp = "D";
@@ -794,6 +795,8 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("  phy %3d:%s:reset in progress\n", phy_id, cp);
         return 0;
     }
+    if ((0 == optsp->verbose) && (0 == adt) && optsp->do_brief)
+        return 0;
     ull = 0;
     for (j = 0; j < 8; ++j) {
         if (j > 0)

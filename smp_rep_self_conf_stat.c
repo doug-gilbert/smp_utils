@@ -46,7 +46,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.00 20110511";
+static char * version_str = "1.00 20110512";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
@@ -57,6 +57,7 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"last", 0, 0, 'l'},
         {"one", 0, 0, 'o'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
@@ -69,7 +70,8 @@ static void usage()
 {
     fprintf(stderr, "Usage: "
           "smp_rep_self_conf_stat [--brief] [--help] [--hex] [--index=SDI]\n"
-          "                              [--interface=PARAMS] [--one] [raw]\n"
+          "                              [--interface=PARAMS] [--last] "
+          "[--one] [raw]\n"
           "                              [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
           "                              SMP_DEVICE[,N]\n"
@@ -82,6 +84,8 @@ static void usage()
           "                            descriptor index (def: 1)\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --last|-l               output descriptors starting at last "
+          "recorded\n"
           "    --one|-o                only output first descriptor\n"
           "    --raw|-r                output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
@@ -170,6 +174,7 @@ int main(int argc, char * argv[])
     int do_brief = 0;
     int do_hex = 0;
     int index = 1;
+    int do_last = 0;
     int do_one = 0;
     int do_raw = 0;
     int verbose = 0;
@@ -193,7 +198,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bhHi:I:ors:vV", long_options,
+        c = getopt_long(argc, argv, "bhHi:I:lors:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -220,6 +225,9 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
+            break;
+        case 'l':
+            ++do_last;
             break;
         case 'o':
             ++do_one;
@@ -309,6 +317,7 @@ int main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+last_again:
     len = (sizeof(smp_resp) - 8) / 4;
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
     smp_req[6] = (index >> 8) & 0xff;
@@ -370,7 +379,8 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "Report self-configuration status result: "
                         "%s\n", smp_get_func_res_str(ret, sizeof(b), b));
         }
-        goto err_out;
+        if (! (do_last && (0 == ret)))
+            goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
         fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
@@ -390,6 +400,17 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
+
+    last_scsd_ind = (smp_resp[10] << 8) + smp_resp[11];
+    if ((do_last > 0) && (last_scsd_ind > 0) && (index != last_scsd_ind)) {
+        --do_last;
+        memset(smp_req, 0, sizeof(smp_req));
+        smp_req[0] = SMP_FRAME_TYPE_REQ;
+        smp_req[1] = SMP_FN_REPORT_SELF_CONFIG;
+        smp_req[3] = 1;
+        index = last_scsd_ind;
+        goto last_again;
+    }
     printf("Report self-configuration status response:\n");
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (verbose || res)
@@ -401,7 +422,6 @@ int main(int argc, char * argv[])
     tot_num_scsd = (smp_resp[8] << 8) + smp_resp[9];
     printf("  total number of self-configuration status descriptors: %d\n",
            tot_num_scsd);
-    last_scsd_ind = (smp_resp[10] << 8) + smp_resp[11];
     if (0 == do_brief) {
         printf("  last self-configuration status descriptor index: %d\n",
                last_scsd_ind);

@@ -2,7 +2,7 @@ smp-utils (0.96-0.1) unstable; urgency=low
 
   * add zoning for SAS-2
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Tue, 10 May 2011 22:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Fri, 13 May 2011 15:00:00 -0400
 
 smp-utils (0.95-0.1) unstable; urgency=low
 
