@@ -4,7 +4,7 @@ smp_rep_self_conf_stat \- invoke REPORT SELF-CONFIGURATION STATUS SMP function
 .SH SYNOPSIS
 .B smp_rep_self_conf_stat
 [\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=SDI\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-one\fR] [\fI\-\-raw\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-last\fR] [\fI\-\-one\fR] [\fI\-\-raw\fR]
 [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
@@ -46,6 +46,15 @@ interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
+\fB\-l\fR, \fB\-\-last\fR
+Sends a REPORT SELF-CONFIGURATION STATUS request to find out the contents
+of the "last self-configuration status descriptor index" field in the
+response. If it is different from \fISDI\fR then it re-issues that request
+with the "starting self-configuration status descriptor index" field set
+to the "last" value. Often only the last (i.e. most recent) recorded
+descriptor is of interest and that is what this option should show. In
+cases there may be more than one descriptor starting at the last index.
+.TP
 \fB\-o\fR, \fB\-\-one\fR
 If multiple self-configuration status descriptors are found, then only
 output the first one.
@@ -68,11 +77,13 @@ increase the verbosity of the output. Can be used multiple times.
 print the version string and then exit.
 .SH NOTES
 The "last self-configuration status descriptor index" field in the response
-seems to indicate the lowest index of the last "clump" of status descriptors
-placed in the expander's storage. This utility flags that descriptor in its
-output with a ">>>" indication. For brief output the descriptor line starts
-with ">>>" while for normal output (i.e. when \fI\-\-brief\fR not given) the
-index has ">>>" placed in front of it.
+may indicate the lowest index of the last recorded (i.e. most recent) "clump"
+of status descriptors placed in the expander's storage.
+.PP
+This utility flags the "last self-configuration status descriptor index"
+descriptor in its output with a ">>>" indication. For brief output the
+descriptor line starts with ">>>" while for normal output (i.e. when
+\fI\-\-brief\fR not given) the index has ">>>" placed in front of it.
 .SH CONFORMING TO
 The SMP REPORT SELF-CONFIGURATION STATUS function was introduced in SAS\-2 .
 .SH AUTHORS
