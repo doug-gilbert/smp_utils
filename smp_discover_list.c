@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.16 20110512";    /* spl2r00 */
+static char * version_str = "1.17 20110514";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -88,6 +88,7 @@ struct opts_t {
     int do_num;
     int do_1line;
     int phy_id;
+    int phy_id_given;
     int do_raw;
     int do_summary;
     int verbose;
@@ -126,7 +127,9 @@ usage()
           "or end device\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
-          "    --ignore|-i          sets the Ignore Zone Group bit\n"
+          "    --ignore|-i          sets the Ignore Zone Group bit; "
+          "will show\n"
+          "                         phys otherwise hidden by zoning\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --list|-l            output attribute=value, 1 per line\n"
@@ -134,8 +137,7 @@ usage()
           "(def: 1)\n"
           "    --one|-o             one line output per response "
           "descriptor (phy)\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0) [starting "
-          "phy id]\n"
+          "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -146,12 +148,15 @@ usage()
     fprintf(stderr,
           "    --summary|-S         output 1 line per active phy; "
           "typically\n"
-          "                         equivalent to: '-o -d 1 -n 254 -b'\n"
+          "                         equivalent to: '-o -d 1 -n 254 -b' .\n"
+          "                         This option is assumed if '--phy=ID' "
+          "not given\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs one or more SMP DISCOVER LIST functions. With "
-          "'--summary' the\ndisposition of each active phy in an expander "
-          "is shown in table form.\n"
+          "Performs one or more SMP DISCOVER LIST functions. If '--phy=ID' "
+          "not given\nthen '--summary' is assumed. The '--summary' option "
+          "shows the disposition\nof each active expander phy in table "
+          "form.\n"
           );
 }
 
@@ -167,8 +172,8 @@ dStrRaw(const char* str, int len)
 static char * smp_attached_device_type[] = {
     "no device attached",
     "end device",
-    "expander device",
-    "expander device (fanout)",
+    "expander device",            /* was 'edge expander' in SAS-1.1 */
+    "expander device (fanout)",   /* marked as obsolete in SAS-2.0 */
     "reserved [4]",
     "reserved [5]",
     "reserved [6]",
@@ -989,6 +994,7 @@ main(int argc, char * argv[])
                         "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++opts.phy_id_given;
             break;
         case 'r':
             ++opts.do_raw;
@@ -1074,14 +1080,16 @@ main(int argc, char * argv[])
             }
         }
     }
-    if (! opts.desc_type_given) {
+    if ((0 == opts.do_summary) && (0 == opts.phy_id_given))
+        ++opts.do_summary;
+    if (0 == opts.desc_type_given) {
         opts.desc_type = opts.do_brief ? 1 : 0;
         if (opts.do_adn)
             opts.desc_type = 0;
     }
     if (opts.do_summary) {
         ++opts.do_brief;
-        if (0 == opts.do_adn)
+        if ((0 == opts.desc_type_given) && (0 == opts.do_adn))
             opts.desc_type = 1;
         opts.do_1line = 1;
         opts.do_num = 254;

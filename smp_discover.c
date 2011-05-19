@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.25 20110512";    /* spl2r00 */
+static char * version_str = "1.26 20110514";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -63,6 +63,7 @@ struct opts_t {
     int multiple;
     int do_num;
     int phy_id;
+    int phy_id_given;
     int do_raw;
     int do_summary;
     int verbose;
@@ -110,7 +111,9 @@ usage()
           "times\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
-          "    --ignore|-i          sets the Ignore Zone Group bit\n"
+          "    --ignore|-i          sets the Ignore Zone Group bit; "
+          "will show\n"
+          "                         phys otherwise hidden by zoning\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --list|-l            output attribute=value, 1 per line\n"
@@ -119,8 +122,7 @@ usage()
           "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
           "is given\n"
           "                         (def: 0 -> the rest)\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0) [starting "
-          "phy id]\n"
+          "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -131,15 +133,18 @@ usage()
           "    --summary|-S         query phys, output 1 line for each "
           "active one,\n"
           "                         equivalent to '--multiple --brief' "
-          "('-mb')\n"
+          "('-mb').\n"
+          "                         This option is assumed if '--phy=ID' "
+          "not given\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "
           "field,\n"
           "                         may be required prior to SAS-2\n\n"
-          "Sends one or more SMP DISCOVER functions. With '--summary' the "
-          "disposition of\neach active phy in an expander is shown in "
-          "table form.\n"
+          "Sends one or more SMP DISCOVER functions. If '--phy=ID' not "
+          "given then\n'--summary' is assumed. The '--summary' option "
+          "shows the disposition\nof each active expander phy in table "
+          "form.\n"
           );
 }
 
@@ -155,8 +160,8 @@ dStrRaw(const char* str, int len)
 static char * smp_attached_device_type[] = {
     "no device attached",
     "end device",
-    "expander device",
-    "expander device (fanout)",
+    "expander device",            /* was 'edge expander' in SAS-1.1 */
+    "expander device (fanout)",   /* marked as obsolete in SAS-2.0 */
     "reserved [4]",
     "reserved [5]",
     "reserved [6]",
@@ -785,7 +790,11 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             if (optsp->sa_given && (optsp->sa != expander_sa))
                 printf("  <<< Warning: reported expander address is not the "
                        "one requested >>>\n");
+#if 0
+            /* for compatibility with smp_discover_list which does not
+             * know its own SAS address with short descriptors */
             printf("Device <%016llx>, expander:\n", expander_sa);
+#endif
         }
         if (optsp->do_hex || optsp->do_raw)
             continue;
@@ -1015,6 +1024,7 @@ main(int argc, char * argv[])
                         "value from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++opts.phy_id_given;
             break;
         case 'r':
             ++opts.do_raw;
@@ -1103,6 +1113,8 @@ main(int argc, char * argv[])
             }
         }
     }
+    if ((0 == opts.do_summary) && (0 == opts.phy_id_given))
+        ++opts.do_summary;
     if (opts.do_summary) {
         ++opts.do_brief;
         opts.multiple = 1;
