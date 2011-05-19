@@ -20,6 +20,14 @@ The mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
 and needs the additional \fI,N\fR to differentiate between HBAs if there are
 multiple present.
 .PP
+If the \fI\-\-phy=ID\fR option is not given then \fI\-\-summary\fR is
+assumed. When \fI\-\-summary\fR is given or assumed, this utility shows
+the disposition of each active expander phy in table form. One row is shown
+for each phy and is described in the SINGLE LINE PER PHY FORMAT section
+below. For this purpose disabled and errored expander phys are
+considered "active" and can be suppressed from the output by adding the
+\fI\-\-brief\fR option.
+.PP
 The DISCOVER LIST response may contain up to 8 descriptors when
 the "descriptor type" field in the request is set to
 0 (e.g. \fI\-\-descriptor=0\fR). The DISCOVER LIST response may contain up
@@ -50,7 +58,9 @@ is placed in the descriptors of this function's response.
 set the filter field in the request. When \fIFI\fR is 0 (default) fetch
 descriptors for all phys. When \fIFI\fR is 1 only fetch descriptors for
 phys attached to expanders. When \fIFI\fR is 2 only fetch descriptors for
-phys attached to expanders or end devices.
+phys attached to expanders or end devices. When \fIFI\fR is 1 or 2, expander
+phys that would yield "phy vacant" (indicating they are hidden by zoning)
+are filtered out.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -81,7 +91,7 @@ indented lines for each descriptor in the response. See the section
 below on SINGLE LINE PER PHY FORMAT.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
+phy identifier. \fIID\fR is a value between 0 and 254.
 This is the lowest numbered phy id to attempt fetch in the response.
 Note that due to the filter field setting, the first phy id in
 the response may be greater than the argument to this option.
@@ -110,8 +120,8 @@ increase the verbosity of the output. Can be used multiple times.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH SINGLE LINE PER PHY FORMAT
-The \fI\-\-one\fR option causes SMP DISCOVER LIST descriptors to be
-compressed to a header section followed by one line per phy. To save
+The \fI\-\-summary\fR (or \fI\-\-one\fR) option causes SMP DISCOVER LIST
+descriptors to be compressed to one line per phy. To save
 space SAS addresses are shown in hex without a '0x' prefix or 'h' suffix.
 The header section outputs information found in the DISCOVER LIST response's
 header section.
@@ -161,6 +171,15 @@ should be its target device name (in NAA-5 format) and for a SATA disk its
 WWN (if provided, also in NAA-5 format). Also when the \fI\-\-adn\fR option
 is given the phy speed and zone group are not output in order to keep the
 line length reasonable.
+.SH NOTES
+In SAS\-2 and later both the DISCOVER and DISCOVER LIST functions are
+available. The DISCOVER LIST function should be favoured for several
+reasons: its response can hold up to 40 descriptors each describing the
+state of one expander phy. The vast majority of expander chips on the market
+support 36 phys or less so one DISCOVER LIST response will summarize the
+states of all its phys. With the DISCOVER function only one expander phy's
+state is returned in its response. Other advantages of the DISCOVER LIST
+function are its "phy filter" and "descriptor type" function request fields.
 .SH CONFORMING TO
 The SMP DISCOVER LIST function was introduced in SAS\-2 .
 .SH AUTHORS
