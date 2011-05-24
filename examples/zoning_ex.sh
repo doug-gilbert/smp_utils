@@ -140,20 +140,20 @@ fi
 echo
 
 
-# To see if anything has happened, so a "summary" smp_discover_list
-# which uses the SMP DISCOVER LIST function.
-echo "smp_discover_list --summary $SMP_DEV"
-smp_discover_list --summary $SMP_DEV
+# To see if anything has happened, call smp_discover_list which uses
+# the SMP DISCOVER LIST function.
+echo "smp_discover_list $SMP_DEV"
+smp_discover_list $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_smp_discover_list failed with exit status: $res"
 fi
 echo
 
-# Do "summary" smp_discover_list again this time with the
-# "ignore zone group" bit set.
-echo "smp_discover_list --ignore -S $SMP_DEV"
-smp_discover_list --ignore -S $SMP_DEV
+# Do smp_discover_list again this time with the "ignore zone group"
+# bit set.
+echo "smp_discover_list --ignore $SMP_DEV"
+smp_discover_list --ignore $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_smp_discover_list failed with exit status: $res"

@@ -57,10 +57,10 @@ is placed in the descriptors of this function's response.
 \fB\-f\fR, \fB\-\-filter\fR=\fIFI\fR
 set the filter field in the request. When \fIFI\fR is 0 (default) fetch
 descriptors for all phys. When \fIFI\fR is 1 only fetch descriptors for
-phys attached to expanders. When \fIFI\fR is 2 only fetch descriptors for
-phys attached to expanders or end devices. When \fIFI\fR is 1 or 2, expander
-phys that would yield "phy vacant" (indicating they are hidden by zoning)
-are filtered out.
+phys attached to (other) expanders. When \fIFI\fR is 2 only fetch
+descriptors for phys attached to expanders or end devices. When \fIFI\fR
+is 1 or 2, expander phys that would yield "phy vacant" (indicating they
+are hidden by zoning) are filtered out.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.

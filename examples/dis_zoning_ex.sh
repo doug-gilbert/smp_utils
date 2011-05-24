@@ -76,12 +76,16 @@ fi
 echo
 
 
-# To see if anything has happened, so a "summary" smp_discover_list
-# which uses the SMP DISCOVER LIST function.
-echo "smp_discover_list --summary $SMP_DEV"
-smp_discover_list --summary $SMP_DEV
+# To see if anything has happened, call smp_discover_list which uses
+# the SMP DISCOVER LIST function.
+echo "smp_discover_list $SMP_DEV"
+smp_discover_list $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_smp_discover_list failed with exit status: $res"
 fi
 echo
+# Note that if zoning was previous in effect then the zone groups are
+# still shown in the smp_discover_list utility output. However because
+# zoning is disabled, the zone groups have no effect. Also the zone
+# permission table is still in place but inactive.
