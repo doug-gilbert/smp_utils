@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.19 20110502";    /* sas2r15 */
+static char * version_str = "1.19 20110521";    /* sas2r15 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -454,7 +454,7 @@ main(int argc, char * argv[])
            (smp_resp[64] << 8) + smp_resp[65]);
     printf("  maximum number of stored phy event list "
            "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
-    printf("  STP reject to open limit: %d\n",
+    printf("  STP reject to open limit: %d (unit: 10us)\n",
            (smp_resp[68] << 8) + smp_resp[69]);
 
 err_out:

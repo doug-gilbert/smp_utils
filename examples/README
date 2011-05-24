@@ -11,7 +11,7 @@ The zoning_ex.sh script will override any zoning configuration in
 place prior to its invocation. The zoning_ex.sh script does not save
 any of its new settings to non-volatile storage on the expander. So
 if experimentation fails, resetting or power cycling the expander
-will restore the previous settings.
+will restore the previous settings **.
 
 The zoning_ex.sh script is relatively generic with the tailoring to
 a set of zone permissions and mapping of expander phys to zone groups
@@ -20,7 +20,30 @@ being done either by two files in this directory:
     pconf_2i2t.txt
 or, alternatively the permission file and the phy info file can be given
 on the script command line (following the expander device node name).
+Note that if pconf_2i2t.txt is used then phy ids will most likely need
+to be changed to match which cable is connected to which expander
+phy. [Suggestion: examine the output of smp_discover closely to determine
+which expander phys are connected to what.]
+
+The zone permissions can be read back from the expander with the REPORT
+ZONE PERMISSION TABLE function (smp_rep_zone_perm_tbl utility). After
+zoning has been set up the smp_rep_zone_perm_tbl is called twice, the
+second time with the --nocomma option, and the output is in these files:
+    rep_permf_8i9t.txt
+    rep_nocom_permf_8i9t.txt
+Note that the input permission file (i.e. permf_8i9t.txt) was formatted
+as if there are only 128 zone groups but the output shows there are
+actually 256 zone groups. The expander obviously can cope with this. Also
+the smp_rep_zone_perm_tbl utility was called without --multiple so less
+than 256 source zone groups are returned. This does not matter since
+no zone group above 30 is being used, so all the remaining rows have their
+default settings.
+
+** Just in case the zone permission table or the zone phy information
+   is saved, these default files are provided:
+      def_permf.txt
+      def_pconf.txt
 
 
 Doug Gilbert
-8th May 2011
+24th May 2011

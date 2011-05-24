@@ -5,7 +5,7 @@ smp_discover \- invoke DISCOVER SMP function
 .B smp_discover
 [\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-ignore\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-list\fR]
-[\fI\-\-multiple\fR] [\fI\-\-num=NUM\fR] [\fI\-\-phy=ID\fR]
+[\fI\-\-multiple\fR] [\fI\-\-my\fR] [\fI\-\-num=NUM\fR] [\fI\-\-phy=ID\fR]
 [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-summary\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
@@ -68,6 +68,13 @@ first, then phy 1, continuing until an error occurs. If \fI\-\-brief\fR is
 given then there is no output for phys that indicate there is no attached
 device; when used twice additionally trims the output line of attached phys.
 See the section below on SINGLE LINE PER PHY FORMAT.
+.TP
+\fB\-M\fR, \fB\-\-my\fR
+outputs my (this expander's) SAS address in hex (prefixed by "0x"). This
+is obtained from the DISCOVER response of phy id 0 (unless \fI\-\-phy=ID\fR
+is given). The expander's SAS address is typically available even if a phy
+is not connected, "vacant" or disabled. This option overrides most other
+options (e.g. overrides \fI\-\-multiple\fR and \fI\-\-summary\fR options).
 .TP
 \fB\-n\fR, \fB\-\-num\fR=\fINUM\fR
 number of phys to fetch, starting at \fI\-\-phy=ID\fR when the

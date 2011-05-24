@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.26 20110514";    /* spl2r00 */
+static char * version_str = "1.27 20110521";    /* spl2r00 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -61,6 +61,7 @@ struct opts_t {
     int ign_zp;
     int do_list;
     int multiple;
+    int do_my;
     int do_num;
     int phy_id;
     int phy_id_given;
@@ -81,6 +82,7 @@ static struct option long_options[] = {
         {"interface", 1, 0, 'I'},
         {"list", 0, 0, 'l'},
         {"multiple", 0, 0, 'm'},
+        {"my", 0, 0, 'M'},
         {"num", 1, 0, 'n'},
         {"phy", 1, 0, 'p'},
         {"sa", 1, 0, 's'},
@@ -97,12 +99,13 @@ usage()
 {
     fprintf(stderr, "Usage: "
           "smp_discover [--adn] [--brief] [--help] [--hex] [--ignore]\n"
-          "                    [--interface=PARAMS] [--list] [--multiple] "
-          "[--num=NUM]\n"
-          "                    [--phy=ID] [--raw] [--sa=SAS_ADDR] "
-          "[--summary]\n"
-          "                    [--verbose] [--version] [--zero] "
-          "SMP_DEVICE[,N]\n"
+          "                    [--interface=PARAMS] [--list] [--my] "
+          "[--multiple]\n"
+          "                    [--num=NUM] [--phy=ID] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                    [--summary] [--verbose] [--version] "
+          "[--zero]\n"
+          "                    SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --adn|-A             output attached device name in one "
           "line per\n"
@@ -119,6 +122,7 @@ usage()
           "    --list|-l            output attribute=value, 1 per line\n"
           "    --multiple|-m        query multiple phys, output 1 line "
           "for each\n"
+          "    --my|-M              output my (expander's) SAS address\n"
           "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
           "is given\n"
           "                         (def: 0 -> the rest)\n"
@@ -529,14 +533,30 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         ret = (len < -2) ? (-4 - len) : len;
     else
         ret = 0;
+    if (optsp->do_hex || optsp->do_raw)
+        return ret;
+    ull = 0;
+    if (len > 23) {
+        /* fetch my (expander's) SAS addrss */
+        for (j = 0; j < 8; ++j) {
+            if (j > 0)
+                ull <<= 8;
+            ull |= smp_resp[16 + j];
+        }
+    }
+    if (optsp->do_my) {
+        printf("0x%llx\n", ull);
+        if ((ull > 0) && (SMP_FRES_PHY_VACANT == ret))
+            return 0;
+        else
+            return ret;
+    }
     if (ret) {
         if (SMP_FRES_PHY_VACANT == ret)
             printf("  phy identifier: %d  inaccessible (phy vacant)\n",
                    optsp->phy_id);
         return ret;
     }
-    if (optsp->do_hex || optsp->do_raw)
-        return 0;
     if (optsp->do_list)
         return do_single_list(smp_resp, len, 1, optsp->do_brief);
     printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
@@ -569,12 +589,6 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
            !!(smp_resp[15] & 8), !!(smp_resp[15] & 4),
            !!(smp_resp[15] & 2), (smp_resp[15] & 1));
 
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= smp_resp[16 + j];
-    }
     printf("  SAS address: 0x%llx\n", ull);
     ull = 0;
     for (j = 0; j < 8; ++j) {
@@ -978,7 +992,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "AbhHiI:lmn:p:rs:SvVz", long_options,
+        c = getopt_long(argc, argv, "AbhHiI:lmMn:p:rs:SvVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -1009,6 +1023,9 @@ main(int argc, char * argv[])
             break;
         case 'm':
             ++opts.multiple;
+            break;
+        case 'M':
+            ++opts.do_my;
             break;
         case 'n':
            opts.do_num = smp_get_num(optarg);
@@ -1113,7 +1130,12 @@ main(int argc, char * argv[])
             }
         }
     }
-    if ((0 == opts.do_summary) && (0 == opts.phy_id_given))
+    if (opts.do_my) {
+        opts.multiple = 0;
+        opts.do_summary = 0;
+        opts.do_num = 1;
+    } else if ((0 == opts.do_summary) && (0 == opts.multiple) &&
+               (0 == opts.do_num) && (0 == opts.phy_id_given))
         ++opts.do_summary;
     if (opts.do_summary) {
         ++opts.do_brief;

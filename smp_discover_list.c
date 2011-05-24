@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.17 20110514";    /* spl2r00 */
+static char * version_str = "1.18 20110521";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -64,7 +64,7 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"ignore", 0, 0, 'i'},
         {"interface", 1, 0, 'I'},
-        {"list", 0, 0, 'l'},
+        {"list", 0, 0, 'l'},	/* placeholder, not implemented */
         {"num", 1, 0, 'n'},
         {"one", 0, 0, 'o'},
         {"phy", 1, 0, 'p'},
@@ -82,7 +82,6 @@ struct opts_t {
     int desc_type;
     int desc_type_given;
     int filter;
-    int do_list;
     int do_hex;
     int ign_zp;
     int do_num;
@@ -104,7 +103,7 @@ usage()
           "[--filter=FI]\n"
           "                          [--help] [--hex] [--ignore] "
           "[--interface=PARAMS]\n"
-          "                          [--list] [--num=NUM] [--one] [--phy=ID] "
+          "                          [--num=NUM] [--one] [--phy=ID] "
           "[--raw]\n"
           "                          [--sa=SAS_ADDR] [--summary] "
           "[--verbose]\n"
@@ -132,7 +131,6 @@ usage()
           "                         phys otherwise hidden by zoning\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --list|-l            output attribute=value, 1 per line\n"
           "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
           "(def: 1)\n"
           "    --one|-o             one line output per response "
@@ -974,7 +972,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-            ++opts.do_list;
+	    /* just ignore, placeholder */
             break;
         case 'n':
            opts.do_num = smp_get_num(optarg);
@@ -1080,7 +1078,8 @@ main(int argc, char * argv[])
             }
         }
     }
-    if ((0 == opts.do_summary) && (0 == opts.phy_id_given))
+    if ((0 == opts.do_summary) && (0 == opts.do_1line) &&
+        (1 == opts.do_num) && (0 == opts.phy_id_given))
         ++opts.do_summary;
     if (0 == opts.desc_type_given) {
         opts.desc_type = opts.do_brief ? 1 : 0;
@@ -1181,14 +1180,14 @@ main(int argc, char * argv[])
                 fresult = resp[off + 2];    /* function result, 0 -> ok */
                 if (0 == resp_desc_type) {
                     adt = (resp[off + 12] >> 4) & 7;
-                    if (opts.verbose || adt || fresult) {
+                    if ((0 == opts.do_brief) || adt || fresult) {
                         printf("descriptor %d:\n", k + 1);
                         if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
                             ++err;
                     }
                 } else if (1 == resp_desc_type) {
                     adt = (resp[off + 2] >> 4) & 7;
-                    if (opts.verbose || adt || fresult) {
+                    if ((0 == opts.do_brief) || adt || fresult) {
                         printf("descriptor %d:\n", k + 1);
                         if (decode_desc1_multiline(resp, off, z_supported,
                                                    &opts))
@@ -1206,7 +1205,7 @@ main(int argc, char * argv[])
                 ret = SMP_LIB_CAT_OTHER;
         }
     }
-    if (zg_not1)
+    if ((zg_not1) && (0 == opts.do_brief))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
     
     res = smp_initiator_close(&tobj);
