@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.18 20110521";    /* spl2r00 */
+static char * version_str = "1.20 20110527";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -64,7 +64,7 @@ static struct option long_options[] = {
         {"hex", 0, 0, 'H'},
         {"ignore", 0, 0, 'i'},
         {"interface", 1, 0, 'I'},
-        {"list", 0, 0, 'l'},	/* placeholder, not implemented */
+        {"list", 0, 0, 'l'},    /* placeholder, not implemented */
         {"num", 1, 0, 'n'},
         {"one", 0, 0, 'o'},
         {"phy", 1, 0, 'p'},
@@ -478,8 +478,10 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
            smp_get_neg_xxx_link_rate(0xf & rp[13], sizeof(b), b));
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[14] & 8), !!(rp[14] & 4), !!(rp[14] & 2), (rp[14] & 1));
-    if (0 == optsp->do_brief)
+    if (0 == optsp->do_brief) {
         printf("  attached sata port selector: %d\n", !!(rp[15] & 0x80));
+        printf("  STP buffer too small: %d\n", !!(rp[15] & 0x10));
+    }
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[15] & 8), !!(rp[15] & 4), !!(rp[15] & 2), (rp[15] & 1));
 
@@ -601,8 +603,9 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
                smp_get_reason((0xf0 & rp[94]) >> 4, sizeof(b), b));
         printf("  negotiated physical link rate: %s\n",
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
-        printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
+        printf("  optical mode enabled: %d\n", !!(rp[95] & 0x4));
         printf("  negotiated SSC: %d\n", !!(rp[95] & 0x2));
+        printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
     }
     if (len > 107) {
         printf("  default inside ZPSDS persistent: %d\n", !!(rp[96] & 0x20));
@@ -972,7 +975,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-	    /* just ignore, placeholder */
+            /* just ignore, placeholder */
             break;
         case 'n':
            opts.do_num = smp_get_num(optarg);
