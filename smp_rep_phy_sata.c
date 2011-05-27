@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.10 20110501";
+static char * version_str = "1.11 20110524";
 
 #define SMP_FN_REPORT_PHY_SATA_RESP_LEN 72
 
@@ -75,8 +75,9 @@ static void usage()
           "[--zero]\n"
           "                        SMP_DEVICE[,N]\n"
           "  where:\n"
-          "    --affiliation=AC|-a AC    affiliation context (field in "
-          "request)\n"
+          "    --affiliation=AC|-a AC    relative identifier of affiliation "
+          "context\n"
+          "                              (def: 0)\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
