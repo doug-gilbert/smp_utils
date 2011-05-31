@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.20 20110527";    /* spl2r00 */
+static char * version_str = "1.21 20110530";    /* spl2r00 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -73,6 +73,7 @@ static struct option long_options[] = {
         {"raw", 0, 0, 'r'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
+        {"zpi", 1, 0, 'Z'},
         {0, 0, 0, 0},
 };
 
@@ -85,6 +86,7 @@ struct opts_t {
     int do_hex;
     int ign_zp;
     int do_num;
+    int num_given;
     int do_1line;
     int phy_id;
     int phy_id_given;
@@ -93,6 +95,8 @@ struct opts_t {
     int verbose;
     int sa_given;
     unsigned long long sa;
+    const char * zpi_fn;
+    FILE * zpi_filep;
 };
 
 static void
@@ -107,7 +111,8 @@ usage()
           "[--raw]\n"
           "                          [--sa=SAS_ADDR] [--summary] "
           "[--verbose]\n"
-          "                          [--version] <smp_device>[,<n>]\n");
+          "                          [--version] [--zpi=FN] "
+          "<smp_device>[,<n>]\n");
     fprintf(stderr,
           "  where:\n"
           "    --adn|-A             output attached device name in one "
@@ -150,7 +155,11 @@ usage()
           "                         This option is assumed if '--phy=ID' "
           "not given\n"
           "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
+          "    --version|-V         print version string and exit\n"
+          "    --zpi=FN|-Z FN       FN is file that zone phy information "
+          "will be\n"
+          "                         written to (for "
+          "smp_conf_zone_phy_info)\n\n"
           "Performs one or more SMP DISCOVER LIST functions. If '--phy=ID' "
           "not given\nthen '--summary' is assumed. The '--summary' option "
           "shows the disposition\nof each active expander phy in table "
@@ -331,7 +340,7 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
 static int
 do_discover_list(struct smp_target_obj * top, int sphy_id,
                  unsigned char * resp, int max_resp_len,
-                 struct opts_t * optsp)
+                 struct opts_t * op)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER_LIST, 0, 6,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -345,17 +354,17 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     dword_resp_len = (max_resp_len - 8) / 4;
     smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
     smp_req[8] = sphy_id;
-    mnum_desc = optsp->do_num;
-    if ((0 == optsp->desc_type) && (mnum_desc > MAX_DLIST_LONG_DESCS))
+    mnum_desc = op->do_num;
+    if ((0 == op->desc_type) && (mnum_desc > MAX_DLIST_LONG_DESCS))
         mnum_desc = MAX_DLIST_LONG_DESCS;
-    if ((1 == optsp->desc_type) && (mnum_desc > MAX_DLIST_SHORT_DESCS))
+    if ((1 == op->desc_type) && (mnum_desc > MAX_DLIST_SHORT_DESCS))
         mnum_desc = MAX_DLIST_SHORT_DESCS;
     smp_req[9] = mnum_desc;
-    smp_req[10] = optsp->filter & 0xf;
-    if (optsp->ign_zp)
+    smp_req[10] = op->filter & 0xf;
+    if (op->ign_zp)
         smp_req[10] |= 0x80;
-    smp_req[11] = optsp->desc_type & 0xf;
-    if (optsp->verbose) {
+    smp_req[11] = op->desc_type & 0xf;
+    if (op->verbose) {
         fprintf(stderr, "    Discover list request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k) {
             if (0 == (k % 16))
@@ -372,10 +381,10 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
 
-    res = smp_send_req(top, &smp_rr, optsp->verbose);
+    res = smp_send_req(top, &smp_rr, op->verbose);
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == optsp->verbose)
+        if (0 == op->verbose)
             fprintf(stderr, "    try adding '-v' option for more debug\n");
         return -1;
     }
@@ -394,13 +403,13 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
-            if (optsp->verbose > 0)
+            if (op->verbose > 0)
                 fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
-    if (optsp->do_hex || optsp->do_raw) {
-        if (optsp->do_hex)
+    if (op->do_hex || op->do_raw) {
+        if (op->do_hex)
             dStrHex((const char *)resp, len, 1);
         else
             dStrRaw((const char *)resp, len);
@@ -409,7 +418,7 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         if (resp[1] != smp_req[1])
             return SMP_LIB_CAT_MALFORMED;
         if (resp[2]) {
-            if (optsp->verbose)
+            if (op->verbose)
                 fprintf(stderr, "Discover list result: %s\n",
                         smp_get_func_res_str(resp[2], sizeof(b), b));
             return resp[2];
@@ -440,7 +449,7 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
  * Returns 0 for okay, else -1 . */
 static int
 decode_desc0_multiline(const unsigned char * resp, int offset,
-                       int hdr_ecc, struct opts_t * optsp)
+                       int hdr_ecc, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -468,9 +477,9 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     adt = ((0x70 & rp[12]) >> 4);
     if (adt < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[adt]);
-    if ((optsp->do_brief > 1) && (0 == adt))
+    if ((op->do_brief > 1) && (0 == adt))
         return 0;
-    if (0 == optsp->do_brief)
+    if (0 == op->do_brief)
         printf("  attached reason: %s\n",
                smp_get_reason(0xf & rp[12], sizeof(b), b));
 
@@ -478,7 +487,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
            smp_get_neg_xxx_link_rate(0xf & rp[13], sizeof(b), b));
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[14] & 8), !!(rp[14] & 4), !!(rp[14] & 2), (rp[14] & 1));
-    if (0 == optsp->do_brief) {
+    if (0 == op->do_brief) {
         printf("  attached sata port selector: %d\n", !!(rp[15] & 0x80));
         printf("  STP buffer too small: %d\n", !!(rp[15] & 0x10));
     }
@@ -500,7 +509,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
-    if (0 == optsp->do_brief) {
+    if (0 == op->do_brief) {
         printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
         printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
         printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));
@@ -530,7 +539,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief) {
+    if (op->do_brief) {
         if ((len > 59) && (rp[60] & 0x1))
             printf("  zone group: %d\n", rp[63]);
         return 0;
@@ -638,7 +647,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
  * Returns 0 for okay, else -1 . */
 static int
 decode_desc1_multiline(const unsigned char * resp, int offset,
-                       int z_supported, struct opts_t * optsp)
+                       int z_supported, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -660,9 +669,9 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     adt = ((0x70 & rp[2]) >> 4);
     if (adt < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[adt]);
-    if ((optsp->do_brief > 1) && (0 == adt))
+    if ((op->do_brief > 1) && (0 == adt))
         return 0;
-    if (0 == optsp->do_brief)
+    if (0 == op->do_brief)
         printf("  attached reason: %s\n",
                smp_get_reason(0xf & rp[2], sizeof(b), b));
     printf("  negotiated logical link rate: %s\n",
@@ -670,12 +679,12 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[4] & 8), !!(rp[4] & 4), !!(rp[4] & 2), (rp[4] & 1));
-    if (0 == optsp->do_brief)
+    if (0 == op->do_brief)
         printf("  attached sata port selector: %d\n", !!(rp[5] & 0x80));
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[5] & 8), !!(rp[5] & 4), !!(rp[5] & 2), (rp[5] & 1));
 
-    if (0 == optsp->do_brief)
+    if (0 == op->do_brief)
         printf("  virtual phy: %d\n", !!(rp[6] & 0x80));
     ull = 0;
     for (j = 0; j < 8; ++j) {
@@ -685,7 +694,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[10]);
-    if (0 == optsp->do_brief)
+    if (0 == op->do_brief)
         printf("  phy change count: %d\n", rp[11]);
     route_attr = (0xf & rp[6]);
     switch (route_attr) {
@@ -695,7 +704,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     default: snprintf(b, sizeof(b), "reserved [%d]", route_attr); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief) {
+    if (op->do_brief) {
         if (z_supported)
             printf("  zone group: %d\n", rp[8]);
         return 0;
@@ -718,12 +727,12 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
  * than ZG:1, else -1 . */
 static int
 decode_1line(const unsigned char * resp, int offset, int desc,
-             int z_supported, struct opts_t * optsp)
+             int z_supported, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull, adn;
     int phy_id, j, off, plus, negot, adt, route_attr, vp, asa_off;
-    int func_res, aphy_id, a_init, a_target, z_group;
+    int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
     int zg_not1 = 0;
     char b[256];
     const char * cp;
@@ -742,6 +751,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         a_init = rp[14];
         a_target = rp[15];
         z_group = rp[63];
+        iz_mask = rp[60];
         break;
     case 1:     /* abridged 24 byte descriptor [short] */
         phy_id = rp[0];
@@ -755,10 +765,23 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         a_init = rp[4];
         a_target = rp[5];
         z_group = rp[8];
+        iz_mask = rp[9];
         break;
     default:
-        printf("  Unknown descriptor type %d\n", desc);
+        fprintf(stderr, "  Unknown descriptor type %d\n", desc);
         return -1;
+    }
+    if (op->zpi_fn) {
+        if (func_res && (SMP_FRES_PHY_VACANT != func_res)) {
+            fprintf(stderr, "  >>> function result: %s\n",
+                    smp_get_func_res_str(func_res, sizeof(b), b));
+            return -1;
+        }
+        snprintf(b, sizeof(b) - 1, "%x,%x,0,%x\n", phy_id, iz_mask & 0x34,
+                 z_group);
+        b[sizeof(b) - 1] = '\0';
+        fprintf(op->zpi_filep, "%s", b);
+        return 0;
     }
     if (SMP_FRES_PHY_VACANT == func_res) {
         printf("  phy %3d: inaccessible (phy vacant)\n", phy_id);
@@ -768,7 +791,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
-    if ((0 == optsp->verbose) && (0 == adt) && (optsp->do_brief > 1))
+    if ((0 == op->verbose) && (0 == adt) && (op->do_brief > 1))
         return 0;
 
     switch (route_attr) {
@@ -801,7 +824,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("  phy %3d:%s:reset in progress\n", phy_id, cp);
         return 0;
     }
-    if ((0 == optsp->verbose) && (0 == adt) && optsp->do_brief)
+    if ((0 == op->verbose) && (0 == adt) && op->do_brief)
         return 0;
     ull = 0;
     for (j = 0; j < 8; ++j) {
@@ -813,7 +836,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("  phy %3d:%s:attached:[0000000000000000:00]\n", phy_id, cp);
         return 0;
     }
-    if ((0 == desc) && optsp->do_adn) {
+    if ((0 == desc) && op->do_adn) {
         adn = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
@@ -883,7 +906,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("%s)", b);
     }
     printf("]");
-    if (optsp->do_brief < 2) {
+    if (op->do_brief < 2) {
         switch(negot) {
         case 8:
             cp = "  1.5 Gbps";
@@ -908,6 +931,55 @@ decode_1line(const unsigned char * resp, int offset, int desc,
     return !! zg_not1;
 }
 
+static void
+output_header_info(const unsigned char * resp, struct opts_t * op)
+{
+    int hdr_ecc, sphy_id, z_enabled ;
+
+    hdr_ecc = (resp[4] << 8) + resp[5];
+    sphy_id = resp[8];
+    z_enabled = !!(resp[16] & 0x40);
+
+    if (op->zpi_fn) {
+        if (0 == op->do_brief) {
+            fprintf(op->zpi_filep, "# Zone phy information from DISCOVER "
+                    "LIST:\n");
+            fprintf(op->zpi_filep, "#  expander change count: %d\n",
+                    hdr_ecc);
+            fprintf(op->zpi_filep, "#  starting phy id: %d\n", sphy_id);
+            fprintf(op->zpi_filep, "#  maximum number of phys output: %d\n",
+                    op->do_num);
+            fprintf(op->zpi_filep, "#  zoning enabled: %d\n", z_enabled);
+            fprintf(op->zpi_filep, "#\n# Values below are in hex, phy_id in "
+                    "first column, zone group in last\n");
+        }
+    } else {
+        if (! op->do_1line) {
+            printf("Discover list response header:\n");
+            printf("  starting phy id: %d\n", sphy_id);
+            printf("  number of discover list descriptors: %d\n", resp[9]);
+        }
+        if ((! op->do_1line) && (0 == op->do_brief)) {
+            printf("  expander change count: %d\n", hdr_ecc);
+            printf("  filter: %d\n", resp[10] & 0xf);
+            printf("  descriptor type: %d\n", resp[11] & 0xf);
+            printf("  discover list descriptor length: %d bytes\n",
+                   resp[12] * 4);
+            printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
+            printf("  zoning enabled: %d\n", z_enabled);
+            printf("  self configuring: %d\n", !!(resp[16] & 0x8));
+            printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
+            printf("  configuring: %d\n", !!(resp[16] & 0x2));
+            printf("  externally configurable route table: %d\n",
+                   !!(resp[16] & 0x1));
+            printf("  last self-configuration status descriptor index: %d\n",
+                   (resp[18] << 8) + resp[19]);    /* sas2r12 */
+            printf("  last phy event list descriptor index: %d\n",
+                   (resp[20] << 8) + resp[21]);
+        }
+    }
+}
+
 
 int
 main(int argc, char * argv[])
@@ -928,12 +1000,11 @@ main(int argc, char * argv[])
     struct opts_t opts;
 
     memset(&opts, 0, sizeof(opts));
-    opts.do_num = 1;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "Abd:f:hHiI:ln:op:rs:SvV", long_options,
+        c = getopt_long(argc, argv, "Abd:f:hHiI:ln:op:rs:SvVZ:", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -984,6 +1055,7 @@ main(int argc, char * argv[])
                         "from 0 to 254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++opts.num_given;
             break;
         case 'o':
             ++opts.do_1line;
@@ -1019,6 +1091,9 @@ main(int argc, char * argv[])
         case 'V':
             fprintf(stderr, "version: %s\n", version_str);
             return 0;
+        case 'Z':
+            opts.zpi_fn = optarg;
+            break;
         default:
             fprintf(stderr, "unrecognised switch code %c [0x%x] ??\n", c, c);
             usage();
@@ -1082,8 +1157,21 @@ main(int argc, char * argv[])
         }
     }
     if ((0 == opts.do_summary) && (0 == opts.do_1line) &&
-        (1 == opts.do_num) && (0 == opts.phy_id_given))
+        (! opts.num_given) && (0 == opts.phy_id_given) &&
+        (NULL == opts.zpi_fn))
         ++opts.do_summary;
+    if (opts.zpi_fn) {
+        if (opts.do_summary || opts.desc_type_given || opts.filter || opts.do_adn) {
+            fprintf(stderr, "--zpi=FN clashes with --summary, --adn, --filter and "
+                    "--descriptor=TY options\n");
+            return SMP_LIB_SYNTAX_ERROR;
+        }
+        if (! opts.num_given)
+            opts.do_num = 254;
+        opts.do_1line = 1;
+        opts.desc_type = 1;
+        opts.ign_zp = 1;        /* set --ignore */
+    }
     if (0 == opts.desc_type_given) {
         opts.desc_type = opts.do_brief ? 1 : 0;
         if (opts.do_adn)
@@ -1095,7 +1183,8 @@ main(int argc, char * argv[])
             opts.desc_type = 1;
         opts.do_1line = 1;
         opts.do_num = 254;
-    }
+    } else if (! (opts.num_given || opts.zpi_fn))
+        opts.do_num = 1;
     if (opts.do_adn && (1 == opts.desc_type)) {
         fprintf(stderr, "--adn and --descriptor=1 options clash since "
                 "there is no 'attached\ndevice name' field in the short "
@@ -1108,9 +1197,27 @@ main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    if (opts.zpi_fn) {
+        if ((1 == strlen(opts.zpi_fn)) && (0 == strcmp("-", opts.zpi_fn)))
+            opts.zpi_filep = stdout;
+        else {
+            opts.zpi_filep  = fopen(opts.zpi_fn, "w");
+            if (NULL == opts.zpi_filep) {
+                fprintf(stderr, "unable to open %s, error: %s\n",
+                        opts.zpi_fn, safe_strerror(errno));
+                ret = SMP_LIB_FILE_ERROR;
+                goto err_out;
+            }
+        }
+    }
+
     no_more = 0;
     for (j = 0; (j < opts.do_num) && (! no_more); j += num_desc) {
         memset(resp, 0, sizeof(resp));
+        if ((opts.phy_id + j) > 254) {
+            ret = 0;    /* off the end so not error */
+            break;
+        }
         ret = do_discover_list(&tobj, opts.phy_id + j, resp, sizeof(resp),
                                &opts);
         if (ret) {
@@ -1126,15 +1233,12 @@ main(int argc, char * argv[])
         if (opts.do_hex || opts.do_raw)
             continue;
         len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
+        if ((0 == j) && ((! opts.do_1line) || opts.zpi_fn))
+            output_header_info(resp, &opts);
         hdr_ecc = (resp[4] << 8) + resp[5];
         sphy_id = resp[8];
         z_supported = !!(resp[16] & 0x80);
         z_enabled = !!(resp[16] & 0x40);
-        if (! opts.do_1line) {
-            printf("Discover list response header:\n");
-            printf("  starting phy id: %d\n", sphy_id);
-            printf("  number of discover list descriptors: %d\n", num_desc);
-        }
         resp_filter = resp[10] & 0xf;
         if (opts.filter != resp_filter)
             fprintf(stderr, ">>> Requested phy filter was %d, got %d\n",
@@ -1144,23 +1248,6 @@ main(int argc, char * argv[])
             fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
                     opts.desc_type, resp_desc_type);
         desc_len = resp[12] * 4;
-        if ((! opts.do_1line) && (0 == opts.do_brief)) {
-            printf("  expander change count: %d\n", hdr_ecc);
-            printf("  filter: %d\n", resp_filter);
-            printf("  descriptor type: %d\n", resp_desc_type);
-            printf("  discover list descriptor length: %d\n", desc_len);
-            printf("  zoning supported: %d\n", z_supported);
-            printf("  zoning enabled: %d\n", z_enabled);
-            printf("  self configuring: %d\n", !!(resp[16] & 0x8));
-            printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
-            printf("  configuring: %d\n", !!(resp[16] & 0x2));
-            printf("  externally configurable route table: %d\n",
-                   !!(resp[16] & 0x1));
-            printf("  last self-configuration status descriptor index: %d\n",
-                   (resp[18] << 8) + resp[19]);    /* sas2r12 */
-            printf("  last phy event list descriptor index: %d\n",
-                   (resp[20] << 8) + resp[21]);
-        }
         if (len != (48 + (num_desc * desc_len))) {
             fprintf(stderr, ">>> Response length of %d bytes doesn't match "
                     "%d descriptors, each\n  of %d bytes plus a 48 byte "
@@ -1184,14 +1271,14 @@ main(int argc, char * argv[])
                 if (0 == resp_desc_type) {
                     adt = (resp[off + 12] >> 4) & 7;
                     if ((0 == opts.do_brief) || adt || fresult) {
-                        printf("descriptor %d:\n", k + 1);
+                        printf("descriptor %d:\n", j + k);
                         if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
                             ++err;
                     }
                 } else if (1 == resp_desc_type) {
                     adt = (resp[off + 2] >> 4) & 7;
                     if ((0 == opts.do_brief) || adt || fresult) {
-                        printf("descriptor %d:\n", k + 1);
+                        printf("descriptor %d:\n", j + k);
                         if (decode_desc1_multiline(resp, off, z_supported,
                                                    &opts))
                             ++err;
@@ -1208,9 +1295,12 @@ main(int argc, char * argv[])
                 ret = SMP_LIB_CAT_OTHER;
         }
     }
-    if ((zg_not1) && (0 == opts.do_brief))
+    if ((zg_not1) && (0 == opts.do_brief) && (NULL == opts.zpi_fn))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
     
+err_out:
+    if (opts.zpi_filep && (stdout != opts.zpi_filep))
+        fclose(opts.zpi_filep);
     res = smp_initiator_close(&tobj);
     if (res < 0) {
         if (0 == ret)

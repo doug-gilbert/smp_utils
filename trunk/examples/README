@@ -39,6 +39,12 @@ than 256 source zone groups are returned. This does not matter since
 no zone group above 30 is being used, so all the remaining rows have their
 default settings.
 
+The zone phy information settings can also be read back from the expander.
+There is no extra function for that since the information is available
+in a DISCOVER and DISCOVER LIST response. The smp_discover_list utility
+has a --zpi=FN option to create a zone phy information file suitable for
+the smp_conf_zone_phy_info utility.
+
 ** Just in case the zone permission table or the zone phy information
    is saved, these default files are provided:
       def_permf.txt
@@ -46,4 +52,4 @@ default settings.
 
 
 Doug Gilbert
-24th May 2011
+30th May 2011
