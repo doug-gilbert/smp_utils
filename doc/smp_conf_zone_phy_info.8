@@ -81,6 +81,10 @@ print the version string and then exit.
 The expander phys that make up a wide port (2 or more attached to phys with
 the same SAS address) must be set to the same zone phy configuration
 settings (other than the phy id).
+.PP
+Zone phy information can be read back from an expander and placed in a file
+with the smp_discover_list utility's \fI\-\-zpi=FN\fR option. The format of
+that file should be suitable for this utility's \fI\-\-pconf=FN\fR option.
 .SH CONFORMING TO
 The SMP CONFIGURE ZONE PHY INFORMATION function was introduced in SAS\-2 .
 .SH AUTHORS
@@ -93,4 +97,5 @@ Copyright \(co 2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_conf_zone_perm_tbl, smp_zone_activate(smp_utils)
+.B smp_utils, smp_conf_zone_perm_tbl, smp_zone_activate,
+.B smp_discover_list(smp_utils)
