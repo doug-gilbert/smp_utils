@@ -8,7 +8,7 @@ smp_discover_list \- invoke DISCOVER LIST SMP function
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR] [\fI\-\-one\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-summary\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-zpi=FN\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -119,6 +119,13 @@ increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
+.TP
+\fB\-Z\fR, \fB\-\-zpi\fR=\fIFN\fR
+\fIFN\fR is a file that will be created or truncated then have zone phy
+information written to it in a format suitable for input to the
+smp_conf_zone_phy_info utility's \fI\-\-pconf=FN\fR option. If
+\fI\-\-num=NUM\fR is not given it is set to 254. The output will start from
+phy_id 0 unless \fI\-\-phy=ID\fR is given.
 .SH SINGLE LINE PER PHY FORMAT
 The \fI\-\-summary\fR (or \fI\-\-one\fR) option causes SMP DISCOVER LIST
 descriptors to be compressed to one line per phy. To save
@@ -192,4 +199,4 @@ Copyright \(co 2006\-2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B smp_utils, smp_discover, smp_phy_control
+.B smp_utils, smp_discover, smp_phy_control, smp_conf_zone_phy_info

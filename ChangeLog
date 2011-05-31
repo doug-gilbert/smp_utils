@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20110527] [svn:r90]
+Changelog for smp_utils-0.96 [20110530] [svn:r91]
   - smp_conf_zone_perm_tbl, smp_conf_zone_man_pass
     smp_conf_zone_phy_info, smp_ena_dis_zoning,
     smp_rep_broadcast, smp_rep_phy_event, smp_rep_phy_event_list,
@@ -16,6 +16,7 @@ Changelog for smp_utils-0.96 [20110527] [svn:r90]
     - make --summary default if --phy=ID option not given
     - with --summary show disabled and errored phys
   - smp_discover: add --my and --zero option
+  - smp_discover_list: add --zpi=FN option
   - smp_rep_general, smp_rep_manufacturer, smp_rep_phy_err_log,
     smp_rep_phy_sata: add --zero options
   - add examples directory, mainly for zoning
