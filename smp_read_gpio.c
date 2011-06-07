@@ -42,15 +42,16 @@
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
  * program.
  *
- * This utility issues a READ GPIO REGISTER request and outputs its
- * response.
+ * This utility issues a READ GPIO REGISTER or READ GPIO REGISTER ENHANCED
+ * request and outputs its response.
  */
 
-static char * version_str = "1.05 20110501";
+static char * version_str = "1.06 20110604";
 
 
 static struct option long_options[] = {
         {"count", 1, 0, 'c'},
+        {"enhanced", 0, 0, 'E'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
@@ -67,14 +68,16 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_read_gpio   [--count=CO] [--help] [--hex] [--index=IN]\n"
-          "                       [--interface=PARAMS> [--raw] "
-          " [--sa=SAS_ADDR]\n"
-          "                       [type=TY] [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "smp_read_gpio   [--count=CO] [--enhanced] [--help] [--hex]\n"
+          "                       [--index=IN] [--interface=PARAMS] [--raw]\n"
+          "                       [--sa=SAS_ADDR] [type=TY] [--verbose] "
+          "[--version]\n"
+          "                       SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --count=CO|-c CO     register count (dwords to read) "
           "(def: 1)\n"
+          "    --enhanced|-E        use READ GPIO REGISTER ENHANCED "
+          "function\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --index=IN|-i IN     register index (def: 0)\n"
@@ -89,7 +92,8 @@ static void usage()
           "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP READ GPIO REGISTER function\n"
+          "Performs a SMP READ GPIO REGISTER (default) or READ GPIO "
+          "REGISTER ENHANCED\nfunction\n"
           );
 }
 
@@ -105,6 +109,7 @@ int main(int argc, char * argv[])
 {
     int res, c, k, len, off, decoded;
     int rcount = 1;
+    int do_enhanced = 0;
     int do_hex = 0;
     int rindex = 0;
     int phy_id = 0;
@@ -129,7 +134,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:hHi:I:p:rs:t:vV", long_options,
+        c = getopt_long(argc, argv, "c:EhHi:I:p:rs:t:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -141,6 +146,9 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--count'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            break;
+        case 'E':
+            ++do_enhanced;
             break;
         case 'h':
         case '?':
@@ -262,11 +270,14 @@ int main(int argc, char * argv[])
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+    if (do_enhanced)
+        smp_req[1] = SMP_FN_READ_GPIO_REG_ENH;
     smp_req[2] = rtype;
     smp_req[3] = rindex;
     smp_req[4] = rcount;
     if (verbose) {
-        fprintf(stderr, "    Read GPIO register request: ");
+        fprintf(stderr, "    Read GPIO register%s request: ",
+                (do_enhanced ? " enhanced" : ""));
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
@@ -327,7 +338,8 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
-    printf("Read GPIO register response:\n");
+    printf("Read GPIO register%s response:\n",
+           (do_enhanced ? " enhanced" : ""));
     decoded = 0;
     if (0 == rtype) {
         off = 4;

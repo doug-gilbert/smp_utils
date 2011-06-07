@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.28 20110527";    /* spl2r00 */
+static char * version_str = "1.29 20110602";    /* spl2r01 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -423,118 +423,120 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
 /* Note that the inner attributes are output in alphabetical order. */
 /* N.B. This function has not been kept up to date. */
 static int
-do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
+do_single_list(const unsigned char * rp, int len, int show_exp_cc,
                int do_brief)
 {
     int res, j, sas2;
     unsigned long long ull;
 
-    sas2 = !! (smp_resp[3]);
+    sas2 = !! (rp[3]);
     if (sas2 && show_exp_cc && (! do_brief)) {
-        res = (smp_resp[4] << 8) + smp_resp[5];
+        res = (rp[4] << 8) + rp[5];
         printf("expander_cc=%d\n", res);
     }
-    printf("phy_id=%d\n", smp_resp[9]);
+    printf("phy_id=%d\n", rp[9]);
     if (! do_brief) {
         if (sas2)
-            printf("  att_br_cap=%d\n", !!(0x1 & smp_resp[33]));
+            printf("  att_br_cap=%d\n", !!(0x1 & rp[33]));
         if (len > 59) {
             for (ull = 0, j = 0; j < 8; ++j) {
                 if (j > 0)
                     ull <<= 8;
-                ull |= smp_resp[52 + j];
+                ull |= rp[52 + j];
             }
             printf("  att_dev_name=0x%llx\n", ull);
         }
     }
-    printf("  att_dev_type=%d\n", (0x70 & smp_resp[12]) >> 4);
+    printf("  att_dev_type=%d\n", (0x70 & rp[12]) >> 4);
     if (sas2 && (! do_brief)) {
-        printf("  att_iz_per=%d\n", !!(0x4 & smp_resp[33]));
-        printf("  att_pa_cap=%d\n", !!(0x8 & smp_resp[33]));
+        printf("  att_iz_per=%d\n", !!(0x4 & rp[33]));
+        printf("  att_pa_cap=%d\n", !!(0x8 & rp[33]));
     }
-    printf("  att_phy_id=%d\n", smp_resp[32]);
+    printf("  att_phy_id=%d\n", rp[32]);
     if (sas2 && (! do_brief)) {
-        printf("  att_reason=%d\n", (0xf & smp_resp[12]));
-        printf("  att_req_iz=%d\n", !!(0x2 & smp_resp[33]));
+        printf("  att_pow_cap=%d\n", (rp[33] >> 5) & 0x3);
+        printf("  att_reason=%d\n", (0xf & rp[12]));
+        printf("  att_req_iz=%d\n", !!(0x2 & rp[33]));
     }
     for (ull = 0, j = 0; j < 8; ++j) {
         if (j > 0)
             ull <<= 8;
-        ull |= smp_resp[24 + j];
+        ull |= rp[24 + j];
     }
     printf("  att_sas_addr=0x%llx\n", ull);
-    printf("  att_sata_dev=%d\n", !! (0x1 & smp_resp[15]));
-    printf("  att_sata_host=%d\n", !! (0x1 & smp_resp[14]));
-    printf("  att_sata_ps=%d\n", !! (0x80 & smp_resp[15]));
+    printf("  att_sata_dev=%d\n", !! (0x1 & rp[15]));
+    printf("  att_sata_host=%d\n", !! (0x1 & rp[14]));
+    printf("  att_sata_ps=%d\n", !! (0x80 & rp[15]));
     if (sas2 && (! do_brief))
-        printf("  att_sl_cap=%d\n", !!(0x10 & smp_resp[33]));
-    printf("  att_smp_init=%d\n", !! (0x2 & smp_resp[14]));
-    printf("  att_smp_targ=%d\n", !! (0x2 & smp_resp[15]));
-    printf("  att_ssp_init=%d\n", !! (0x8 & smp_resp[14]));
-    printf("  att_ssp_targ=%d\n", !! (0x8 & smp_resp[15]));
-    printf("  att_stp_init=%d\n", !! (0x4 & smp_resp[14]));
-    printf("  att_stp_targ=%d\n", !! (0x4 & smp_resp[15]));
+        printf("  att_sl_cap=%d\n", !!(0x10 & rp[33]));
+    printf("  att_smp_init=%d\n", !! (0x2 & rp[14]));
+    printf("  att_smp_targ=%d\n", !! (0x2 & rp[15]));
+    printf("  att_ssp_init=%d\n", !! (0x8 & rp[14]));
+    printf("  att_ssp_targ=%d\n", !! (0x8 & rp[15]));
+    printf("  att_stp_init=%d\n", !! (0x4 & rp[14]));
+    printf("  att_stp_targ=%d\n", !! (0x4 & rp[15]));
     if (! do_brief) {
-        if (sas2 || (smp_resp[45] & 0x7f)) {
-            printf("  conn_elem_ind=%d\n", smp_resp[46]);
-            printf("  conn_p_link=%d\n", smp_resp[47]);
-            printf("  conn_type=%d\n", (0x7f & smp_resp[45]));
+        if (sas2 || (rp[45] & 0x7f)) {
+            printf("  conn_elem_ind=%d\n", rp[46]);
+            printf("  conn_p_link=%d\n", rp[47]);
+            printf("  conn_type=%d\n", (0x7f & rp[45]));
         }
     }
     if (! do_brief) {
-        printf("  hw_max_p_lrate=%d\n", (0xf & smp_resp[41]));
-        printf("  hw_min_p_lrate=%d\n", (0xf & smp_resp[40]));
+        printf("  hw_max_p_lrate=%d\n", (0xf & rp[41]));
+        printf("  hw_min_p_lrate=%d\n", (0xf & rp[40]));
         if (len > 95)
-            printf("  hw_mux_sup=%d\n", (!! (smp_resp[95] & 0x1)));
+            printf("  hw_mux_sup=%d\n", (!! (rp[95] & 0x1)));
     }
 
     if (! do_brief) {
-        printf("  iz=%d\n", !! (0x2 & smp_resp[60]));
-        printf("  iz_pers=%d\n", !! (0x20 & smp_resp[60]));
+        printf("  iz=%d\n", !! (0x2 & rp[60]));
+        printf("  iz_pers=%d\n", !! (0x20 & rp[60]));
     }
-    printf("  neg_log_lrate=%d\n", (0xf & smp_resp[13]));
+    printf("  neg_log_lrate=%d\n", (0xf & rp[13]));
     if (! do_brief) {
         if (len > 95) {
-            printf("  neg_phy_lrate=%d\n", (0xf & smp_resp[94]));
-            printf("  opt_m_en=%d\n", (!! (smp_resp[95] & 0x4)));
+            printf("  neg_phy_lrate=%d\n", (0xf & rp[94]));
+            printf("  opt_m_en=%d\n", (!! (rp[95] & 0x4)));
         }
-        printf("  phy_cc=%d\n", smp_resp[42]);
-        printf("  phy_power_cond=%d\n", ((0xc0 & smp_resp[48]) >> 6));
-        printf("  pp_timeout=%d\n", (0xf & smp_resp[43]));
-        printf("  pr_max_p_lrate=%d\n", ((0xf0 & smp_resp[41]) >> 4));
-        printf("  pr_min_p_lrate=%d\n", ((0xf0 & smp_resp[40]) >> 4));
+        printf("  phy_cc=%d\n", rp[42]);
+        printf("  phy_power_cond=%d\n", ((0xc0 & rp[48]) >> 6));
+        printf("  pp_timeout=%d\n", (0xf & rp[43]));
+        printf("  pr_max_p_lrate=%d\n", ((0xf0 & rp[41]) >> 4));
+        printf("  pr_min_p_lrate=%d\n", ((0xf0 & rp[40]) >> 4));
     }
     if ((! do_brief) && (len > 95))
-            printf("  reason=%d\n", (0xf0 & smp_resp[94]) >> 4);
+            printf("  reason=%d\n", (0xf0 & rp[94]) >> 4);
     if (! do_brief) {
-        printf("  req_iz=%d\n", !! (0x10 & smp_resp[60]));
-        printf("  req_iz_cbe=%d\n", !! (0x40 & smp_resp[60]));
+        printf("  req_iz=%d\n", !! (0x10 & rp[60]));
+        printf("  req_iz_cbe=%d\n", !! (0x40 & rp[60]));
     }
-    printf("  routing_attr=%d\n", smp_resp[44] & 0xf);
+    printf("  routing_attr=%d\n", rp[44] & 0xf);
     
     for (ull = 0, j = 0; j < 8; ++j) {
         if (j > 0)
             ull <<= 8;
-        ull |= smp_resp[16 + j];
+        ull |= rp[16 + j];
     }
     printf("  sas_addr=0x%llx\n", ull);
     if (! do_brief) {
-        printf("  sas_pa_cap=%d\n", !!(0x4 & smp_resp[48]));
-        printf("  sas_pa_en=%d\n", !!(0x4 & smp_resp[49]));
-        printf("  sas_sl_cap=%d\n", !!(0x8 & smp_resp[48]));
-        printf("  sas_sl_en=%d\n", !!(0x8 & smp_resp[49]));
-        printf("  sata_pa_cap=%d\n", !!(0x1 & smp_resp[48]));
-        printf("  sata_pa_en=%d\n", !!(0x1 & smp_resp[49]));
-        printf("  sata_sl_cap=%d\n", !!(0x2 & smp_resp[48]));
-        printf("  sata_sl_en=%d\n", !!(0x2 & smp_resp[49]));
-        printf("  stp_buff_tsmall=%d\n", !! (0x10 & smp_resp[15]));
+        printf("  sas_pa_cap=%d\n", !!(0x4 & rp[48]));
+        printf("  sas_pa_en=%d\n", !!(0x4 & rp[49]));
+        printf("  sas_pow_cap=%d\n", (rp[48] >> 4) & 0x3);
+        printf("  sas_sl_cap=%d\n", !!(0x8 & rp[48]));
+        printf("  sas_sl_en=%d\n", !!(0x8 & rp[49]));
+        printf("  sata_pa_cap=%d\n", !!(0x1 & rp[48]));
+        printf("  sata_pa_en=%d\n", !!(0x1 & rp[49]));
+        printf("  sata_sl_cap=%d\n", !!(0x2 & rp[48]));
+        printf("  sata_sl_en=%d\n", !!(0x2 & rp[49]));
+        printf("  stp_buff_tsmall=%d\n", !!(0x10 & rp[15]));
     }
 
-    printf("  virt_phy=%d\n", !!(0x80 & smp_resp[43]));
+    printf("  virt_phy=%d\n", !!(0x80 & rp[43]));
     if (! do_brief) {
-        printf("  zg=%d\n", smp_resp[63]);
-        printf("  zg_pers=%d\n", !! (0x4 & smp_resp[60]));
-        printf("  zoning_en=%d\n", !! (0x1 & smp_resp[60]));
+        printf("  zg=%d\n", rp[63]);
+        printf("  zg_pers=%d\n", !! (0x4 & rp[60]));
+        printf("  zoning_en=%d\n", !! (0x1 & rp[60]));
     }
     return 0;
 }
@@ -544,14 +546,14 @@ do_single_list(const unsigned char * smp_resp, int len, int show_exp_cc,
 static int
 do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
+    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull;
     unsigned int ui;
     int res, len, j, sas2, ret;
     char b[256];
 
     /* If do_discover() works, returns response length (less CRC bytes) */
-    len = do_discover(top, optsp->phy_id, smp_resp, sizeof(smp_resp), 0,
+    len = do_discover(top, optsp->phy_id, rp, sizeof(rp), 0,
                       optsp);
     if (len < 0)
         ret = (len < -2) ? (-4 - len) : len;
@@ -565,7 +567,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         for (j = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;
-            ull |= smp_resp[16 + j];
+            ull |= rp[16 + j];
         }
     }
     if (optsp->do_my) {
@@ -582,78 +584,69 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         return ret;
     }
     if (optsp->do_list)
-        return do_single_list(smp_resp, len, 1, optsp->do_brief);
+        return do_single_list(rp, len, 1, optsp->do_brief);
     printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
-    sas2 = !! (smp_resp[3]);
-    res = (smp_resp[4] << 8) + smp_resp[5];
+    sas2 = !! (rp[3]);
+    res = (rp[4] << 8) + rp[5];
     if (sas2 || (optsp->verbose > 3)) {
         if (optsp->verbose || (res > 0))
             printf("  expander change count: %d\n", res);
     }
-    printf("  phy identifier: %d\n", smp_resp[9]);
-    res = ((0x70 & smp_resp[12]) >> 4);
+    printf("  phy identifier: %d\n", rp[9]);
+    res = ((0x70 & rp[12]) >> 4);
     if (res < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[res]);
     if ((optsp->do_brief > 1) && (0 == res))
         return 0;
     if (sas2 || (optsp->verbose > 3))
         printf("  attached reason: %s\n",
-               smp_get_reason(0xf & smp_resp[12], sizeof(b), b));
+               smp_get_reason(0xf & rp[12], sizeof(b), b));
 
     printf("  negotiated logical link rate: %s\n",
-           smp_get_neg_xxx_link_rate(0xf & smp_resp[13], sizeof(b), b));
+           smp_get_neg_xxx_link_rate(0xf & rp[13], sizeof(b), b));
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
-           !!(smp_resp[14] & 8), !!(smp_resp[14] & 4),
-           !!(smp_resp[14] & 2), (smp_resp[14] & 1));
+           !!(rp[14] & 8), !!(rp[14] & 4), !!(rp[14] & 2), (rp[14] & 1));
     if (0 == optsp->do_brief) {
         printf("  attached sata port selector: %d\n",
-               !!(smp_resp[15] & 0x80));
-        printf("  STP buffer too small: %d\n", !!(smp_resp[15] & 0x10));
+               !!(rp[15] & 0x80));
+        printf("  STP buffer too small: %d\n", !!(rp[15] & 0x10));
     }
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
-           !!(smp_resp[15] & 8), !!(smp_resp[15] & 4),
-           !!(smp_resp[15] & 2), (smp_resp[15] & 1));
+           !!(rp[15] & 8), !!(rp[15] & 4), !!(rp[15] & 2), (rp[15] & 1));
 
     printf("  SAS address: 0x%llx\n", ull);
     ull = 0;
     for (j = 0; j < 8; ++j) {
         if (j > 0)
             ull <<= 8;
-        ull |= smp_resp[24 + j];
+        ull |= rp[24 + j];
     }
     printf("  attached SAS address: 0x%llx\n", ull);
-    printf("  attached phy identifier: %d\n", smp_resp[32]);
+    printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == optsp->do_brief) {
         if (sas2 || (optsp->verbose > 3)) {
-            printf("  attached slumber capable: %d\n",
-                   !!(smp_resp[33] & 0x10));
-            printf("  attached partial capable: %d\n",
-                   !!(smp_resp[33] & 0x8));
+            printf("  attached power capable: %d\n", ((rp[33] >> 5) & 0x3));
+            printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
+            printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
             printf("  attached inside ZPSDS persistent: %d\n",
-                   !!(smp_resp[33] & 4));
-            printf("  attached requested inside ZPSDS: %d\n",
-                   !!(smp_resp[33] & 2));
-            printf("  attached break_reply capable: %d\n",
-                   !!(smp_resp[33] & 1));
+                   !!(rp[33] & 4));
+            printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
+            printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
         }
         printf("  programmed minimum physical link rate: %s\n",
-               smp_get_plink_rate(((smp_resp[40] >> 4) & 0xf), 1,
-                                  sizeof(b), b));
+               smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1, sizeof(b), b));
         printf("  hardware minimum physical link rate: %s\n",
-               smp_get_plink_rate((smp_resp[40] & 0xf), 0, sizeof(b), b));
+               smp_get_plink_rate((rp[40] & 0xf), 0, sizeof(b), b));
         printf("  programmed maximum physical link rate: %s\n",
-               smp_get_plink_rate(((smp_resp[41] >> 4) & 0xf), 1,
-                                  sizeof(b), b));
+               smp_get_plink_rate(((rp[41] >> 4) & 0xf), 1, sizeof(b), b));
         printf("  hardware maximum physical link rate: %s\n",
-               smp_get_plink_rate((smp_resp[41] & 0xf), 0,
-                                  sizeof(b), b));
-        printf("  phy change count: %d\n", smp_resp[42]);
-        printf("  virtual phy: %d\n", !!(smp_resp[43] & 0x80));
-        printf("  partial pathway timeout value: %d us\n",
-               (smp_resp[43] & 0xf));
+               smp_get_plink_rate((rp[41] & 0xf), 0, sizeof(b), b));
+        printf("  phy change count: %d\n", rp[42]);
+        printf("  virtual phy: %d\n", !!(rp[43] & 0x80));
+        printf("  partial pathway timeout value: %d us\n", (rp[43] & 0xf));
     }
-    res = (0xf & smp_resp[44]);
+    res = (0xf & rp[44]);
     switch (res) {
     case 0: snprintf(b, sizeof(b), "direct"); break;
     case 1: snprintf(b, sizeof(b), "subtractive"); break;
@@ -662,117 +655,108 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     }
     printf("  routing attribute: %s\n", b);
     if (optsp->do_brief) {
-        if ((len > 59) && !!(smp_resp[60] & 0x1))
-            printf("  zone group: %d\n", smp_resp[63]);
+        if ((len > 59) && !!(rp[60] & 0x1))
+            printf("  zone group: %d\n", rp[63]);
         return 0;
     }
-    if (sas2 || (smp_resp[45] & 0x7f)) {
+    if (sas2 || (rp[45] & 0x7f)) {
         printf("  connector type: %s\n",
-               find_sas_connector_type((smp_resp[45] & 0x7f), b, sizeof(b)));
-        printf("  connector element index: %d\n", smp_resp[46]);
-        printf("  connector physical link: %d\n", smp_resp[47]);
-        printf("  phy power condition: %d\n", (smp_resp[48] & 0xc0) >> 6);
-        printf("  sas slumber capable: %d\n", !!(smp_resp[48] & 0x8));
-        printf("  sas partial capable: %d\n", !!(smp_resp[48] & 0x4));
-        printf("  sata slumber capable: %d\n", !!(smp_resp[48] & 0x2));
-        printf("  sata partial capable: %d\n", !!(smp_resp[48] & 0x1));
-        printf("  sas slumber enabled: %d\n", !!(smp_resp[49] & 0x8));
-        printf("  sas partial enabled: %d\n", !!(smp_resp[49] & 0x4));
-        printf("  sata slumber enabled: %d\n", !!(smp_resp[49] & 0x2));
-        printf("  sata partial enabled: %d\n", !!(smp_resp[49] & 0x1));
+               find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
+        printf("  connector element index: %d\n", rp[46]);
+        printf("  connector physical link: %d\n", rp[47]);
+        printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
+        printf("  sas power capable: %d\n", (rp[48] >> 4) & 0x3);
+        printf("  sas slumber capable: %d\n", !!(rp[48] & 0x8));
+        printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
+        printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
+        printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
+        printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
+        printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
+        printf("  sata slumber enabled: %d\n", !!(rp[49] & 0x2));
+        printf("  sata partial enabled: %d\n", !!(rp[49] & 0x1));
     }
     if (len > 59) {
         ull = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;
-            ull |= smp_resp[52 + j];
+            ull |= rp[52 + j];
         }
         printf("  attached device name: 0x%llx\n", ull);
         printf("  requested inside ZPSDS changed by expander: %d\n",
-              !!(smp_resp[60] & 0x40));
-        printf("  inside ZPSDS persistent: %d\n", !!(smp_resp[60] & 0x20));
-        printf("  requested inside ZPSDS: %d\n", !!(smp_resp[60] & 0x10));
-        /* printf("  zone address resolved: %d\n", !!(smp_resp[60] & 0x8)); */
-        printf("  zone group persistent: %d\n", !!(smp_resp[60] & 0x4));
-        printf("  inside ZPSDS: %d\n", !!(smp_resp[60] & 0x2));
-        printf("  zoning enabled: %d\n", !!(smp_resp[60] & 0x1));
-        printf("  zone group: %d\n", smp_resp[63]);
+               !!(rp[60] & 0x40));
+        printf("  inside ZPSDS persistent: %d\n", !!(rp[60] & 0x20));
+        printf("  requested inside ZPSDS: %d\n", !!(rp[60] & 0x10));
+        /* printf("  zone address resolved: %d\n", !!(rp[60] & 0x8)); */
+        printf("  zone group persistent: %d\n", !!(rp[60] & 0x4));
+        printf("  inside ZPSDS: %d\n", !!(rp[60] & 0x2));
+        printf("  zoning enabled: %d\n", !!(rp[60] & 0x1));
+        printf("  zone group: %d\n", rp[63]);
         if (len < 76)
             return 0;
-        printf("  self-configuration status: %d\n", smp_resp[64]);
-        printf("  self-configuration levels completed: %d\n", smp_resp[65]);
+        printf("  self-configuration status: %d\n", rp[64]);
+        printf("  self-configuration levels completed: %d\n", rp[65]);
         ull = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;
-            ull |= smp_resp[68 + j];
+            ull |= rp[68 + j];
         }
         printf("  self-configuration sas address: 0x%llx\n", ull);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
                 ui <<= 8;
-            ui |= smp_resp[76 + j];
+            ui |= rp[76 + j];
         }
         printf("  programmed phy capabilities: 0x%x\n", ui);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
                 ui <<= 8;
-            ui |= smp_resp[80 + j];
+            ui |= rp[80 + j];
         }
         printf("  current phy capabilities: 0x%x\n", ui);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
                 ui <<= 8;
-            ui |= smp_resp[84 + j];
+            ui |= rp[84 + j];
         }
         printf("  attached phy capabilities: 0x%x\n", ui);
     }
     if (len > 95) {
         printf("  reason: %s\n",
-               smp_get_reason((0xf0 & smp_resp[94]) >> 4, sizeof(b), b));
+               smp_get_reason((0xf0 & rp[94]) >> 4, sizeof(b), b));
         printf("  negotiated physical link rate: %s\n",
-               smp_get_neg_xxx_link_rate(0xf & smp_resp[94], sizeof(b), b));
-        printf("  optical mode enabled: %d\n", !!(smp_resp[95] & 0x4));
-        printf("  negotiated SSC: %d\n", !!(smp_resp[95] & 0x2));
-        printf("  hardware muxing supported: %d\n", !!(smp_resp[95] & 0x1));
+               smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
+        printf("  optical mode enabled: %d\n", !!(rp[95] & 0x4));
+        printf("  negotiated SSC: %d\n", !!(rp[95] & 0x2));
+        printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
     }
     if (len > 107) {
-        printf("  default inside ZPSDS persistent: %d\n",
-               !!(smp_resp[96] & 0x20));
-        printf("  default requested inside ZPSDS: %d\n",
-               !!(smp_resp[96] & 0x10));
-        printf("  default zone group persistent: %d\n",
-               !!(smp_resp[96] & 0x4));
-        printf("  default zoning enabled: %d\n", !!(smp_resp[96] & 0x1));
-        printf("  default zone group: %d\n", smp_resp[99]);
-        printf("  saved inside ZPSDS persistent: %d\n",
-               !!(smp_resp[100] & 0x20));
-        printf("  saved requested inside ZPSDS: %d\n",
-               !!(smp_resp[100] & 0x10));
-        printf("  saved zone group persistent: %d\n",
-               !!(smp_resp[100] & 0x4));
-        printf("  saved zoning enabled: %d\n", !!(smp_resp[100] & 0x1));
-        printf("  saved zone group: %d\n", smp_resp[103]);
-        printf("  shadow inside ZPSDS persistent: %d\n",
-               !!(smp_resp[104] & 0x20));
-        printf("  shadow requested inside ZPSDS: %d\n",
-               !!(smp_resp[104] & 0x10));
-        printf("  shadow zone group persistent: %d\n",
-               !!(smp_resp[104] & 0x4));
-        printf("  shadow zone group: %d\n", smp_resp[107]);
+        printf("  default inside ZPSDS persistent: %d\n", !!(rp[96] & 0x20));
+        printf("  default requested inside ZPSDS: %d\n", !!(rp[96] & 0x10));
+        printf("  default zone group persistent: %d\n", !!(rp[96] & 0x4));
+        printf("  default zoning enabled: %d\n", !!(rp[96] & 0x1));
+        printf("  default zone group: %d\n", rp[99]);
+        printf("  saved inside ZPSDS persistent: %d\n", !!(rp[100] & 0x20));
+        printf("  saved requested inside ZPSDS: %d\n", !!(rp[100] & 0x10));
+        printf("  saved zone group persistent: %d\n", !!(rp[100] & 0x4));
+        printf("  saved zoning enabled: %d\n", !!(rp[100] & 0x1));
+        printf("  saved zone group: %d\n", rp[103]);
+        printf("  shadow inside ZPSDS persistent: %d\n", !!(rp[104] & 0x20));
+        printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
+        printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
+        printf("  shadow zone group: %d\n", rp[107]);
     }
     if (len > 115) {
-        printf("  device slot number: %d\n", smp_resp[108]);
-        printf("  device slot group number: %d\n", smp_resp[109]);
-        printf("  device slot group output connector: %.6s\n", smp_resp + 110);
+        printf("  device slot number: %d\n", rp[108]);
+        printf("  device slot group number: %d\n", rp[109]);
+        printf("  device slot group output connector: %.6s\n", rp + 110);
     }
     if (len > 117)
-        printf("  STP buffer size: %d\n",
-               (smp_resp[116] << 8) + smp_resp[117]);
+        printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
     return 0;
 }
 
@@ -783,7 +767,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
 {
-    unsigned char smp_resp[SMP_FN_DISCOVER_RESP_LEN];
+    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull, adn;
     unsigned long long expander_sa;
     int ret, len, k, j, num, off, plus, negot, adt, zg;
@@ -794,7 +778,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
     expander_sa = 0;
     num = optsp->do_num ? (optsp->phy_id + optsp->do_num) : MAX_PHY_ID;
     for (k = optsp->phy_id; k < num; ++k) {
-        len = do_discover(top, k, smp_resp, sizeof(smp_resp), 1, optsp);
+        len = do_discover(top, k, rp, sizeof(rp), 1, optsp);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
         else
@@ -810,7 +794,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         for (j = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;
-            ull |= smp_resp[16 + j];
+            ull |= rp[16 + j];
         }
         if (0 == expander_sa)
             expander_sa = ull;
@@ -818,12 +802,12 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             if (ull != expander_sa) {
                 if (ull > 0) {
                     fprintf(stderr, ">> expander's SAS address is changing?? "
-                            "phy_id=%d, was=%llxh, now=%llxh\n", smp_resp[9],
+                            "phy_id=%d, was=%llxh, now=%llxh\n", rp[9],
                             expander_sa, ull);
                     expander_sa = ull;
                 } else if (optsp->verbose)
                     fprintf(stderr, ">> expander's SAS address shown as 0 at "
-                            "phy_id=%d\n", smp_resp[9]);
+                            "phy_id=%d\n", rp[9]);
             }
         }
         if (first && (! optsp->do_raw)) {
@@ -841,15 +825,15 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             continue;
 
         if (optsp->do_list) {
-            do_single_list(smp_resp, len, 0, optsp->do_brief);
+            do_single_list(rp, len, 0, optsp->do_brief);
             continue;
         }
-        adt = ((0x70 & smp_resp[12]) >> 4);
+        adt = ((0x70 & rp[12]) >> 4);
         if ((optsp->do_brief > 1) && (0 == adt))
             continue;
 
-        negot = smp_resp[13] & 0xf;
-        switch(smp_resp[44] & 0xf) {
+        negot = rp[13] & 0xf;
+        switch(rp[44] & 0xf) {
         case 0:
             cp = "D";
             break;
@@ -864,35 +848,35 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             break;
         }
         if (1 == negot) {
-            printf("  phy %3d:%s:disabled\n", smp_resp[9], cp);
+            printf("  phy %3d:%s:disabled\n", rp[9], cp);
             continue;
         } else if (2 == negot) {
-            printf("  phy %3d:%s:reset problem\n", smp_resp[9], cp);
+            printf("  phy %3d:%s:reset problem\n", rp[9], cp);
             continue;
         } else if (3 == negot) {
-            printf("  phy %3d:%s:spinup hold\n", smp_resp[9], cp);
+            printf("  phy %3d:%s:spinup hold\n", rp[9], cp);
             continue;
         } else if (4 == negot) {
-            printf("  phy %3d:%s:port selector\n", smp_resp[9], cp);
+            printf("  phy %3d:%s:port selector\n", rp[9], cp);
             continue;
         } else if (5 == negot) {
-            printf("  phy %3d:%s:reset in progress\n", smp_resp[9], cp);
+            printf("  phy %3d:%s:reset in progress\n", rp[9], cp);
             continue;
         } else if (6 == negot) {
-            printf("  phy %3d:%s:unsupported phy attached\n", smp_resp[9],
+            printf("  phy %3d:%s:unsupported phy attached\n", rp[9],
                    cp);
             continue;
         }
         if ((optsp->do_brief > 0) && (0 == adt))
             continue;
-        if (k != smp_resp[9])
+        if (k != rp[9])
             fprintf(stderr, ">> requested phy_id=%d differs from response "
-                    "phy=%d\n", k, smp_resp[9]);
+                    "phy=%d\n", k, rp[9]);
         ull = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
                 ull <<= 8;
-            ull |= smp_resp[24 + j];
+            ull |= rp[24 + j];
         }
         if ((0 == adt) || (adt > 3)) {
             printf("  phy %3d:%s:attached:[0000000000000000:00]\n", k, cp);
@@ -903,65 +887,64 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             for (j = 0; j < 8; ++j) {
                 if (j > 0)
                     adn <<= 8;
-                adn |= smp_resp[52 + j];
+                adn |= rp[52 + j];
             }
-            printf("  phy %3d:%s:attached:[%016llx:%02d %016llx %s%s", k,
-                   cp, ull, smp_resp[32], adn,
-                   smp_short_attached_device_type[adt],
-                   ((smp_resp[43] & 0x80) ? " V" : ""));
+            printf("  phy %3d:%s:attached:[%016llx:%02d %016llx %s%s", k, cp,
+                   ull, rp[32], adn, smp_short_attached_device_type[adt],
+                   ((rp[43] & 0x80) ? " V" : ""));
         } else
             printf("  phy %3d:%s:attached:[%016llx:%02d %s%s", k, cp, ull,
-                   smp_resp[32], smp_short_attached_device_type[adt],
-                   ((smp_resp[43] & 0x80) ? " V" : ""));
-        if (smp_resp[14] & 0xf) {
+                   rp[32], smp_short_attached_device_type[adt],
+                   ((rp[43] & 0x80) ? " V" : ""));
+        if (rp[14] & 0xf) {
             off = 0;
             plus = 0;
             off += snprintf(b + off, sizeof(b) - off, " i(");
-            if (smp_resp[14] & 0x8) {
+            if (rp[14] & 0x8) {
                 off += snprintf(b + off, sizeof(b) - off, "SSP");
                 ++plus;
             }
-            if (smp_resp[14] & 0x4) {
+            if (rp[14] & 0x4) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                                 (plus ? "+" : ""));
                 ++plus;
             }
-            if (smp_resp[14] & 0x2) {
+            if (rp[14] & 0x2) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                                 (plus ? "+" : ""));
                 ++plus;
             }
-            if (smp_resp[14] & 0x1) {
+            if (rp[14] & 0x1) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                                 (plus ? "+" : ""));
                 ++plus;
             }
             printf("%s)", b);
         }
-        if (smp_resp[15] & 0xf) {
+        if (rp[15] & 0xf) {
             off = 0;
             plus = 0;
             off += snprintf(b + off, sizeof(b) - off, " t(");
-            if (smp_resp[15] & 0x80) {
+            if (rp[15] & 0x80) {
                 off += snprintf(b + off, sizeof(b) - off, "PORT_SEL");
                 ++plus;
             }
-            if (smp_resp[15] & 0x8) {
+            if (rp[15] & 0x8) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSSP",
                                 (plus ? "+" : ""));
                 ++plus;
             }
-            if (smp_resp[15] & 0x4) {
+            if (rp[15] & 0x4) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                                 (plus ? "+" : ""));
                 ++plus;
             }
-            if (smp_resp[15] & 0x2) {
+            if (rp[15] & 0x2) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                                 (plus ? "+" : ""));
                 ++plus;
             }
-            if (smp_resp[15] & 0x1) {
+            if (rp[15] & 0x1) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                                 (plus ? "+" : ""));
                 ++plus;
@@ -989,9 +972,9 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         }
         printf("%s", cp);
         if (len > 63) {
-            zg = smp_resp[63];
-            if (((smp_resp[60] & 0x1) || zg) && (1 != zg))
-                printf("  ZG:%d\n", smp_resp[63]);
+            zg = rp[63];
+            if (((rp[60] & 0x1) || zg) && (1 != zg))
+                printf("  ZG:%d\n", rp[63]);
             else
                 printf("\n");
         } else

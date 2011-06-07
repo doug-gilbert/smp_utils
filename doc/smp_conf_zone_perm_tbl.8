@@ -1,4 +1,4 @@
-.TH SMP_CONF_ZONE_PERM_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_ZONE_PERM_TBL "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERMISSION TABLE function
 .SH SYNOPSIS
@@ -19,10 +19,22 @@ The mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
 and needs the additional \fI,N\fR to differentiate between HBAs if there
 are multiple present.
 .PP
-Each zone permission configuration descriptor represents all 128 (or 256)
-destination zone permission bits for a single source zone group. At a more
-abstract level each descriptor can be viewed as a row in the zone permission
-table. The maximum number of descriptors that one CONFIGURE ZONE PERMISSION
+The zone permission table has a row for each source zone group and a column
+for each destination zone group. Each element in the table (ZP[s,d]) is a
+single bit indicating whether the source zone group can access the
+destination zone group (the bit is set: 1) or not (the bit is clear: 0).
+There are two different table sizes: 128 and 256 zone groups. Descriptors
+provided to this function request are either 16 bytes (128 bits) or 32
+bytes (256 bits) long. Each descriptor is basically a row in the zone
+permission table.
+
+Apart from being row in the zone permission table each descriptor is
+transposed and applied to the corresponding destination column.
+This "maintains symmetry about the ZP[s,s] table axis" in the words of the
+draft. Also descriptors are applied in the order that they appear in the
+request (i.e. ascending source zone group numbers).
+.PP
+The maximum number of descriptors that one CONFIGURE ZONE PERMISSION
 TABLE function request can hold is limited to 63 if there are 128 zone
 groups; and is limited to 31 if there are 256 zone groups. A full zone table
 will contain 128 (or 256) descriptors so to configure a full table requires
@@ -108,10 +120,13 @@ For simplicity, each active line in the \fIFN\fR file should contain
 16 or 32 bytes. 16 bytes if there are 128 zone groups or 32 bytes if
 there are 256 zone groups.
 .PP
+There is an annex called "Zone permission configuration descriptor
+examples" in recent SAS\-2 and later drafts (Annex H in spl2r01.pdf).
+.PP
 There are some examples of the \fI\-\-permf=FN\fR format in the examples
-directory. Note the need for symmetry: if Z[s,d] is set then so should
-be Z[d,s] (e.g. if Z[2,8]=1 then so should Z[8,2]=1). It also seems to
-be practical to set Z[s,s] (e.g. if zone group 8 is used then Z[8,8]=1).
+directory. Not all SAS-2 expanders properly implement descriptor transpose
+and only place the descriptor in the row corresponding to the source zone
+group.
 .SH CONFORMING TO
 The SMP CONFIGURE ZONE PERMISSION TABLE function was introduced in SAS\-2 .
 .SH AUTHORS

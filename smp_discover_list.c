@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.21 20110530";    /* spl2r00 */
+static char * version_str = "1.21 20110607";    /* spl2r01 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -510,6 +510,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == op->do_brief) {
+        printf("  attached power capable: %d\n", ((rp[33] >> 5) & 0x3));
         printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
         printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
         printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));

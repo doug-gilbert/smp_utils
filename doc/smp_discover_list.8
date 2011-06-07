@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -92,7 +92,7 @@ below on SINGLE LINE PER PHY FORMAT.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 254.
-This is the lowest numbered phy id to attempt fetch in the response.
+This is the starting (lowest numbered) phy id to fetch in the response.
 Note that due to the filter field setting, the first phy id in
 the response may be greater than the argument to this option.
 .TP

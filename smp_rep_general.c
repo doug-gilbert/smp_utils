@@ -45,7 +45,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.19 20110521";    /* sas2r15 */
+static char * version_str = "1.20 20110602";    /* spl2r01 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -421,9 +421,11 @@ main(int argc, char * argv[])
     }
     if (len < 50)
         goto err_out;
-    if (do_full)
+    if (do_full) {
         printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
                (smp_resp[48]  << 8) + smp_resp[49]);
+        printf("  power done timeout: %d (unit: second)\n", smp_resp[52]);
+    }
     if (len < 56)
         goto err_out;
     if (do_full) {

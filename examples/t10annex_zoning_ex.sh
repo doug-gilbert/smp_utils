@@ -3,22 +3,23 @@
 # This is an example script showing a SAS-2 zoning being set up 
 # by calling various smp_utils utilities.
 
-# This is a relatively generic script for setting up zoning. The
-# customization of the zone groups (who can access whom) is in the
-# PERMISSION_FILE while the mapping of expander phy_ids to zone
-# groups in in the PHYINFO_FILE.
+# This example is taken from the "Zone permission configuration descriptor
+# examples" annex in SAS-2 (and later) drafts found at t10.org 
+# The PERM_FILE is fixed to 'permf_t10annex.txt' while the mapping of
+# expander phy_ids to zone groups in in the PHYINFO_FILE or can be passed on
+# the command line.
 
 if [ $1 ] ; then
 if [ "-h" = $1 ] || [ "--help" = $1 ] ; then
-    echo "Usage: zoning_ex.sh [<smp_dev> [<permf> [<pconf>]]]"
+    echo "Usage: t10annex_zoning_ex.sh [<smp_dev> [<pconf>]]"
     echo "  where:"
     echo "    <smp_dev>     expander device node"
-    echo "    <permf>       permission table file name"
     echo "    <pconf>       phy information file name"
     echo
-    echo "zoning_ex.sh sets up zoning on <smp_dev> according to data in the "
-    echo "<permf> and <pconf> files. If these are not given, they default"
-    echo "to values coded within this script which may need editing."
+    echo "t10annex_zoning_ex.sh sets up zoning on <smp_dev> according to data"
+    echo "in the permf_t10annex.txt file in this directory <pconf> file. If"
+    echo "either <smp_dev> or <pconf> are not given, they default to values"
+    echo "coded within this script which may need editing."
     exit 0
 fi
 fi
@@ -35,21 +36,15 @@ else
     SMP_DEV="/dev/bsg/expander-6:0"
 fi
 
-# Assumptions are made in the zone permission table file and the zone phy
-# information file. The zone permission table file name is either the
-# second argument, or defaults:
-if [ $2 ] ; then
-    PERMISSION_FILE="$2"
-else
-    PERMISSION_FILE="permf_8i9t.txt"
-fi
+# Note the zone permission table file is fixed.
+PERM_FILE="permf_t10annex.txt"
 
-# the zone phy information file name is either the third argument, or
+# the zone phy information file name is either the second argument, or
 # defaults:
-if [ $3 ] ; then
-    PHYINFO_FILE="$3"
+if [ $2 ] ; then
+    PHYINFO_FILE="$2"
 else
-    PHYINFO_FILE="pconf_2i2t.txt"
+    PHYINFO_FILE="pconf_all10.txt"
 fi
 
 # First a SMP ZONE LOCK function is required. Assume the zone manager
@@ -71,8 +66,8 @@ echo
 # to provide 128 zone group style descriptors (which is the default for
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
-echo "smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE --deduce $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE $ --deduce SMP_DEV
+echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --first=10 --deduce -v $SMP_DEV"
+smp_conf_zone_perm_tbl --permf=$PERM_FILE --first=10 --deduce -v $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"

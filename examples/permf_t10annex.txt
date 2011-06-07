@@ -1,0 +1,40 @@
+# Example file for smp_conf_zone_perm_tbl --permf=FN --first=10 --deduce
+#
+# Assume 128 zone groups (hence 16 byte table entries); note: even
+# if expander permits 256 zone groups, it still seems to accept the
+# 16 byte table entries format.
+# Note that the starting source zone group is set to 10
+
+# This zone permission descriptor file is designed to set up the
+# SMP CONFIGURE ZONE PERMISSION TABLE request shown in the "Zone
+# permission configuration descriptor examples" annex is various
+# SAS-2 (and later) drafts. [It is Annex L in sas2r16.pdf; Annex H in
+# spl-r07.pdf and spl2r01.pdf .]
+
+# 
+# The request in the Annex example turns all the zone group permission
+# bits on in source zone group 10, then turns all the zone group
+# permission bits off in source zone group 11 .
+
+# N.B. Since SCSI is big endian, the lower bit positions are to the right.
+# Each element below is a byte, represented in ASCII hexadecimal.
+#
+
+# make sure '--first=10' so the following descriptor applies to source
+# zone group 10.
+# If an expander only supports 256 zone groups without expansion of the 16
+# byte format, just expand the first line to have 32 bytes of ff and the
+# second line to 32 bytes of 0 .
+ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,0
+
+# Why do this? To illustrate that the descriptor not only becomes the
+# source zone group row in the permission table, but its transpose
+# should also be placed in the corresponding destination zone group
+# column. Also invariants are preserved (e.g. ZP[1,*] and ZP[*,1] are
+# always set). And the descriptors are applied in the order that appear
+# (i.e. ascending source zone group numbers).
+
+# Not all SAS-2 expanders do the transpose insertion. Users may need
+# to check. Such a check could be done with:
+#   smp_rep_zone_perm_tbl --permf=t10annex_rep.txt --num=12 <expander_dev>
