@@ -21,7 +21,7 @@ ENABLE DISABLE ZONING                 2                smp_ena_dis_zoning
 PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
-READ GPIO REGISTER ENHANCED           SFF-8485*
+READ GPIO REGISTER ENHANCED           SFF-8485*        smp_read_gpio
 REPORT BROADCAST                      2                smp_rep_broadcast
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
@@ -36,7 +36,7 @@ REPORT SELF-CONFIGURATION STATUS      2                smp_rep_self_conf_stat
 REPORT ZONE MANAGER PASSWORD          2                smp_rep_zone_man_pass
 REPORT ZONE PERMISSION TABLE          2                smp_rep_zone_perm_tbl
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
-WRITE GPIO REGISTER ENHANCED          SFF-8485*
+WRITE GPIO REGISTER ENHANCED          SFF-8485*        smp_write_gpio
 ZONE ACTIVATE                         2                smp_zone_activate
 ZONE LOCK                             2                smp_zone_lock
 ZONE UNLOCK                           2                smp_zone_unlock
@@ -44,7 +44,7 @@ ZONED BROADCAST                       2                smp_zoned_broadcast
 
 *  in sas2r16 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
-   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r00) these 4 functions
+   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r01) these 4 functions
    are not defined (their function codes are "restricted").
 
 There are 27 SMP functions defined in sas2r16.pdf plus 2 (or 4 since
@@ -68,4 +68,4 @@ placed on the t10 ftp site.
 
 
 Doug Gilbert
-10th May 2011
+7th June 2011

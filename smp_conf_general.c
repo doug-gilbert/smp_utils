@@ -45,7 +45,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.03 20110501";
+static char * version_str = "1.04 20110602";    /* spl2r01 */
 
 
 static struct option long_options[] = {
@@ -57,6 +57,7 @@ static struct option long_options[] = {
         {"interface", 1, 0, 'I'},
         {"nexus", 1, 0, 'p'},
         {"open", 1, 0, 'o'},
+        {"power", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"reduced", 1, 0, 'R'},
         {"sa", 1, 0, 's'},
@@ -72,11 +73,11 @@ static void usage()
           "[--hex]\n"
           "                        [--inactivity=IN] "
           "[--interface=PARAMS]\n"
-          "                        [--nexus=NE] [--open=OP] [--raw] "
-          "[--reduced=RE]\n"
-          "                        [--sa=SAS_ADDR] [--verbose] "
-          "[--version]\n"
-          "                        SMP_DEVICE[,N]\n"
+          "                        [--nexus=NE] [--open=OP] [--power] "
+          "[--raw]\n"
+          "                        [--reduced=RE] [--sa=SAS_ADDR] "
+          "[--verbose]\n"
+          "                        [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --connect=CO|-c CO     STP maximum connect time limit "
           "(100 us)\n"
@@ -92,6 +93,7 @@ static void usage()
           "(ms)\n"
           "    --open=OP|-o OP        STP reject to open limit "
           "(10 us)\n"
+          "    --power=PD|-p PD       power done timeout (unit: second)\n"
           "    --raw|-r               output response in binary\n"
           "    --reduced=RE|-R RE     initial time to reduced functionality "
           "(100 ms)\n"
@@ -124,11 +126,13 @@ int main(int argc, char * argv[])
     int do_inactivity = 0;
     int do_nexus = 0;
     int do_open = 0;
+    int do_pdt = 0;
     int do_reduced = 0;
     int connect_val = 0;
     int inactivity_val = 0;
     int nexus_val = 0;
     int open_val = 0;
+    int power_val = 0;
     int reduced_val = 0;
     int do_raw = 0;
     int verbose = 0;
@@ -151,7 +155,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:rR:s:vV", long_options,
+        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:p:rR:s:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -209,6 +213,15 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_open;
+            break;
+        case 'p':
+            power_val = smp_get_num(optarg);
+            if ((power_val < 0) || (power_val > 255)) {
+                fprintf(stderr, "bad argument to '--power', expect "
+                        "value from 0 to 255\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            ++do_pdt;
             break;
         case 'r':
             ++do_raw;
@@ -325,6 +338,10 @@ int main(int argc, char * argv[])
         smp_req[8] |= 0x10;
         smp_req[18] = (open_val >> 8) & 0xff;
         smp_req[19] = open_val & 0xff;
+    }
+    if (do_pdt) {
+        smp_req[8] |= 0x20;
+        smp_req[17] = power_val & 0xff;
     }
     if (do_reduced) {
         smp_req[8] |= 0x8;

@@ -24,7 +24,7 @@ The reference documents are:
   sas1r10.pdf          www.t10.org   draft prior to SAS 1.1 spec
   sas2r16.pdf          www.t10.org   draft prior to SAS-2
   spl-r07.pdf          www.t10.org   draft prior to SAS-2.1
-  spl2r00.pdf          www.t10.org   current draft
+  spl2r01.pdf          www.t10.org   current draft
   SFF_8485.PDF         www.sffcommittee.com   SGPIO revision 0.7
 
 In SAS-2.1 the lower levels were put into a document of that name
@@ -33,4 +33,4 @@ SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-13th May 2011
+7th June 2011

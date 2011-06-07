@@ -1,6 +1,6 @@
-.TH SMP_WRITE_GPIO "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_WRITE_GPIO "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
-smp_write_gpio \- invoke WRITE GPIO REGISTER SMP function
+smp_write_gpio \- invoke WRITE GPIO REGISTER (ENHANCED) SMP function
 .SH SYNOPSIS
 .B smp_write_gpio
 [\fI\-\-count=CO\fR] [\fI\-\-data=H,H...\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
@@ -10,15 +10,16 @@ smp_write_gpio \- invoke WRITE GPIO REGISTER SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) WRITE GPIO REGISTER function request
-to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
-the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
-deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
-to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
-differentiate between HBAs if there are multiple present.
+Sends a SAS Management Protocol (SMP) WRITE GPIO REGISTER or a WRITE GPIO
+REGISTER ENHANCED function request to a SMP target. The SMP target is
+identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the
+interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The
+mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
+and needs the additional \fI,N\fR to differentiate between HBAs if there
+are multiple present.
 .PP
-This function is defined in SFF\-8485 ( see www.sffcommittee.com )
-together with its corresponding READ GPIO REGISTER SMP function.
+This function is defined in SFF\-8485 ( see www.sffcommittee.com ) together
+with its corresponding READ GPIO REGISTER (ENHANCED) SMP function.
 The other SMP functions are defined in SAS documents at www.t10.org .
 SFF\-8485 defines a curious device called a "virtual SMP port"
 that lives in a host bus adapter (HBA) and allows SMP to manipulate
@@ -48,6 +49,10 @@ The first 4 bytes will become the first register written.
 \fB\-d\fR, \fB\-\-data\fR=\fB-\fR
 reads string of hexadecimal bytes from stdin. Spaces, tabs and line feeds
 additionally are permitted as separators.
+.TP
+\fB\-E\fR, \fB\-\-enhanced\fR
+sends a WRITE GPIO REGISTER ENHANCED function request (default: send a WRITE
+GPIO REGISTER function request).
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.

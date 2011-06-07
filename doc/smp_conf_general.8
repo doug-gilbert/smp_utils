@@ -1,11 +1,11 @@
-.TH SMP_CONF_GENERAL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_GENERAL "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 .SH SYNOPSIS
 .B smp_conf_general
 [\fI\-\-connect=CO\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-inactivity=IN\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-nexus=NE\fR] [\fI\-\-open=OP\fR] [\fI\-\-raw\fR]
+[\fI\-\-nexus=NE\fR] [\fI\-\-open=OP\fR] [\fI\-\-power=PD\fR] [\fI\-\-raw\fR]
 [\fI\-\-reduced=RE\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
@@ -63,6 +63,13 @@ recognize an I_T nexus loss.
 sets the "update STP reject to open limit" flag and the
 corresponding "STP reject to open limit" field to \fIOP\fR. Unit of
 \fIOP\fR is 10 microseconds.
+.TP
+\fB\-p\fR, \fB\-\-power\fR=\fIPD\fR
+sets the "update power done timeout" flag and the corresponding "power
+doen timeout" field to \fIPD\fR. Unit of \fIPD\fR is 1 second. A \fIPD\fR
+value of 0 is interpreted as don't change the current value. The
+maximum value of \fIPD\fR is 255 and means the time limit is vendor
+specific.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response (less the CRC field) to stdout in binary. All error

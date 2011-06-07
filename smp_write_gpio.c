@@ -46,12 +46,13 @@
  * response.
  */
 
-static char * version_str = "1.04 20110501";
+static char * version_str = "1.05 20110604";
 
 
 static struct option long_options[] = {
         {"count", 1, 0, 'c'},
         {"data", 1, 0, 'd'},
+        {"enhanced", 0, 0, 'E'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
@@ -68,9 +69,9 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_write_gpio [--count=CO] [--data=H,H...] [--help] "
-          "[--hex]\n"
-          "                      [--index=IN] [--interface=PARAMS] "
+          "smp_write_gpio [--count=CO] [--data=H,H...] [--enhanced] "
+          "[--help]\n"
+          "                      [--hex] [--index=IN] [--interface=PARAMS] "
           "[--raw]\n"
           "                      [--sa=SAS_ADDR] [type=TY] [--verbose] "
           "[--version]\n"
@@ -81,6 +82,8 @@ static void usage()
           "    --data=H,H...|-d H,H...    comma separated list of hex "
           "bytes to write\n"
           "    --data=-|-d -        read stdin for hex bytes to write\n"
+          "    --enhanced|-E        use WRITE GPIO REGISTER ENHANCED "
+          "function\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --index=IN|-i IN     register index (def: 0)\n"
@@ -95,7 +98,8 @@ static void usage()
           "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP WRITE GPIO REGISTER function\n"
+          "Performs a SMP WRITE GPIO REGISTER (default) or SMP WRITE GPIO "
+          "REGISTER\nENHANCED function\n"
           );
 }
 
@@ -210,6 +214,7 @@ int main(int argc, char * argv[])
     int res, c, k, len;
     int rcount = 1;
     int do_data = 0;
+    int do_enhanced = 0;
     int do_hex = 0;
     int rindex = 0;
     int phy_id = 0;
@@ -238,7 +243,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:d:hHi:I:p:rs:t:vV", long_options,
+        c = getopt_long(argc, argv, "c:d:EhHi:I:p:rs:t:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -258,6 +263,9 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             do_data = 1;
+            break;
+        case 'E':
+            ++do_enhanced;
             break;
         case 'h':
         case '?':
@@ -390,13 +398,16 @@ int main(int argc, char * argv[])
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+    if (do_enhanced)
+        smp_req[1] = SMP_FN_WRITE_GPIO_REG_ENH;
     smp_req[2] = rtype;
     smp_req[3] = rindex;
     smp_req[4] = rcount;
     for (k = 0; k < arr_len; ++k)
         smp_req[8 + k] = data_arr[k];
     if (verbose) {
-        fprintf(stderr, "    Write GPIO register request: ");
+        fprintf(stderr, "    Write GPIO register%s request: ",
+                (do_enhanced ? " enhanced" : ""));
         for (k = 0; k < (12 + arr_len); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");

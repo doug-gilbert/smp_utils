@@ -3,8 +3,10 @@ SAS-2 zoning might be set up and disabled using the utilities
 in the main directory.
 
 Scripts:
-    zoning_ex.sh:       configure zoning
-    dis_zoning_ex.sh:   disable zoning
+    zoning_ex.sh:           configure zoning
+    dis_zoning_ex.sh:       disable zoning
+    t10annex_zoning_ex.sh   configure zoning with permissions as seen
+                            in the SAS-2 Annex example (see below)
 
 
 The zoning_ex.sh script will override any zoning configuration in
@@ -16,7 +18,7 @@ will restore the previous settings **.
 The zoning_ex.sh script is relatively generic with the tailoring to
 a set of zone permissions and mapping of expander phys to zone groups
 being done either by two files in this directory:
-    permf_8i9t.txt
+    permf_8i9t.txt  ***
     pconf_2i2t.txt
 or, alternatively the permission file and the phy info file can be given
 on the script command line (following the expander device node name).
@@ -45,11 +47,36 @@ in a DISCOVER and DISCOVER LIST response. The smp_discover_list utility
 has a --zpi=FN option to create a zone phy information file suitable for
 the smp_conf_zone_phy_info utility.
 
-** Just in case the zone permission table or the zone phy information
-   is saved, these default files are provided:
+
+The most recent draft of SAS-2 (and later: SPL and SPL-2) at t10.org
+contains an annex titled: "Zone permission configuration descriptor
+examples". It shows how two descriptors in a CONFIGURE ZONE PERMISSION
+TABLE request change the internal zone permission table. One feature
+that annex is trying to highlight is that a descriptor not only becomes
+a source zone group row in that table, but that its transpose becomes the
+corresponding destination zone group column in that table. There is a
+reason for highlighting that: not all SAS-2 expanders apply that transpose.
+
+The t10annex_zoning_ex.sh script starts up zoning based on the zone
+permission file permf_t10annex.txt. This will send a CONFIGURE ZONE
+PERMISSION TABLE request as shown in the annex example. There is an
+associated zone phy control file pconf_all10.txt which puts the first
+24 expander phys in zone group 10. If the t10annex_zoning_ex.sh script
+is successful then the smp_rep_zone_perm_tbl command can be used to
+read the expander zone permission table. A comparison can then be made
+between what was read back and the final state of the zone permission
+table shown in the annex.
+
+
+**  Just in case the zone permission table or the zone phy information
+    is saved, these default files are provided:
       def_permf.txt
       def_pconf.txt
 
+*** The permf_8i9t.txt assumes an expander that does not do the descriptor
+    transpose discussed in the t10 annex example above. This should not
+    cause a problem on an expander that does perform the descriptor transpose.
+
 
 Doug Gilbert
-30th May 2011
+3rd June 2011
