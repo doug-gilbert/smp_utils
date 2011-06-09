@@ -12,8 +12,8 @@ Scripts:
 The zoning_ex.sh script will override any zoning configuration in
 place prior to its invocation. The zoning_ex.sh script does not save
 any of its new settings to non-volatile storage on the expander. So
-if experimentation fails, resetting or power cycling the expander
-will restore the previous settings **.
+when the experimentation is complete, then resetting or power cycling
+the expander will restore the previous settings **.
 
 The zoning_ex.sh script is relatively generic with the tailoring to
 a set of zone permissions and mapping of expander phys to zone groups
@@ -27,10 +27,11 @@ to be changed to match which cable is connected to which expander
 phy. [Suggestion: examine the output of smp_discover closely to determine
 which expander phys are connected to what.]
 
-The zone permissions can be read back from the expander with the REPORT
-ZONE PERMISSION TABLE function (smp_rep_zone_perm_tbl utility). After
-zoning has been set up the smp_rep_zone_perm_tbl is called twice, the
-second time with the --nocomma option, and the output is in these files:
+The zone permission table can be read back from the expander with the
+REPORT ZONE PERMISSION TABLE function. After zoning was set up on the
+author's equipment, the smp_rep_zone_perm_tbl utility was called twice,
+the second time with the --nocomma option, and the output placed in
+these files:
     rep_permf_8i9t.txt
     rep_nocom_permf_8i9t.txt
 Note that the input permission file (i.e. permf_8i9t.txt) was formatted
@@ -42,7 +43,7 @@ no zone group above 30 is being used, so all the remaining rows have their
 default settings.
 
 The zone phy information settings can also be read back from the expander.
-There is no extra function for that since the information is available
+There is no special function for that since the information is available
 in a DISCOVER and DISCOVER LIST response. The smp_discover_list utility
 has a --zpi=FN option to create a zone phy information file suitable for
 the smp_conf_zone_phy_info utility.
@@ -60,12 +61,12 @@ reason for highlighting that: not all SAS-2 expanders apply that transpose.
 The t10annex_zoning_ex.sh script starts up zoning based on the zone
 permission file permf_t10annex.txt. This will send a CONFIGURE ZONE
 PERMISSION TABLE request as shown in the annex example. There is an
-associated zone phy control file pconf_all10.txt which puts the first
-24 expander phys in zone group 10. If the t10annex_zoning_ex.sh script
-is successful then the smp_rep_zone_perm_tbl command can be used to
-read the expander zone permission table. A comparison can then be made
-between what was read back and the final state of the zone permission
-table shown in the annex.
+associated zone phy control file pconf_all10.txt which puts the first 24
+expander phys in zone group 10. If the t10annex_zoning_ex.sh script is
+successful then the smp_rep_zone_perm_tbl utility can be used to read the
+expander zone permission table. A comparison can then be made between what
+was read back and the final state of the zone permission table shown in
+the annex.
 
 
 **  Just in case the zone permission table or the zone phy information
@@ -79,4 +80,4 @@ table shown in the annex.
 
 
 Doug Gilbert
-3rd June 2011
+8th June 2011
