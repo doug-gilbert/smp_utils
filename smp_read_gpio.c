@@ -46,7 +46,9 @@
  * request and outputs its response.
  */
 
-static char * version_str = "1.06 20110604";
+static char * version_str = "1.06 20110613";
+
+#define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
 
 static struct option long_options[] = {
@@ -122,12 +124,13 @@ int main(int argc, char * argv[])
     char device_name[512];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_READ_GPIO_REG,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[1024 + 16];
+    unsigned char smp_resp[SMP_MAX_RESP_LEN];
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
     int subvalue = 0;
     char * cp;
     int ret = 0;
+    char b[128];
 
     memset(device_name, 0, sizeof device_name);
     memset(i_params, 0, sizeof i_params);
@@ -336,6 +339,9 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         ret = smp_resp[2];
+        cp = smp_get_func_res_str(ret, sizeof(b), b);
+        fprintf(stderr, "Read gpio register%s result: %s\n",
+                (do_enhanced ? " enhanced" : ""), cp);
         goto err_out;
     }
     printf("Read GPIO register%s response:\n",

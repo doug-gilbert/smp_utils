@@ -47,10 +47,7 @@
  * its response.
  */
 
-static char * version_str = "1.01 20110428";
-
-/* Leave the following define commented out unless testing */
-// #define DUMMY_TEST 1
+static char * version_str = "1.01 20110609";
 
 static unsigned char full_perm_tbl[32 * 256];
 
@@ -453,13 +450,10 @@ int main(int argc, char * argv[])
                 "ignore excess\n", desc_len);
     max_desc_per_req = (128 == num_zg) ? 63 : 31;
 
-#ifdef DUMMY_TEST
-#else
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
-#endif
 
     for (j = 0; j < num_desc; j += max_desc_per_req) {
         numd = num_desc - j;
@@ -494,15 +488,7 @@ int main(int argc, char * argv[])
         smp_rr.request = smp_req;
         smp_rr.max_response_len = sizeof(smp_resp);
         smp_rr.response = smp_resp;
-#ifdef DUMMY_TEST
-        memset(smp_resp, 0, sizeof smp_resp);
-        smp_resp[0] = SMP_FRAME_TYPE_RESP;
-        smp_resp[1] = smp_req[1];
-        smp_rr.act_response_len = 8;
-        res = 0;
-#else
         res = smp_send_req(&tobj, &smp_rr, verbose);
-#endif
 
         if (res) {
             fprintf(stderr, "smp_send_req failed, res=%d\n", res);

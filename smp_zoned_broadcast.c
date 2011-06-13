@@ -46,10 +46,7 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.00 20110424";
-
-/* Leave the following define commented out unless testing */
-// #define DUMMY_TEST 1
+static char * version_str = "1.00 20110609";
 
 
 static struct option long_options[] = {
@@ -402,13 +399,10 @@ int main(int argc, char * argv[])
         return SMP_LIB_SYNTAX_ERROR;
     }
 
-#ifdef DUMMY_TEST
-#else
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
-#endif
 
     smp_req[0] = SMP_FRAME_TYPE_REQ;
     smp_req[1] = SMP_FN_ZONED_BROADCAST,
