@@ -183,9 +183,18 @@ package could be used like this:
 .PP
   # sg_logs \-\-page=18h /dev/sdb
 .PP
-Any given "attached SAS address" is either a HBA, an expander or 0
-indicating that port is not connected. An expander is indicated
-by "attached device type: expander device".
+Any given "attached SAS address" is either a HBA, an expander or 0 indicating
+that port is not connected. An expander is indicated by "attached device
+type: expander device". A SAS disk's target port identifiers (also known as
+SAS addresses), device name and logical unit name (all NAA 5 format) can be
+found with the sg_vpd utility (e.g. 'sg_vpd -i <disk_dev>'). The sdparm
+utility can provide the same information (e.g. 'sdparm -i <disk_dev>').
+.PP
+A SAS expander is often associated with a SCSI Enclosure Services (SES)
+device sometimes on the same silicon attached via a virtual phy to the
+expander. That SES device may be able to access and control an attached
+enclosure or backplane via SGPIO or I2C on sideband signals (e.g. in a
+SFF\-8087 cable). To interact with a SES device, see the sg_ses utility.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO
@@ -225,4 +234,4 @@ Copyright \(co 2006\-2011 Douglas Gilbert
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 .SH "SEE ALSO"
-.B sg_logs, sg_vpd(sg3_utils); sdparm(sdparm)
+.B sg_logs, sg_vpd, sg_ses(sg3_utils); sdparm(sdparm)

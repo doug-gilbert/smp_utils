@@ -46,7 +46,9 @@
  * response.
  */
 
-static char * version_str = "1.05 20110604";
+static char * version_str = "1.06 20110613";
+
+#define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
 
 static struct option long_options[] = {
@@ -225,7 +227,7 @@ int main(int argc, char * argv[])
     unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
-    unsigned char smp_req[1060];
+    unsigned char smp_req[SMP_MAX_REQ_LEN];
     unsigned char smp_resp[8];
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
@@ -233,6 +235,7 @@ int main(int argc, char * argv[])
     int arr_len = 0;
     int subvalue = 0;
     char * cp;
+    char b[128];
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
@@ -466,6 +469,9 @@ int main(int argc, char * argv[])
     }
     if (smp_resp[2]) {
         ret = smp_resp[2];
+        cp = smp_get_func_res_str(ret, sizeof(b), b);
+        fprintf(stderr, "Write gpio register%s result: %s\n",
+                (do_enhanced ? " enhanced" : ""), cp);
         goto err_out;
     }
 
