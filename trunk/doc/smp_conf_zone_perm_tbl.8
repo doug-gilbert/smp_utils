@@ -3,10 +3,10 @@
 smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERMISSION TABLE function
 .SH SYNOPSIS
 .B smp_conf_zone_perm_tbl
-[\fI\-\-deduce\fR] [\fI\-\-expected=EX\fR] [\fI\-\-first=SS\fR]
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-numzg=NG\fR] \fI\-\-permf=FN\fR [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-save=SAV\fR] [\fI\-\-verbose\fR]
+[\fI\-\-deduce\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
+[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-numzg=NG\fR]
+\fI\-\-permf=FN\fR [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-save=SAV\fR] [\fI\-\-start=SS\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -48,7 +48,6 @@ found in the \fIFN\fR file will be sent unless an earlier function response
 indicates there has been an error.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
-maximum connection time limit.
 .TP
 \fB\-d\fR, \fB\-\-deduce\fR
 deduce number of zone groups from number of bytes on active \fIFN\fR lines.
@@ -66,10 +65,12 @@ the expander change count of the SMP target (i.e. the expander) when
 the request arrives then the target ignores the request and sets a
 function result of "invalid expander change count" in the response.
 .TP
-\fB\-f\fR, \fB\-\-first\fR=\fISS\fR
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
 starting (first) source zone group (default: zone group 0). If multiple
 function requests are sent, this field in subsequent function requests
-will be adjusted to reflect those descriptors already sent. 
+will be adjusted to reflect those descriptors already sent. Note that
+the \fISS\fR value may be picked up from \fIFN\fR and if this option
+and that value are not the same, an error is generated.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -92,6 +93,10 @@ FN is a file containing zone permission configuration descriptors in ASCII
 hexadecimal; either as bytes separated by space, tab, comma or newline,
 or as longer strings of hexadecimal bytes in which every 2 digits
 represents a byte. Empty lines and those starting with "#" are ignored.
+A line with "\-\-start=<num>" will be taken as the starting source zone
+group number (i.e. <num> becomes \fISS\fR) unless it contradicts the
+command line \fI\-\-start=SS\fR option. Otherwise lines starting with "\-"
+are ignored.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response (less the CRC field) to stdout in binary. All error
@@ -110,6 +115,10 @@ set the 'save' field in the SMP request. \fISAV\fR may take these values:
 2 for updating shadow values and if available the saved values, 3 for
 updating both saved and shadow values.
 .TP
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
+See entry above, listed in order by its short option letter (i.e.
+\fI\-f\fR).
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times.
 .TP
@@ -119,6 +128,12 @@ print the version string and then exit.
 For simplicity, each active line in the \fIFN\fR file should contain
 16 or 32 bytes. 16 bytes if there are 128 zone groups or 32 bytes if
 there are 256 zone groups.
+.PP
+SCSI is big endian. So for 128 zone groups, the first byte placed in
+the zone permission configuration descriptor is ZP[0,127\-120]. If the
+\fI\-\-start=SS\fR option is given then the first byte is
+ZP[\fISS\fR,127\-120]. For 256 zone groups, the first bytes are
+ZP[0,255\-248] and ZP[\fISS\fR,255\-248] respectively.
 .PP
 There is an annex called "Zone permission configuration descriptor
 examples" in recent SAS\-2 and later drafts (Annex H in spl2r01.pdf).

@@ -36,7 +36,9 @@ else
     SMP_DEV="/dev/bsg/expander-6:0"
 fi
 
-# Note the zone permission table file is fixed.
+# Note the zone permission table file is fixed. Also this file
+# contains '--start=10' so the (two) descriptors are applied
+# starting at zone group 10.
 PERM_FILE="permf_t10annex.txt"
 
 # the zone phy information file name is either the second argument, or
@@ -66,8 +68,8 @@ echo
 # to provide 128 zone group style descriptors (which is the default for
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
-echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --first=10 --deduce -v $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=$PERM_FILE --first=10 --deduce -v $SMP_DEV
+echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV"
+smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"
@@ -154,3 +156,16 @@ if [ $res -ne 0 ] ; then
     echo "smp_smp_discover_list failed with exit status: $res"
 fi
 
+
+echo
+echo "The zone permission table could now be viewed with:"
+echo "  smp_rep_zone_perm_tbl --t10=12 $SMP_DEV"
+#
+# Note that the t10 annex example shows the ZP array with its origin
+# (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
+# output will show the origin in the top right corner (due to SCSI's big
+# endian internal representation). To override that, the "--t10=12" option
+# presents the output like the t10 annex example (i.e. bit oriented, little
+# endian).
+#
+# To comply with t10 rules ZP[10,11] should be zero (as should ZP[11,10]).
