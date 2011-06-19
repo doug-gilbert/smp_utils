@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.96 [20110613] [svn:r94]
+Changelog for smp_utils-0.96 [20110619] [svn:r95]
   - smp_conf_zone_perm_tbl, smp_conf_zone_man_pass
     smp_conf_zone_phy_info, smp_ena_dis_zoning,
     smp_rep_broadcast, smp_rep_phy_event, smp_rep_phy_event_list,

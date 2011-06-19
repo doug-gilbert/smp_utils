@@ -1,9 +1,9 @@
-# Example file for smp_conf_zone_perm_tbl --permf=FN --first=10 --deduce
+# Example file for smp_conf_zone_perm_tbl --permf=FN --deduce
 #
 # Assume 128 zone groups (hence 16 byte table entries); note: even
 # if expander permits 256 zone groups, it still seems to accept the
 # 16 byte table entries format.
-# Note that the starting source zone group is set to 10
+# Note that the starting source zone group is set to 10 by this file.
 
 # This zone permission descriptor file is designed to set up the
 # SMP CONFIGURE ZONE PERMISSION TABLE request shown in the "Zone
@@ -20,11 +20,12 @@
 # Each element below is a byte, represented in ASCII hexadecimal.
 #
 
-# make sure '--first=10' so the following descriptor applies to source
+# Note the '--start=10' so the following descriptors start at source
 # zone group 10.
 # If an expander only supports 256 zone groups without expansion of the 16
 # byte format, just expand the first line to have 32 bytes of ff and the
 # second line to 32 bytes of 0 .
+--start=10
 ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,0
 
@@ -37,4 +38,13 @@ ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 
 # Not all SAS-2 expanders do the transpose insertion. Users may need
 # to check. Such a check could be done with:
-#   smp_rep_zone_perm_tbl --permf=t10annex_rep.txt --num=12 <expander_dev>
+#   smp_rep_zone_perm_tbl --t10=12 <expander_dev>
+#
+# Note that the t10 annex example shows the ZP array with its origin
+# (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
+# output will show the origin in the top right corner (due to SCSI's big
+# endian internal representation). To override that, the "--t10=12" option
+# presents the output like the t10 annex example (i.e. bit oriented, little
+# endian).
+#
+# To comply with t10 rules ZP[10,11] should be zero (as should ZP[11,10]).

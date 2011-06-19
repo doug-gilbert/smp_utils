@@ -47,15 +47,20 @@
  * its response.
  */
 
-static char * version_str = "1.01 20110609";
+static char * version_str = "1.02 20110619";
 
+/* Permission table big enough for 256 source zone groups (rows) and
+ * 256 destination zone groups (columns). Each element is a single bit,
+ * written in the drafts as ZP[s,d] . */
 static unsigned char full_perm_tbl[32 * 256];
+
+static int sszg = 0;
+static int sszg_given = 0;
 
 
 static struct option long_options[] = {
         {"deduce", 0, 0, 'd'},
         {"expected", 1, 0, 'E'},
-        {"first", 1, 0, 'f'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -64,6 +69,7 @@ static struct option long_options[] = {
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"save", 1, 0, 'S'},
+        {"start", 1, 0, 'f'},   /* note the short option: 'f' */
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -72,12 +78,13 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_zone_perm_tbl [--deduce] [--expected=EX] [--first=SS]\n"
-          "                              [--help] [--hex] "
-          "[--interface=PARAMS]\n"
-          "                              [--numzg=NG] --permf=FN [--raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                              [--save=SAV] [--verbose] "
+          "smp_conf_zone_perm_tbl [--deduce] [--expected=EX] [--help] "
+          "[--hex]\n"
+          "                              [--interface=PARAMS] [--numzg=NG] "
+          "--permf=FN\n"
+          "                              [--raw] [--sa=SAS_ADDR] "
+          "[--save=SAV]\n"
+          "                              [--start=SS] [--verbose] "
           "[--version]\n"
           "                              SMP_DEVICE[,N]\n"
           "  where:\n"
@@ -86,8 +93,6 @@ static void usage()
           "                           of bytes on active FN lines\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
-          "    --first=SS|-f SS       starting (first) source zone group "
-          "(def: 0)\n"
           "    --help|-h              print out usage message\n"
           "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
@@ -102,14 +107,17 @@ static void usage()
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                           '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                           interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). Depending "
+          "on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --save=SAV|-S SAV      SAV: 0 -> shadow (def); 1 -> "
           "saved\n"
           "                           2 -> shadow (and saved if "
           "supported))\n"
           "                           3 -> shadow and saved\n"
+          "    --start=SS|-f SS       starting (first) source zone group "
+          "(def: 0)\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
           "Performs one of more SMP CONFIGURE ZONE PERMISSION TABLE "
@@ -122,12 +130,15 @@ static void usage()
  * separated list of bytes. The first ASCII hex string detected has its
  * length checked; if the length is 1 or 2 then bytes are expected to
  * be space, comma or tab separated; if the length is 3 or more then a
- * string of ACSII hex digits is expected, 2 per byte. Everything from
- * and including a '#' on a line is ignored.
+ * string of ACSII hex digits is expected, 2 per byte. If any lines
+ * contain more that 16 bytes (numzg256p is non-NULL), then 1 is written
+ * to *numzg256p. Everything from and including a '#' and '-' on a line
+ * is ignored. '#' is meant for comments. '-' is meant as a lead-in to an
+ * option (e.g. "--start=8"); not yet implemented.
  * Returns 0 if ok, or 1 if error. */
 static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
-          int max_arr_len, int * numzg256p)
+          int max_arr_len, int * numzg256p, int verbose)
 {
     int fn_len, in_len, k, j, m;
     int no_space = 0;
@@ -174,6 +185,25 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         in_len -= m;
         if ('#' == *lcp)
             continue;
+        if ('-' == *lcp) {
+            if (0 == strncmp("--start=", lcp, 8)) {
+                if (1 == sscanf(lcp, "--start=%d", &k)) {
+                    if (sszg_given && (k != sszg)) {
+                        fprintf(stderr, "permission file '--start=%d' "
+                                "contradicts command line '--start=%d'\n",
+                                k, sszg);
+                        goto bad;
+                    }
+                    if (verbose)
+                        fprintf(stderr, "permission file contains "
+                                "--start=%d, using it\n", k);
+                    sszg = k;
+                }  else if (verbose)
+                    fprintf(stderr, "found line with '-' but "
+                            "could not decode --start=<num>\n");
+            }
+            continue;
+        }
         if (! checked_hexlen) {
             ++checked_hexlen;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF");
@@ -182,7 +212,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         }
 
         k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
-        if ((k < in_len) && ('#' != lcp[k])) {
+        if ((k < in_len) && ('#' != lcp[k]) && ('-' != lcp[k])) {
             fprintf(stderr, "f2hex_arr: syntax error at "
                     "line %d, pos %d\n", j + 1, m + k + 1);
             goto bad;
@@ -226,7 +256,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
                     if ('\0' == *lcp)
                         break;
                 } else {
-                    if ('#' == *lcp) {
+                    if (('#' == *lcp) || ('-' == *lcp)) {
                         --k;
                         break;
                     }
@@ -266,7 +296,6 @@ int main(int argc, char * argv[])
     const char * permf = NULL;
     int deduce = 0;
     int expected_cc = 0;
-    int first = 0;
     int do_hex = 0;
     int num_zg = 128;
     int num_zg_given = 0;
@@ -306,12 +335,13 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
-        case 'f':
-            first = smp_get_num(optarg);
-            if ((first < 0) || (first > 255)) {
-                fprintf(stderr, "bad argument to '--first'\n");
+        case 'f':       /* maps tp '--start=SS' */
+            sszg = smp_get_num(optarg);
+            if ((sszg < 0) || (sszg > 255)) {
+                fprintf(stderr, "bad argument to '--start'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            ++sszg_given;
             break;
         case 'h':
         case '?':
@@ -437,7 +467,7 @@ int main(int argc, char * argv[])
         return SMP_LIB_SYNTAX_ERROR;
     }
     if (f2hex_arr(permf, full_perm_tbl, &len, sizeof full_perm_tbl,
-                  &numzg256)) {
+                  &numzg256, verbose)) {
         fprintf(stderr, "failed decoding --permf=FN option\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
@@ -465,7 +495,7 @@ int main(int argc, char * argv[])
         smp_req[3] = (numd * (desc_len / 4)) + 3;
         smp_req[4] = (expected_cc >> 8) & 0xff;
         smp_req[5] = expected_cc & 0xff;
-        smp_req[6] = first + j;
+        smp_req[6] = sszg + j;
         smp_req[7] = numd;
         smp_req[8] = (do_save & 0x3);
         if (256 == num_zg)
