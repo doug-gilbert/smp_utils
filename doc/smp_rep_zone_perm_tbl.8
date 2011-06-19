@@ -1,4 +1,4 @@
-.TH SMP_REP_ZONE_PERM_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_ZONE_PERM_TBL "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
 .SH SYNOPSIS
@@ -7,7 +7,8 @@ smp_rep_zone_perm_tbl \- invoke REPORT ZONE PERMISSION TABLE function
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-multiple\fR] [\fI\-\-nocomma\fR]
 [\fI\-\-num=MD\fR] [\fI\-\-permf=FN\fR] [\fI\-\-raw\fR]
 [\fI\-\-report=RT\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-start=SS\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-t10=BITS\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -34,13 +35,20 @@ TABLE requests until all source zone groups (or starting from
 to output the whole zone permission table. In the absence of the
 \fI\-\-multiple\fR option only one REPORT ZONE PERMISSION TABLE request is
 sent.
+.PP
+The output of this utility is designed to be useful as input to the
+smp_conf_zone_perm_tbl utility. In other words these utilties can be
+used to save and restore zone permission table settings.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
-maximum connection time limit.
 .TP
 \fB\-a\fR, \fB\-\-append\fR
 used in conjunction with \fI\-\-permf=FN\fR to append to \fIFN\fR if it
 already exists. If \fIFN\fR does not exist then it is created.
+.TP
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
+starting (first and lowest numbered) source zone group (default: zone group
+0).
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -95,8 +103,18 @@ this option and it will typically be an expander's SAS address. The
 To give a number in hexadecimal either prefix it with '0x' or put a
 trailing 'h' on it.
 .TP
-\fB\-S\fR, \fB\-\-start\fR=\fISS\fR
-starting (lowest numbered) source zone group (default: zone group 0).
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
+See entry above, listed in order by its short option letter (i.e.
+\fI\-f\fR).
+.TP
+\fB\-T\fR, \fB\-\-t10\fR=\fIBITS\fR
+This is an alternate output respresention showing single bits with the
+origin (i.e. ZP[0,0]) in the top left. This follows the example zone
+permission tables shown in the SAS draft documents (at t10.org). Without this
+option the descriptors shown reflect the byte oriented, big endian nature of
+SCSI (and hence SMP) commands. A square array will be output with no more
+than \fIBITS\fR rows (and no more than \fIBITS\fR columns). The output using
+this option is not suitable as input for the smp_conf_zone_perm_tbl utility.
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times.
@@ -104,6 +122,10 @@ increase the verbosity of the output. Can be used multiple times.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH NOTES
+When the \fI\-\-permf=FN\fR is given and \fISS\fR is greater than zero
+then a line of the form "\-\-start=\fISS\fR" is written to \fIFN\fR
+just prior to the first row of zone permissions.
+.PP
 There are some examples of the \fI\-\-permf=FN\fR format in the examples
 directory.
 .SH CONFORMING TO
