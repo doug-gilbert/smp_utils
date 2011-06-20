@@ -1,4 +1,5 @@
-# file for smp_conf_zone_phy_info --pconf=FN
+# Example file invoked like this:
+#   smp_conf_zone_phy_info --pconf=<this_filename> <smp_dev>
 #
 # Assume phy ids 0, 1, 2 and 3 are attached to initiator (HBA) doing
 # zoning and phy control

@@ -1,4 +1,5 @@
-# file for smp_conf_zone_phy_info --pconf=FN
+# Example file invoked like this:
+#   smp_conf_zone_phy_info --pconf=<this_filename> <smp_dev>
 #
 # Assume an expander with 24 phys. Put all its phys in zone group 1 so
 # they can all access one another if zoning is enabled. This seems
@@ -31,3 +32,9 @@ f,0,0,1
 15,0,0,1
 16,0,0,1
 17,0,0,1
+
+# The default zone permission and phy control files could be used
+# with the scripts in this directory to reset a 24 phy expander to its
+# zoning defaults (and turn off zoning) like this:
+#   ./zoning_ex.sh <smp_dev> def_permf.txt def_pconf.txt
+#   ./dis_zoning_ex.sh

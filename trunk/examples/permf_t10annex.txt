@@ -1,4 +1,5 @@
-# Example file for smp_conf_zone_perm_tbl --permf=FN --deduce
+# Example file invoked like this:
+#   smp_conf_zone_perm_tbl --permf=<this_filename> --deduce <smp_dev>
 #
 # Assume 128 zone groups (hence 16 byte table entries); note: even
 # if expander permits 256 zone groups, it still seems to accept the
@@ -38,12 +39,12 @@ ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 
 # Not all SAS-2 expanders do the transpose insertion. Users may need
 # to check. Such a check could be done with:
-#   smp_rep_zone_perm_tbl --t10=12 <expander_dev>
+#   smp_rep_zone_perm_tbl --bits=12 <expander_dev>
 #
 # Note that the t10 annex example shows the ZP array with its origin
 # (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
 # output will show the origin in the top right corner (due to SCSI's big
-# endian internal representation). To override that, the "--t10=12" option
+# endian internal representation). To override that, the "--bits=12" option
 # presents the output like the t10 annex example (i.e. bit oriented, little
 # endian).
 #
