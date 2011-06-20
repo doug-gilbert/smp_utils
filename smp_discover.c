@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.29 20110602";    /* spl2r01 */
+static char * version_str = "1.30 20110620";    /* spl2r01 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -655,7 +655,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     }
     printf("  routing attribute: %s\n", b);
     if (optsp->do_brief) {
-        if ((len > 59) && !!(rp[60] & 0x1))
+        if ((len > 63) && !!(rp[60] & 0x1))
             printf("  zone group: %d\n", rp[63]);
         return 0;
     }
@@ -879,7 +879,17 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             ull |= rp[24 + j];
         }
         if ((0 == adt) || (adt > 3)) {
-            printf("  phy %3d:%s:attached:[0000000000000000:00]\n", k, cp);
+            printf("  phy %3d:%s:attached:[0000000000000000:00]", k, cp);
+            if ((optsp->do_brief > 1) || optsp->do_adn || (len < 64)) {
+                printf("\n");
+                continue;
+            }
+            zg = rp[63];
+            /* (zoning enabled or a zone group > 0) and a zg other than 1 */
+            if (((rp[60] & 0x1) || zg) && (1 != zg))
+                printf("  ZG:%d\n", zg);
+            else
+                printf("\n");
             continue;
         }
         if (optsp->do_adn && (len > 59)) {
@@ -974,7 +984,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         if (len > 63) {
             zg = rp[63];
             if (((rp[60] & 0x1) || zg) && (1 != zg))
-                printf("  ZG:%d\n", rp[63]);
+                printf("  ZG:%d\n", zg);
             else
                 printf("\n");
         } else

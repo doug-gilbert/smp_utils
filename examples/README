@@ -45,8 +45,9 @@ default settings.
 The zone phy information settings can also be read back from the expander.
 There is no special function for that since the information is available
 in a DISCOVER and DISCOVER LIST response. The smp_discover_list utility
-has a --zpi=FN option to create a zone phy information file suitable for
-the smp_conf_zone_phy_info utility.
+has a --zpi=FN option to create a zone phy information file from the
+current expander settings. This file is suitable for the
+smp_conf_zone_phy_info utility.
 
 
 The most recent draft of SAS-2 (and later: SPL and SPL-2) at t10.org
@@ -66,7 +67,8 @@ expander phys in zone group 10. If the t10annex_zoning_ex.sh script is
 successful then the smp_rep_zone_perm_tbl utility can be used to read the
 expander zone permission table. A comparison can then be made between what
 was read back and the final state of the zone permission table shown in
-the annex.
+the annex. To simplify comparing the read back zone permission table
+and the SAS-2 annex example, the '--bits=12' option may help.
 
 
 **  Just in case the zone permission table or the zone phy information
@@ -76,8 +78,9 @@ the annex.
 
 *** The permf_8i9t.txt assumes an expander that does not do the descriptor
     transpose discussed in the t10 annex example above. This should not
-    cause a problem on an expander that does perform the descriptor transpose.
+    cause a problem on an expander that does perform the descriptor
+    transpose.
 
 
 Doug Gilbert
-8th June 2011
+20th June 2011

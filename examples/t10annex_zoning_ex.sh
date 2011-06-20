@@ -159,12 +159,12 @@ fi
 
 echo
 echo "The zone permission table could now be viewed with:"
-echo "  smp_rep_zone_perm_tbl --t10=12 $SMP_DEV"
+echo "  smp_rep_zone_perm_tbl --bits=12 $SMP_DEV"
 #
 # Note that the t10 annex example shows the ZP array with its origin
 # (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
 # output will show the origin in the top right corner (due to SCSI's big
-# endian internal representation). To override that, the "--t10=12" option
+# endian internal representation). To override that, the "--bits=12" option
 # presents the output like the t10 annex example (i.e. bit oriented, little
 # endian).
 #

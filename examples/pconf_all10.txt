@@ -1,4 +1,5 @@
-# file for smp_conf_zone_phy_info --pconf=FN
+# Example file invoked like this:
+#   smp_conf_zone_phy_info --pconf=<this_filename> <smp_dev>
 #
 # Put all phys in zone group 10
 # Assume expander with 24 phys. If larger onlt the first 24 phys will

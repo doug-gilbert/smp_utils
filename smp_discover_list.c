@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.21 20110607";    /* spl2r01 */
+static char * version_str = "1.22 20110620";    /* spl2r01 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -834,8 +834,17 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         ull |= rp[asa_off + j];
     }
     if ((0 == adt) || (adt > 3)) {
-        printf("  phy %3d:%s:attached:[0000000000000000:00]\n", phy_id, cp);
-        return 0;
+        printf("  phy %3d:%s:attached:[0000000000000000:00]", phy_id, cp);
+        if ((op->do_brief > 1) || op->do_adn) {
+            printf("\n");
+            return 0;
+        }
+        if (z_supported && (1 != z_group)) {
+            ++zg_not1;
+            printf("  ZG:%d\n", z_group);
+        } else
+            printf("\n");
+        return !! zg_not1;
     }
     if ((0 == desc) && op->do_adn) {
         adn = 0;
@@ -907,7 +916,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         printf("%s)", b);
     }
     printf("]");
-    if (op->do_brief < 2) {
+    if ((op->do_brief < 2) && (0 == op->do_adn)) {
         switch(negot) {
         case 8:
             cp = "  1.5 Gbps";

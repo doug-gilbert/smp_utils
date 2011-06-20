@@ -46,7 +46,7 @@
  * its response.
  */
 
-static char * version_str = "1.03 20110619";
+static char * version_str = "1.04 20110620";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -75,6 +75,7 @@ static int numzg_blen[] = {
 
 static struct option long_options[] = {
         {"append", 0, 0, 'a'},
+        {"bits", 1, 0, 'B'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
@@ -86,7 +87,6 @@ static struct option long_options[] = {
         {"report", 1, 0, 'R'},
         {"sa", 1, 0, 's'},
         {"start", 1, 0, 'f'},
-        {"t10", 1, 0, 'T'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
@@ -96,17 +96,20 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_zone_perm_tbl [--append] [--help] [--hex] "
-          "[--interface=PARAMS]\n"
-          "                             [--multiple] [--nocomma] "
-          "[--num=MD] [--permf=FN]\n"
-          "                             [--raw] [--report=RT] "
-          "[--sa=SAS_ADDR]\n"
-          "                             [--start=SS] [--t10=BITS] "
+          "smp_rep_zone_perm_tbl [--append] [--bits=COL] [--help] [--hex]\n"
+          "                             [--interface=PARAMS] [--multiple] "
+          "[--nocomma]\n"
+          "                             [--num=MD] [--permf=FN] [--raw] "
+          "[--report=RT]\n"
+          "                             [--sa=SAS_ADDR] [--start=SS] "
           "[--verbose]\n"
           "                             [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --append|-a          append to FN with '--permf' option\n"
+          "    --bits=COL|-B COL    output table as bit array with COL "
+          "columns\n"
+          "                         and ZP[0,0] top left (def: output byte "
+          "array)\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
@@ -136,8 +139,6 @@ static void usage()
           "needed\n"
           "    --start=SS|-f SS     starting (first) source zone group "
           "(default: 0)\n"
-          "    --t10=BITS|-T BITS    square array with BITS rows. ZP[0,0] "
-          "top left\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Perform one or more SMP REPORT ZONE PERMISSION TABLE functions\n"
@@ -167,7 +168,7 @@ int main(int argc, char * argv[])
     int do_raw = 0;
     int report_type = 0;
     int sszg = 0;
-    int t10_rows = 0;
+    int bits_col = 0;
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
@@ -189,7 +190,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "af:hHI:mn:NP:rR:s:T:vV", long_options,
+        c = getopt_long(argc, argv, "aB:f:hHI:mn:NP:rR:s:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -197,6 +198,14 @@ int main(int argc, char * argv[])
         switch (c) {
         case 'a':
             ++do_append;
+            break;
+        case 'B':
+           bits_col = smp_get_num(optarg);
+           if ((bits_col < 1) || (bits_col > 256)) {
+                fprintf(stderr, "bad argument to '--bits=', expect 1 to "
+                        "256\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
             break;
         case 'f':       /* note: maps to '--start=SS' option */
            sszg = smp_get_num(optarg);
@@ -256,14 +265,6 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
-            break;
-        case 'T':
-           t10_rows = smp_get_num(optarg);
-           if ((t10_rows < 1) || (t10_rows > 256)) {
-                fprintf(stderr, "bad argument to '--t10=', expect 1 to "
-                        "256\n");
-                return SMP_LIB_SYNTAX_ERROR;
-            }
             break;
         case 'v':
             ++verbose;
@@ -487,12 +488,12 @@ int main(int argc, char * argv[])
                         "%d\n", num_desc);
             if (sszg > 0)
                 fprintf(foutp, "--start=%d\n", sszg);
-            if (t10_rows) {
+            if (bits_col) {
                 fprintf(foutp, "\n\nOutput unsuitable for "
                         "smp_conf_zone_perm_tbl utility\n\n    ");
-                for (k = 0; k < t10_rows; ++k)
+                for (k = 0; k < bits_col; ++k)
                     fprintf(foutp, "%d", k % 10);
-                fprintf(foutp, "\n");
+                fprintf(foutp, "\n\n");
             }
             if (0 == numzg_blen[numzg]) {
                 fprintf(stderr, "unexpected number of zone groups: %d\n",
@@ -502,7 +503,7 @@ int main(int argc, char * argv[])
         }
         descp = smp_resp + 16;
         for (k = 0; k < num_desc; ++k, descp += desc_len) {
-            if (0 == t10_rows) {
+            if (0 == bits_col) {
                 for (m = 0; m < desc_len; ++m) {
                     if (nocomma)
                         fprintf(foutp, "%02x", descp[m]);
@@ -513,13 +514,13 @@ int main(int argc, char * argv[])
                             fprintf(foutp, ",%x", descp[m]);
                     }
                 }
-            } else {
+            } else {    /* --bit=<bits_col> given */
                 int by, bi;
 
-                if ((k + j) >= t10_rows)
+                if ((k + j) >= bits_col)
                     break;
                 fprintf(foutp, "%-4d", j + k);
-                for (m = 0; m < t10_rows; ++m) {
+                for (m = 0; m < bits_col; ++m) {
                     by = (m / 8) + 1;
                     bi = m % 8;
                     fprintf(foutp, "%d", (descp[desc_len - by] >> bi) & 0x1);
