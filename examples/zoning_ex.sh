@@ -72,7 +72,7 @@ echo
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
 echo "smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE --deduce $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE $ --deduce SMP_DEV
+smp_conf_zone_perm_tbl --permf=$PERMISSION_FILE --deduce $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"

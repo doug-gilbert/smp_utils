@@ -1,4 +1,5 @@
-# Example file for smp_conf_zone_perm_tbl --permf=FN
+# Example file invoked like this:
+#   smp_conf_zone_perm_tbl --permf=<this_filename> --deduce <smp_dev>
 #
 # Assume 128 zone groups (hence 16 byte table entries); note: even
 # if expander permits 256 zone groups, it still seems to accept the

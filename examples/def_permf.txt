@@ -1,4 +1,5 @@
-# Example file for smp_conf_zone_perm_tbl --permf=FN
+# Example file invoked like this:
+#   smp_conf_zone_perm_tbl --permf=<this_filename> --deduce <smp_dev>
 #
 # Assume 128 zone groups (hence 16 byte table entries); note: even
 # if expander permits 256 zone groups, it still seems to accept the
@@ -46,3 +47,13 @@ ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 # Actually each line can be 16 zeros since the setting of ZG 1 to all
 # ones and all other zone groups to have access to ZG 1 is implicit
 # (i.e. cannot be overridden).
+
+# Note that a zoning expander can be asked for its default permission
+# table like this:
+#   smp_rep_zone_perm_tbl --multiple --report=3 <smp_dev>
+
+# The default zone permission and phy control files could be used
+# with the scripts in this directory to reset a 24 phy expander to its
+# zoning defaults (and turn off zoning) like this:
+#   ./zoning_ex.sh <smp_dev> def_permf.txt def_pconf.txt
+#   ./dis_zoning_ex.sh
