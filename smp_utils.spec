@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.96
+%define version 0.97
 %define release 1
 
 Summary:        Utilities for SAS management protocol (SMP)
@@ -54,6 +54,9 @@ make install \
 %{_mandir}/man8/*
 
 %changelog
+* Thu Jul 07 2011 - dgilbert at interlog dot com
+- change binary install directory from /usr/bin to /usr/sbin
+  * smp_utils-0.97
 * Sun Jun 19 2011 - dgilbert at interlog dot com
 - add zoning for SAS-2, SPL, SPL-2
   * smp_utils-0.96

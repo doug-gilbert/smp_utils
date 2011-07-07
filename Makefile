@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 
 PREFIX=/usr/local
-INSTDIR=$(DESTDIR)/$(PREFIX)/bin
+INSTDIR=$(DESTDIR)/$(PREFIX)/sbin
 MANDIR=$(DESTDIR)/$(PREFIX)/share/man
 
 ifndef CC
