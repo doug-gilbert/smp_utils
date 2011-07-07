@@ -1,3 +1,9 @@
+smp-utils (0.97-0.1) unstable; urgency=low
+
+  * change binary install directory from /usr/bin to /usr/sbin
+
+ -- Douglas Gilbert <dgilbert@interlog.com>  Thu, 07 Jul 2011 18:00:00 +0200
+
 smp-utils (0.96-0.1) unstable; urgency=low
 
   * add zoning for SAS-2
