@@ -224,6 +224,9 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
         perror("send_req_sgv4: SG_IO ioctl");
         return -1;
     }
+    res = hdr.din_xfer_len - hdr.din_resid;
+    rresp->act_response_len = res;
+    /* was: rresp->act_response_len = -1; */
     if (verbose > 3) {
         fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
                 "%u\n", hdr.driver_status, hdr.transport_status);
@@ -231,12 +234,14 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
                 hdr.device_status, hdr.duration, hdr.info);
         fprintf(stderr, "    din_resid=%d, dout_resid=%d\n",
                 hdr.din_resid, hdr.dout_resid);
+        fprintf(stderr, "  smp_req_resp::max_response_len=%d  "
+                "act_response_len=%d\n", rresp->max_response_len, res);
         if ((verbose > 4) && (hdr.din_xfer_len > 0)) {
-            fprintf(stderr, "  response (ignoring din_resid):\n");
-            dStrHex((const char *)rresp->response, hdr.din_xfer_len, 1);
+            fprintf(stderr, "  response (din_resid might exclude CRC):\n");
+            dStrHex((const char *)rresp->response,
+                    (res > 0) ? res : (int)hdr.din_xfer_len, 1);
         }
     }
-    rresp->act_response_len = -1; /* >>>> hdr.din_xfer_len - hdr.din_resid */
     if (hdr.driver_status)
         rresp->transport_err = hdr.driver_status;
     else if (hdr.transport_status)

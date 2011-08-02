@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.22 20110620";    /* spl2r01 */
+static char * version_str = "1.23 20110730";    /* spl2r02 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -214,6 +214,9 @@ smp_get_plink_rate(int val, int prog, int b_len, char * b)
     case 0xa:
         snprintf(b, b_len, "6 Gbps");
         break;
+    case 0xb:
+        snprintf(b, b_len, "12 Gbps");
+        break;
     default:
         if (prog && (0 == val))
             snprintf(b, b_len, "not programmable");
@@ -262,6 +265,7 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
     case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
+    case 0xb: snprintf(b, b_len, "phy enabled; 12 Gbps"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
@@ -349,7 +353,7 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k, dword_resp_len, mnum_desc;
+    int len, res, k, dword_resp_len, mnum_desc, act_resplen;
 
     dword_resp_len = (max_resp_len - 8) / 4;
     smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
@@ -393,9 +397,9 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
                 smp_rr.transport_err);
         return -1;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         return SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
@@ -408,6 +412,12 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (op->verbose)
+            fprintf(stderr, "actual response length [%d] less than "
+                    "deduced length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (op->do_hex || op->do_raw) {
         if (op->do_hex)
             dStrHex((const char *)resp, len, 1);
@@ -926,6 +936,9 @@ decode_1line(const unsigned char * resp, int offset, int desc,
             break;
         case 0xa:
             cp = "  6 Gbps";
+            break;
+        case 0xb:
+            cp = "  12 Gbps";
             break;
         default:
             cp = "";
