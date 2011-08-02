@@ -46,7 +46,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.00 20110512";
+static char * version_str = "1.01 20110731";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
@@ -170,7 +170,7 @@ find_status_description(int status, char * buff, int buff_len)
 int main(int argc, char * argv[])
 {
     int res, c, k, j, len, sscsd_ind, last_scsd_ind, scsd_len, num_scsd;
-    int tot_num_scsd, ind, status;
+    int tot_num_scsd, ind, status, act_resplen;
     int do_brief = 0;
     int do_hex = 0;
     int index = 1;
@@ -348,7 +348,8 @@ last_again:
         ret = -1;
         goto err_out;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
         fprintf(stderr, "response too short, len=%d\n",
                 smp_rr.act_response_len);
         ret = SMP_LIB_CAT_MALFORMED;
@@ -364,6 +365,12 @@ last_again:
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (verbose)
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (do_hex || do_raw) {
         if (do_hex)
             dStrHex((const char *)smp_resp, len, 1);

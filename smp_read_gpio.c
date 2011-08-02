@@ -46,7 +46,7 @@
  * request and outputs its response.
  */
 
-static char * version_str = "1.06 20110613";
+static char * version_str = "1.07 20110731";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
@@ -109,7 +109,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, off, decoded;
+    int res, c, k, len, off, decoded, act_resplen;
     int rcount = 1;
     int do_enhanced = 0;
     int do_hex = 0;
@@ -305,13 +305,19 @@ int main(int argc, char * argv[])
         ret = -1;
         goto err_out;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     len = 4 + (rcount * 4);      /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (verbose)
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (do_hex || do_raw) {
         if (do_hex)
             dStrHex((const char *)smp_resp, len, 1);

@@ -44,7 +44,7 @@ ZONED BROADCAST                       2                smp_zoned_broadcast
 
 *  in sas2r16 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
-   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r01) these 4 functions
+   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r02) these 4 functions
    are not defined (their function codes are "restricted").
 
 There are 27 SMP functions defined in sas2r16.pdf plus 2 (or 4 since
@@ -68,4 +68,4 @@ placed on the t10 ftp site.
 
 
 Doug Gilbert
-7th June 2011
+31st July 2011

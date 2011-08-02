@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.07 20110501";
+static char * version_str = "1.08 20110731";
 
 #define REP_ROUTE_INFO_RESP_LEN 44
 
@@ -125,7 +125,7 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k;
+    int len, res, k, act_resplen;
 
     if (! do_zero) {     /* SAS-2 or later */
         len = (max_resp_len - 8) / 4;
@@ -159,9 +159,9 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
                 smp_rr.transport_err);
         return -1;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         return SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
@@ -174,6 +174,12 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (verbose)
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (do_hex || do_raw) {
         if (do_hex)
             dStrHex((const char *)resp, len, 1);

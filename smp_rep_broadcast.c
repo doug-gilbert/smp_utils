@@ -45,7 +45,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.00 20110510";
+static char * version_str = "1.01 20110731";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
@@ -102,7 +102,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, j, len, bd_len, num_bd, btype_hdr;
+    int res, c, k, j, len, bd_len, num_bd, btype_hdr, act_resplen;
     int do_hex = 0;
     int btype = 0;
     int do_raw = 0;
@@ -265,9 +265,9 @@ int main(int argc, char * argv[])
         ret = -1;
         goto err_out;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -281,6 +281,12 @@ int main(int argc, char * argv[])
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (verbose)
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (do_hex || do_raw) {
         if (do_hex)
             dStrHex((const char *)smp_resp, len, 1);

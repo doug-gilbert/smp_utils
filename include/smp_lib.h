@@ -139,8 +139,8 @@ struct smp_target_obj {
 };
 
 /* SAS standards include a 4 byte CRC at the end of each SMP request
-   and response (why ??). All current pass throughs calculate and check
-   the CRC in the driver, but some pass through want the space allocated.
+   and response framesl. All current pass-throughs calculate and check
+   the CRC in the driver, but some pass-throughs want the space allocated.
  */
 struct smp_req_resp {
     int request_len;            /* [i] in bytes, includes space for 4 byte

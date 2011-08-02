@@ -48,7 +48,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.30 20110620";    /* spl2r01 */
+static char * version_str = "1.31 20110731";    /* spl2r02 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -199,6 +199,9 @@ smp_get_plink_rate(int val, int prog, int b_len, char * b)
     case 0xa:
         snprintf(b, b_len, "6 Gbps");
         break;
+    case 0xb:
+        snprintf(b, b_len, "12 Gbps");
+        break;
     default:
         if (prog && (0 == val))
             snprintf(b, b_len, "not programmable");
@@ -247,6 +250,7 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
     case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
+    case 0xb: snprintf(b, b_len, "phy enabled; 12 Gbps"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
@@ -333,7 +337,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
-    int len, res, k;
+    int len, res, k, act_resplen;
 
     memset(resp, 0, max_resp_len);
     if (! optsp->do_zero) {     /* SAS-2 or later */
@@ -368,9 +372,9 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
                 smp_rr.transport_err);
         return -1;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         return -4 - SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
@@ -383,6 +387,12 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (optsp->verbose)
+            fprintf(stderr, "actual response length [%d] less than "
+                    "deduced length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (optsp->do_hex || optsp->do_raw) {
         if (optsp->do_hex)
             dStrHex((const char *)resp, len, 1);
@@ -748,6 +758,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("  shadow inside ZPSDS persistent: %d\n", !!(rp[104] & 0x20));
         printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
         printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
+        printf("  shadow zoning enabled: %d\n", !!(rp[104] & 0x1));
         printf("  shadow zone group: %d\n", rp[107]);
     }
     if (len > 115) {
@@ -975,6 +986,9 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             break;
         case 0xa:
             cp = "  6 Gbps";
+            break;
+        case 0xb:
+            cp = "  12 Gbps";
             break;
         default:
             cp = "";

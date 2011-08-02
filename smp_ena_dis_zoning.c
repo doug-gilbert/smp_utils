@@ -46,7 +46,7 @@
  * response.
  */
 
-static char * version_str = "1.03 20110430";
+static char * version_str = "1.04 20110731";
 
 
 static struct option long_options[] = {
@@ -113,7 +113,7 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len;
+    int res, c, k, len, act_resplen;
     int disable = 0;
     int ena_dis = 1;    /* what is the point of ena_dis=0 (no change)? */
     int ena_dis_given = 0;
@@ -304,9 +304,9 @@ int main(int argc, char * argv[])
         ret = -1;
         goto err_out;
     }
-    if ((smp_rr.act_response_len >= 0) && (smp_rr.act_response_len < 4)) {
-        fprintf(stderr, "response too short, len=%d\n",
-                smp_rr.act_response_len);
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -320,6 +320,12 @@ int main(int argc, char * argv[])
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (verbose)
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
     if (do_hex || do_raw) {
         if (do_hex)
             dStrHex((const char *)smp_resp, len, 1);
