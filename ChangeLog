@@ -2,11 +2,13 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.97 [20110731] [svn:r98]
+Changelog for smp_utils-0.97 [20110803] [svn:r99]
   - change binary install from /usr/bin to /usr/sbin
   - sync to SPL-2 (spl2r02)
   - take resid into account when calculating the actual
     response length
+  - smp_read_gpio, smp_write_gpio: move register type,
+    index and count fields in enhanced variants
 
 Changelog for smp_utils-0.96 [20110620] [svn:r96]
   - smp_conf_zone_perm_tbl, smp_conf_zone_man_pass

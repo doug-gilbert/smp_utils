@@ -43,10 +43,16 @@
  * program.
  *
  * This utility issues a READ GPIO REGISTER or READ GPIO REGISTER ENHANCED
- * request and outputs its response.
+ * request and outputs its response. The READ GPIO REGISTER function is
+ * defined in SFF-8485 0.7 [2006/02/01].
+ *
+ * Based on a comment by Rob Elliott in this t10 document : 08-212r8.pdf
+ * (page 871 or 552) the ENHANCED variant request has its 4-byte header
+ * changed to comply with other SAS-2 SMP requests. This will increase
+ * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.07 20110731";
+static char * version_str = "1.08 20110803";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
@@ -111,7 +117,7 @@ int main(int argc, char * argv[])
 {
     int res, c, k, len, off, decoded, act_resplen;
     int rcount = 1;
-    int do_enhanced = 0;
+    int enhanced = 0;
     int do_hex = 0;
     int rindex = 0;
     int phy_id = 0;
@@ -151,7 +157,7 @@ int main(int argc, char * argv[])
             }
             break;
         case 'E':
-            ++do_enhanced;
+            ++enhanced;
             break;
         case 'h':
         case '?':
@@ -273,14 +279,19 @@ int main(int argc, char * argv[])
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
-    if (do_enhanced)
+    if (enhanced) {
         smp_req[1] = SMP_FN_READ_GPIO_REG_ENH;
-    smp_req[2] = rtype;
-    smp_req[3] = rindex;
-    smp_req[4] = rcount;
+        smp_req[2] = rcount;    /* response payload in dwords */
+        smp_req[3] = 0x1;       /* 12 byte request */
+        off = 2;
+    } else
+        off = 0;
+    smp_req[2 + off] = rtype;
+    smp_req[3 + off] = rindex;
+    smp_req[4 + off] = rcount;
     if (verbose) {
         fprintf(stderr, "    Read GPIO register%s request: ",
-                (do_enhanced ? " enhanced" : ""));
+                (enhanced ? " enhanced" : ""));
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
@@ -311,7 +322,13 @@ int main(int argc, char * argv[])
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
-    len = 4 + (rcount * 4);      /* length in bytes, excluding 4 byte CRC */
+    if (enhanced) {
+        len = smp_resp[3];
+        if ((len != rcount) && verbose)
+            fprintf(stderr, "requested %d dwords but received %d\n", rcount, len);
+    } else
+        len = rcount;
+    len = 4 + (len * 4);      /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
@@ -347,11 +364,11 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         cp = smp_get_func_res_str(ret, sizeof(b), b);
         fprintf(stderr, "Read gpio register%s result: %s\n",
-                (do_enhanced ? " enhanced" : ""), cp);
+                (enhanced ? " enhanced" : ""), cp);
         goto err_out;
     }
     printf("Read GPIO register%s response:\n",
-           (do_enhanced ? " enhanced" : ""));
+           (enhanced ? " enhanced" : ""));
     decoded = 0;
     if (0 == rtype) {
         off = 4;

@@ -43,10 +43,17 @@
  * program.
  *
  * This utility issues a WRITE GPIO REGISTER request and outputs its
- * response.
+ * response.  The WRITE GPIO REGISTER function is defined in SFF-8485
+ * 0.7 [2006/02/01].
+ *
+ * Based on a comment by Rob Elliott in this t10 document : 08-212r8.pdf
+ * (page 871 or 552) the ENHANCED variant request has its 4-byte header
+ * changed to comply with other SAS-2 SMP requests. This will increase
+ * the byte position by 2 of the register type, index and count fields.
+ * The remaining write data (first..last register) is not moved.
  */
 
-static char * version_str = "1.07 20110731";
+static char * version_str = "1.08 20110803";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
@@ -213,10 +220,10 @@ static int read_hex(const char * inp, unsigned char * arr, int * arr_len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, act_resplen;
+    int res, c, k, len, act_resplen, off;
     int rcount = 1;
     int do_data = 0;
-    int do_enhanced = 0;
+    int enhanced = 0;
     int do_hex = 0;
     int rindex = 0;
     int phy_id = 0;
@@ -268,7 +275,7 @@ int main(int argc, char * argv[])
             do_data = 1;
             break;
         case 'E':
-            ++do_enhanced;
+            ++enhanced;
             break;
         case 'h':
         case '?':
@@ -401,16 +408,21 @@ int main(int argc, char * argv[])
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
-    if (do_enhanced)
+    if (enhanced) {
         smp_req[1] = SMP_FN_WRITE_GPIO_REG_ENH;
-    smp_req[2] = rtype;
-    smp_req[3] = rindex;
-    smp_req[4] = rcount;
+        smp_req[2] = 0x0;       /* response is only header+CRC */
+        smp_req[3] = rcount + 1;/* request: extra dword for register fields */
+        off = 2;
+    } else
+        off = 0;
+    smp_req[2 + off] = rtype;
+    smp_req[3 + off] = rindex;
+    smp_req[4 + off] = rcount;
     for (k = 0; k < arr_len; ++k)
         smp_req[8 + k] = data_arr[k];
     if (verbose) {
         fprintf(stderr, "    Write GPIO register%s request: ",
-                (do_enhanced ? " enhanced" : ""));
+                (enhanced ? " enhanced" : ""));
         for (k = 0; k < (12 + arr_len); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
         fprintf(stderr, "\n");
@@ -477,7 +489,7 @@ int main(int argc, char * argv[])
         ret = smp_resp[2];
         cp = smp_get_func_res_str(ret, sizeof(b), b);
         fprintf(stderr, "Write gpio register%s result: %s\n",
-                (do_enhanced ? " enhanced" : ""), cp);
+                (enhanced ? " enhanced" : ""), cp);
         goto err_out;
     }
 
