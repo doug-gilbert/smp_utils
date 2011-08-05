@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -45,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.21 20110731";    /* spl2r01 */
+static char * version_str = "1.22 20110805";    /* spl2r01 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 

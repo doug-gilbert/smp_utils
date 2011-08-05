@@ -18,6 +18,9 @@
 // #include <linux/major.h>
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "mpi_type.h"
 #include "mpi.h"
 #include "mpi_sas.h"

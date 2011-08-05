@@ -38,6 +38,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -47,7 +51,7 @@
  * its response.
  */
 
-static char * version_str = "1.03 20110730";
+static char * version_str = "1.04 20110805";
 
 /* Permission table big enough for 256 source zone groups (rows) and
  * 256 destination zone groups (columns). Each element is a single bit,

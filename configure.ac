@@ -8,6 +8,9 @@ AC_PROG_CC
 # AC_PROG_CXX
 AC_PROG_INSTALL
 
+# Adding libtools to the build seems to bring in C++ environment
+AC_PROG_LIBTOOL
+
 # check for headers
 AC_HEADER_STDC
 # AC_CHECK_HEADERS([linux/types.h linux/bsg.h linux/kdev_t.h], [], [],
@@ -28,23 +31,23 @@ AC_DEFINE_UNQUOTED(SMP_UTILS_BUILD_HOST, "${host}", [smp_utils Build Host])
 case "${host}" in
         *-*-linux-gnu*)
                 AC_SUBST([os_deps], ['sg_pt_linux.o'])
-		AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [smp_utils on linux])
+		AC_DEFINE_UNQUOTED(SMP_UTILS_LINUX, 1, [smp_utils on linux])
                 AC_SUBST([os_libs], ['']) ;;
         *-*-linux*)
                 AC_SUBST([os_deps], ['sg_pt_linux.o'])
-		AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [smp_utils on linux])
+		AC_DEFINE_UNQUOTED(SMP_UTILS_LINUX, 1, [smp_utils on linux])
                 AC_SUBST([os_libs], ['']) ;;
         *-*-freebsd*|*-*-kfreebsd*-gnu*)
                 AC_SUBST([os_deps], ['sg_pt_freebsd.o'])
-		AC_DEFINE_UNQUOTED(SG_LIB_FREEBSD, 1, [smp_utils on FreeBSD])
+		AC_DEFINE_UNQUOTED(SMP_UTILS_FREEBSD, 1, [smp_utils on FreeBSD])
                 AC_SUBST([os_libs], ['-lcam']);;
         *-*-solaris*)
                 AC_SUBST([os_deps], ['sg_pt_solaris.o'])
-		AC_DEFINE_UNQUOTED(SG_LIB_SOLARIS, 1, [smp_utils on Solaris])
+		AC_DEFINE_UNQUOTED(SMP_UTILS_SOLARIS, 1, [smp_utils on Solaris])
                 AC_SUBST([os_libs], ['']);;
         *)
                 AC_SUBST([os_deps], ['sg_pt_linux.o'])
-		AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [assume smp_utils on linux])
+		AC_DEFINE_UNQUOTED(SMP_UTILS_LINUX, 1, [assume smp_utils on linux])
                 AC_SUBST([os_libs], ['']) ;;
 esac
 
@@ -63,5 +66,4 @@ AC_CHECK_LIB(smputils1, smp_send_req,
 AC_SUBST(SMPUTILS_LIBS)
 AM_CONDITIONAL(HAVE_SMPUTILS, test x"$have_smputils" = xyes)
 
-# AC_PROG_LIBTOOL
-AC_OUTPUT(Makefile src/Makefile doc/Makefile)
+AC_OUTPUT(Makefile include/Makefile lib/Makefile src/Makefile doc/Makefile)
