@@ -18,13 +18,13 @@
 #include <scsi/sg.h>
 #include <linux/bsg.h>
 
-#include "smp_sgv4_io.h"
+#include "smp_lin_bsg.h"
 
 #define DEF_TIMEOUT_MS 20000    /* 20 seconds */
 
 
 int
-chk_sgv4_device(const char * dev_name, int verbose)
+chk_lin_bsg_device(const char * dev_name, int verbose)
 {
     char buff[1024];
     char sysfs_nm[1024];
@@ -45,7 +45,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
                 buff[len++] = '/';
         } else {
             if (verbose > 3)
-                perror("chk_sgv4_device: getcwd failed");
+                perror("chk_lin_bsg_device: getcwd failed");
             return 0;
         }
         strncpy(buff + len, dev_name, sizeof(buff) - len);
@@ -58,7 +58,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
         if (strstr(buff, "/bsg/")) {
             if (stat(buff, &st) < 0) {
                 if (verbose > 3) {
-                    fprintf(stderr, "chk_sgv4_device: stat() on %s "
+                    fprintf(stderr, "chk_lin_bsg_device: stat() on %s "
                             "failed: ", buff);
                     perror("");
                 }
@@ -73,7 +73,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
         snprintf(sysfs_nm, sizeof(sysfs_nm), "/sys/class/bsg/%s/dev", cp + 1);
         if (stat(sysfs_nm, &st) < 0) {
             if (verbose > 3) {
-                fprintf(stderr, "chk_sgv4_device: stat() on redirected %s "
+                fprintf(stderr, "chk_lin_bsg_device: stat() on redirected %s "
                         "failed: ", sysfs_nm);
                 perror("");
             }
@@ -85,7 +85,7 @@ chk_sgv4_device(const char * dev_name, int verbose)
 }
 
 int
-open_sgv4_device(const char * dev_name, int verbose)
+open_lin_bsg_device(const char * dev_name, int verbose)
 {
     char buff[1024];
     char sysfs_nm[1024];
@@ -107,7 +107,7 @@ open_sgv4_device(const char * dev_name, int verbose)
                 buff[len++] = '/';
         } else {
             if (verbose)
-                perror("open_sgv4_device: getcwd failed");
+                perror("open_lin_bsg_device: getcwd failed");
             return 0;
         }
         strncpy(buff + len, dev_name, sizeof(buff) - len);
@@ -122,23 +122,23 @@ open_sgv4_device(const char * dev_name, int verbose)
         fp = fopen(sysfs_nm, "r");
         if (! fp) {
             if (verbose)
-                perror("open_sgv4_device: fopen() in sysfs failed");
+                perror("open_lin_bsg_device: fopen() in sysfs failed");
             return -1;
         }
         if (! fgets(buff, sizeof(buff), fp)) {
             if (verbose)
-                perror("open_sgv4_device: fgets() in sysfs failed");
+                perror("open_lin_bsg_device: fgets() in sysfs failed");
             goto close_sysfs;
         }
         if (2 != sscanf(buff, "%d:%d", &maj, &min)) {
             if (verbose)
-                perror("open_sgv4_device: fclose() in sysfs failed");
+                perror("open_lin_bsg_device: fclose() in sysfs failed");
             goto close_sysfs;
         }
         res = gettimeofday(&t, NULL);
         if (res) {
             if (verbose)
-                perror("open_sgv4_device: gettimeofday() failed");
+                perror("open_lin_bsg_device: gettimeofday() failed");
             goto close_sysfs;
         }
         memset(buff, 0, sizeof(buff));
@@ -150,13 +150,13 @@ open_sgv4_device(const char * dev_name, int verbose)
                     makedev(maj, min));
         if (res) {
             if (verbose)
-                perror("open_sgv4_device: mknod() failed");
+                perror("open_lin_bsg_device: mknod() failed");
             goto close_sysfs;
         }
         ret = open(buff, O_RDWR);
         if (ret < 0) {
             if (verbose) {
-                perror("open_sgv4_device: open() temporary device node failed");
+                perror("open_lin_bsg_device: open() temporary device node failed");
                 fprintf(stderr, "\t\ttried to open %s\n", buff);
             }
             goto close_sysfs;
@@ -167,7 +167,7 @@ open_sgv4_device(const char * dev_name, int verbose)
         ret = open(buff, O_RDWR);
         if (ret < 0) {
             if (verbose) {
-                perror("open_sgv4_device: open() device node failed");
+                perror("open_lin_bsg_device: open() device node failed");
                 fprintf(stderr, "\t\ttried to open %s\n", buff);
             }
             goto close_sysfs;
@@ -182,13 +182,14 @@ close_sysfs:
 }
 
 int
-close_sgv4_device(int fd)
+close_lin_bsg_device(int fd)
 {
     return close(fd);
 }
 
 int
-send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
+send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
+	         int verbose)
 {
     struct sg_io_v4 hdr;
     unsigned char cmd[16];      /* unused */
@@ -215,20 +216,20 @@ send_req_sgv4(int fd, int subvalue, struct smp_req_resp * rresp, int verbose)
     hdr.timeout = DEF_TIMEOUT_MS;
 
     if (verbose > 3)
-        fprintf(stderr, "send_req_sgv4: dout_xfer_len=%u, din_xfer_len="
+        fprintf(stderr, "send_req_lin_bsg: dout_xfer_len=%u, din_xfer_len="
                 "%u, timeout=%u ms\n", hdr.dout_xfer_len, hdr.din_xfer_len,
                 hdr.timeout);
 
     res = ioctl(fd, SG_IO, &hdr);
     if (res) {
-        perror("send_req_sgv4: SG_IO ioctl");
+        perror("send_req_lin_bsg: SG_IO ioctl");
         return -1;
     }
     res = hdr.din_xfer_len - hdr.din_resid;
     rresp->act_response_len = res;
     /* was: rresp->act_response_len = -1; */
     if (verbose > 3) {
-        fprintf(stderr, "send_req_sgv4: driver_status=%u, transport_status="
+        fprintf(stderr, "send_req_lin_bsg: driver_status=%u, transport_status="
                 "%u\n", hdr.driver_status, hdr.transport_status);
         fprintf(stderr, "    device_status=%u, duration=%u, info=%u\n",
                 hdr.device_status, hdr.duration, hdr.info);
