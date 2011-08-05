@@ -2,7 +2,7 @@
 %define version 0.97
 %define release 1
 
-Summary:        Utilities for SAS management protocol (SMP)
+Summary:        Utilities for SAS Serial Management Protocol (SMP)
 Name:           %{name}
 Version:        %{version}
 Release:        %{release}
@@ -10,52 +10,78 @@ License:        FreeBSD
 Group:          Utilities/System
 URL:            http://sg.danny.cz/sg/smp_utils.html
 Source0:        http://sg.danny.cz/sg/p/%{name}-%{version}.tgz
+Provides:       smp_utils
+BuildRequires:  libtool
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
 Packager:       Douglas Gilbert <dgilbert at interlog dot com>
 
 %description
 This is a package of utilities. Each utility sends a Serial Attached
-SCSI (SAS) Management Protocol (SMP) request to a SMP target.
+SCSI (SAS) Serial Management Protocol (SMP) request to a SMP target.
 If the request fails then the error is decoded. If the request succeeds
 then the response is either decoded, printed out in hexadecimal or
-output in binary. This package supports multiple interfaces since
-SMP passthroughs are not mature. This package supports the linux
-2.4 and 2.6 series and should be easy to port to other operating
-systems.
+output in binary. This package supports the linux 2.6 series and has
+ports to FreeBSD and Solaris.
 
-Warning: Some of these tools access the internals of your system
-and the incorrect usage of them may render your system inoperable.
+Warning: These utilities access SAS expanders (storage switches) and
+the incorrect usage of them may render your system and others inoperable.
+
+%package libs
+Summary: Shared library for %{name}
+Group: System/Libraries
+
+%description libs
+This package contains the shared library for %{name}.
+
+%package devel
+Summary: Static library and header files for the smputils library
+Group: Development/C
+Requires: %{name}-libs = %{version}-%{release}
+
+%description devel
+This package contains the static %{name} library and its header files for
+developing applications.
 
 %prep
-
 %setup -q
 
 %build
-
-make \
-     CFLAGS="%{optflags} -DSMP_UTILS_LINUX"
+%configure
 
 %install
-[ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
+if [ "$RPM_BUILD_ROOT" != "/" ]; then
+        rm -rf $RPM_BUILD_ROOT
+fi
 
 make install \
-        PREFIX=%{_prefix} \
-        INSTDIR=%{buildroot}/%{_bindir} \
-        MANDIR=%{buildroot}/%{_mandir} \
-        INCLUDEDIR=%{buildroot}/%{_includedir}
+        DESTDIR=$RPM_BUILD_ROOT
 
 %clean
-[ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
+if [ "$RPM_BUILD_ROOT" != "/" ]; then
+        rm -rf $RPM_BUILD_ROOT
+fi
 
 %files
 %defattr(-,root,root)
-%doc ChangeLog COPYING COVERAGE CREDITS INSTALL README
-%attr(0755,root,root) %{_bindir}/*
+%doc AUTHORS ChangeLog COPYING COVERAGE CREDITS INSTALL NEWS README
+%attr(755,root,root) %{_bindir}/*
 %{_mandir}/man8/*
 
+%files libs
+%defattr(-,root,root)
+%{_libdir}/*.so.*
+
+%files devel
+%defattr(-,root,root)
+%{_includedir}/scsi/*.h
+%{_libdir}/*.so
+%{_libdir}/*.a
+%{_libdir}/*.la
+
+
 %changelog
-* Thu Jul 07 2011 - dgilbert at interlog dot com
-- change binary install directory from /usr/bin to /usr/sbin
+* Fri Aug 05 2011 - dgilbert at interlog dot com
+- change to ./configure style build, put execs in /usr/sbin
   * smp_utils-0.97
 * Sun Jun 19 2011 - dgilbert at interlog dot com
 - add zoning for SAS-2, SPL, SPL-2

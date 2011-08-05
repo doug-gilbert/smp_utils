@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -52,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.08 20110803";
+static char * version_str = "1.09 20110805";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
