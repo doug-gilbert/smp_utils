@@ -31,13 +31,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 
 #ifdef SMP_UTILS_LINUX
 
-#include "mpt/smp_mptctl_io.h"
-#include "sgv4/smp_sgv4_io.h"
+#include "smp_mptctl_io.h"
+#include "smp_lin_bsg.h"
 
 
 #define I_MPT 2
@@ -71,7 +75,8 @@ smp_initiator_open(const char * device_name, int subvalue,
     if (i_params[0]) {
         if (0 == strncmp("mpt", i_params, 3))
             tobj->interface_selector = I_MPT;
-        else if (0 == strncmp("sgv4", i_params, 2))
+        else if ((0 == strncmp("sgv4", i_params, 2)) ||
+                 (0 == strncmp("bsg", i_params, 3)))
             tobj->interface_selector = I_SGV4;
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
@@ -86,14 +91,14 @@ smp_initiator_open(const char * device_name, int subvalue,
     }
     if ((I_SGV4 == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) { 
-        res = chk_sgv4_device(device_name, verbose);
+        res = chk_lin_bsg_device(device_name, verbose);
         if (res || force) {
             if (0 == tobj->interface_selector)
                 tobj->interface_selector = I_SGV4;
             if ((0 == res) && force)
                 fprintf(stderr, "... overriding failed check due "
                         "to 'force'\n");
-            res = open_sgv4_device(device_name, verbose);
+            res = open_lin_bsg_device(device_name, verbose);
             if (res < 0)
                 goto err_out;
             tobj->fd = res;
@@ -101,7 +106,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             tobj->opened = 1;
             return 0;
         } else if (verbose > 2)
-            fprintf(stderr, "chk_sgv4_device: failed\n");
+            fprintf(stderr, "chk_lin_bsg_device: failed\n");
     }
     if ((I_MPT == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) { 
@@ -137,7 +142,7 @@ smp_send_req(const struct smp_target_obj * tobj,
         return -1;
     }
     if (I_SGV4 == tobj->interface_selector)
-        return send_req_sgv4(tobj->fd, tobj->subvalue, rresp, verbose);
+        return send_req_lin_bsg(tobj->fd, tobj->subvalue, rresp, verbose);
     else if (I_MPT == tobj->interface_selector)
         return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr,
                             rresp, verbose);

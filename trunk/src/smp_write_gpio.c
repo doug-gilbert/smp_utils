@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -53,7 +57,7 @@
  * The remaining write data (first..last register) is not moved.
  */
 
-static char * version_str = "1.08 20110803";
+static char * version_str = "1.09 20110805";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 

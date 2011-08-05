@@ -38,6 +38,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -46,7 +50,7 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.01 20110731";
+static char * version_str = "1.02 20110805";
 
 
 static struct option long_options[] = {

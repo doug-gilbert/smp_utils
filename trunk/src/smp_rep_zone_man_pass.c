@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -46,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.01 20110731";
+static char * version_str = "1.02 20110805";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 

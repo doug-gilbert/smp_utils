@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -46,7 +50,7 @@
  * its response.
  */
 
-static char * version_str = "1.08 20110731";    /* sync with sas2r15 */
+static char * version_str = "1.09 20110805";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {

@@ -37,6 +37,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lib.h"
 
 /* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
@@ -48,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.23 20110730";    /* spl2r02 */
+static char * version_str = "1.24 20110805";    /* spl2r02 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40

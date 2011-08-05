@@ -18,6 +18,9 @@
 #include <scsi/sg.h>
 #include <linux/bsg.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "smp_lin_bsg.h"
 
 #define DEF_TIMEOUT_MS 20000    /* 20 seconds */
