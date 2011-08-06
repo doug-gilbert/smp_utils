@@ -129,6 +129,14 @@ extern "C" {
 
 #define SMP_MAX_DEVICE_NAME 256
 
+#ifdef SMP_UTILS_LINUX
+#define SMP_SUBVALUE_SEPARATOR ','
+#elif defined(SMP_UTILS_SOLARIS)
+#define SMP_SUBVALUE_SEPARATOR '^'
+#else
+#define SMP_SUBVALUE_SEPARATOR ','
+#endif
+
 struct smp_target_obj {
     char device_name[SMP_MAX_DEVICE_NAME];
     int subvalue;                       /* adapter number (opt) */
@@ -152,21 +160,45 @@ struct smp_req_resp {
     int transport_err;          /* [o] 0 implies no error */
 };
 
+/* Open device_name (perhaps using associated subvalue, i_params, and sa
+ * fields) and if successful places context information in the object pointed
+ * to by tobj . Returns 0 on success, else -1 . */
 extern int smp_initiator_open(const char * device_name, int subvalue,
                               const char * i_params, unsigned long long sa,
                               struct smp_target_obj * tobj, int verbose);
 
+/* Send a SMP request to the SMP target referred to by tobj. The request
+ * and space for the response (including the CRC even if it is not sent
+ * or returned) are in the object pointed to by rresp. Returns 0 on
+ * success. */
 extern int smp_send_req(const struct smp_target_obj * tobj,
                         struct smp_req_resp * rresp, int verbose);
 
+/* Closes the context to the SMP target referred to by tobj. Returns 0
+ * on success, else -1 . */
 extern int smp_initiator_close(struct smp_target_obj * tobj);
 
+/* Given an SMP function response code in func_res, places the associated
+ * string (most likely an error if func_res > 0) in the area pointed to
+ * by buffer. That string will not exceed buff_len bytes. Returns buff
+ * as its result. */
 extern char * smp_get_func_res_str(int func_res, int buff_len, char * buff);
 
+/* Returns the request length in dwords associated with func_code in SAS-1.
+ * The dword count excludes the 4 byte header and the 4 byte CRC (i.e.
+ * eight bytes or two dwords). Returns -2 for no default (e.g. functions
+ * found in SAS-2 or later) and -3 for a different format (e.g. READ GPIO
+ * REGISTER). */
 extern int smp_get_func_def_req_len(int func_code);
 
+/* Returns the expected response length in dwords associated with func_code
+ * in SAS-1. The dword count excludes the 4 byte header and the 4 byte CRC.
+ * Returns -2 for no default and -3 for a different format (e.g. READ GPIO
+ * REGISTER). */
 extern int smp_get_func_def_resp_len(int func_code);
 
+/* SAS addresses are NAA-5 and should have 5 in their most significant
+ * nibbe. Returns 1 if NAA-5 format, else 0. */
 extern int smp_is_naa5(unsigned long long addr);
 
 extern const char * smp_lib_version();

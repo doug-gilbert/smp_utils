@@ -284,10 +284,10 @@ int main(int argc, char * argv[])
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
-    if ((cp = strchr(device_name, ','))) {
+    if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after comma in SMP_DEVICE "
+            fprintf(stderr, "expected number after separator in SMP_DEVICE "
                     "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
