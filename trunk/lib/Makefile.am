@@ -16,7 +16,8 @@ endif
 if OS_FREEBSD
 
 libsmputils1_la_SOURCES = \
-	smp_dummy.c
+	smp_lib.c \
+	smp_fre_sel.c
 
 EXTRA_libsmputils1_la_SOURCES = \
 	smp_dummy.c
@@ -27,7 +28,8 @@ endif
 if OS_SOLARIS
 
 libsmputils1_la_SOURCES = \
-	smp_dummy.c
+	smp_lib.c \
+	smp_sol_usmp.c
 
 EXTRA_libsmputils1_la_SOURCES = \
 	smp_dummy.c
