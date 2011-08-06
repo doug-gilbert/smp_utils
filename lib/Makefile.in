@@ -68,14 +68,17 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsmputils1_la_DEPENDENCIES =
-am__libsmputils1_la_SOURCES_DIST = smp_dummy.c smp_lib.c smp_lin_bsg.c \
-	smp_lin_sel.c smp_mptctl_io.c
-@OS_FREEBSD_FALSE@@OS_LINUX_FALSE@@OS_SOLARIS_TRUE@am_libsmputils1_la_OBJECTS = smp_dummy.lo
+am__libsmputils1_la_SOURCES_DIST = smp_lib.c smp_fre_sel.c \
+	smp_lin_bsg.c smp_lin_sel.c smp_mptctl_io.c smp_sol_usmp.c
+@OS_FREEBSD_FALSE@@OS_LINUX_FALSE@@OS_SOLARIS_TRUE@am_libsmputils1_la_OBJECTS =  \
+@OS_FREEBSD_FALSE@@OS_LINUX_FALSE@@OS_SOLARIS_TRUE@	smp_lib.lo \
+@OS_FREEBSD_FALSE@@OS_LINUX_FALSE@@OS_SOLARIS_TRUE@	smp_sol_usmp.lo
 @OS_FREEBSD_FALSE@@OS_LINUX_TRUE@am_libsmputils1_la_OBJECTS =  \
 @OS_FREEBSD_FALSE@@OS_LINUX_TRUE@	smp_lib.lo smp_lin_bsg.lo \
 @OS_FREEBSD_FALSE@@OS_LINUX_TRUE@	smp_lin_sel.lo \
 @OS_FREEBSD_FALSE@@OS_LINUX_TRUE@	smp_mptctl_io.lo
-@OS_FREEBSD_TRUE@am_libsmputils1_la_OBJECTS = smp_dummy.lo
+@OS_FREEBSD_TRUE@am_libsmputils1_la_OBJECTS = smp_lib.lo \
+@OS_FREEBSD_TRUE@	smp_fre_sel.lo
 am__EXTRA_libsmputils1_la_SOURCES_DIST = smp_dummy.c
 libsmputils1_la_OBJECTS = $(am_libsmputils1_la_OBJECTS)
 libsmputils1_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -216,7 +219,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @OS_FREEBSD_TRUE@libsmputils1_la_SOURCES = \
-@OS_FREEBSD_TRUE@	smp_dummy.c
+@OS_FREEBSD_TRUE@	smp_lib.c \
+@OS_FREEBSD_TRUE@	smp_fre_sel.c
 
 @OS_LINUX_TRUE@libsmputils1_la_SOURCES = \
 @OS_LINUX_TRUE@	smp_lib.c \
@@ -225,7 +229,8 @@ top_srcdir = @top_srcdir@
 @OS_LINUX_TRUE@	smp_mptctl_io.c
 
 @OS_SOLARIS_TRUE@libsmputils1_la_SOURCES = \
-@OS_SOLARIS_TRUE@	smp_dummy.c
+@OS_SOLARIS_TRUE@	smp_lib.c \
+@OS_SOLARIS_TRUE@	smp_sol_usmp.c
 
 @OS_FREEBSD_TRUE@EXTRA_libsmputils1_la_SOURCES = \
 @OS_FREEBSD_TRUE@	smp_dummy.c
@@ -316,10 +321,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_dummy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_fre_sel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_lib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_lin_bsg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_lin_sel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_mptctl_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_sol_usmp.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

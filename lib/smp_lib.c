@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.18 20110405";    /* spl-2 rev 0 */
+static char * version_str = "1.19 20110805";    /* spl-2 rev 2 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -51,9 +51,9 @@ static char * version_str = "1.18 20110405";    /* spl-2 rev 0 */
 struct smp_func_def_rrlen {
     int func;           /* '-1' for last entry */
     int def_req_len;    /* if 0==<request_length> use this value, unless */
-                        /*  -2 -> no default; -3 -> implicit length */
+                        /*  -2 -> no default; -3 -> different format */
     int def_resp_len;   /* if 0==<response_length> use this value, unless */
-                        /*  -2 -> no default; -3 -> implicit length */
+                        /*  -2 -> no default; -3 -> different format */
     /* N.B. Some SAS-2 functions have 8 byte request or response lengths.
             This is noted by putting 0 in one of the two above fields. */
 };
@@ -68,7 +68,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_REPORT_ZONE_PERMISSION_TBL, -2, -2},/* variable length response */
     {SMP_FN_REPORT_ZONE_MANAGER_PASS, -2, -2},
     {SMP_FN_REPORT_BROADCAST, -2, -2},
-    {SMP_FN_READ_GPIO_REG_ENH, -3, -3}, /* not applicable: SFF-8485 */
+    {SMP_FN_READ_GPIO_REG_ENH, -2, -2}, /* SFF-8485 should explain */
     {SMP_FN_DISCOVER, 2, 0xc},
     {SMP_FN_REPORT_PHY_ERR_LOG, 2, 6},
     {SMP_FN_REPORT_PHY_SATA, 2, 13},
@@ -80,7 +80,7 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_CONFIG_GENERAL, 3, 0},
     {SMP_FN_ENABLE_DISABLE_ZONING, -2, 0},
     {SMP_FN_WRITE_GPIO_REG, -3, -3}, /* obsolete, not applicable: SFF-8485 */
-    {SMP_FN_WRITE_GPIO_REG_ENH, -3, -3}, /* not applicable: SFF-8485 */
+    {SMP_FN_WRITE_GPIO_REG_ENH, -2, -2}, /* SFF-8485 should explain */
     {SMP_FN_ZONED_BROADCAST, -2, 0},            /* variable length request */
     {SMP_FN_ZONE_LOCK, -2, -2},
     {SMP_FN_ZONE_ACTIVATE, -2, 0},

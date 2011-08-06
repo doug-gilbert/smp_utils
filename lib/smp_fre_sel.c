@@ -38,12 +38,10 @@
 #include "smp_lib.h"
 
 
-#include "smp_mptctl_io.h"
-#include "smp_lin_bsg.h"
+#include "mpt/smp_mptctl_io.h"
 
 
 #define I_MPT 2
-#define I_SGV4 4
 
 int
 smp_initiator_open(const char * device_name, int subvalue,
@@ -61,42 +59,28 @@ smp_initiator_open(const char * device_name, int subvalue,
     if (sa) {
         for (j = 0; j < 8; ++j, (sa >>= 8))
             tobj->sas_addr[j] = (sa & 0xff);
+#if 0
+        if (verbose > 3) {
+            fprintf(stderr, "    given SAS address: 0x");
+            for (j = 0; j < 8; ++j)
+                fprintf(stderr, "%02x", tobj->sas_addr[7 - j]);
+            fprintf(stderr, "\n");
+        }
+#endif
     }
     if (i_params[0]) {
         if (0 == strncmp("mpt", i_params, 3))
             tobj->interface_selector = I_MPT;
-        else if ((0 == strncmp("sgv4", i_params, 2)) ||
-                 (0 == strncmp("bsg", i_params, 3)))
-            tobj->interface_selector = I_SGV4;
         else if (0 == strncmp("for", i_params, 3))
             force = 1;
         else if (verbose > 3)
-            fprintf(stderr, "smp_initiator_open: interface not recognized\n");
+            fprintf(stderr, "chk_mpt_device: interface not recognized\n");
         cp = strchr(i_params, ',');
         if (cp) {
             if ((tobj->interface_selector > 0) &&
                 (0 == strncmp("for", cp + 1, 3)))
                 force = 1;
         }
-    }
-    if ((I_SGV4 == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) { 
-        res = chk_lin_bsg_device(device_name, verbose);
-        if (res || force) {
-            if (0 == tobj->interface_selector)
-                tobj->interface_selector = I_SGV4;
-            if ((0 == res) && force)
-                fprintf(stderr, "... overriding failed check due "
-                        "to 'force'\n");
-            res = open_lin_bsg_device(device_name, verbose);
-            if (res < 0)
-                goto err_out;
-            tobj->fd = res;
-            tobj->subvalue = subvalue;
-            tobj->opened = 1;
-            return 0;
-        } else if (verbose > 2)
-            fprintf(stderr, "chk_lin_bsg_device: failed\n");
     }
     if ((I_MPT == tobj->interface_selector) ||
         (0 == tobj->interface_selector)) { 
@@ -115,7 +99,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             tobj->opened = 1;
             return 0;
         } else if (verbose > 2)
-            fprintf(stderr, "smp_initiator_open: chk_mpt_device failed\n");
+            fprintf(stderr, "chk_mpt_device: failed\n");
     }
 err_out:
     fprintf(stderr, "smp_initiator_open: failed to open %s\n", device_name);
@@ -123,20 +107,18 @@ err_out:
 }
 
 int
-smp_send_req(const struct smp_target_obj * tobj,
-             struct smp_req_resp * rresp, int verbose)
+smp_send_req(const struct smp_target_obj * tobj, struct smp_req_resp * rresp,
+             int verbose)
 {
     if ((NULL == tobj) || (0 == tobj->opened)) {
-        if (verbose > 2)
+        if (verbose)
             fprintf(stderr, "smp_send_req: nothing open??\n");
         return -1;
     }
-    if (I_SGV4 == tobj->interface_selector)
-        return send_req_lin_bsg(tobj->fd, tobj->subvalue, rresp, verbose);
-    else if (I_MPT == tobj->interface_selector)
+    if (I_MPT == tobj->interface_selector) {
         return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr,
                             rresp, verbose);
-    else {
+    } else {
         if (verbose)
             fprintf(stderr, "smp_send_req: no transport??\n");
         return -1;
