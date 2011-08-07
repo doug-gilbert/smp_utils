@@ -1,8 +1,8 @@
 smp-utils (0.97-0.1) unstable; urgency=low
 
-  * change binary install directory from /usr/bin to /usr/sbin
+  * switch to autotools style build
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Thu, 07 Jul 2011 18:00:00 +0200
+ -- Douglas Gilbert <dgilbert@interlog.com>  Sun, 07 Aug 2011 11:00:00 -0400
 
 smp-utils (0.96-0.1) unstable; urgency=low
 

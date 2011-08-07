@@ -59,6 +59,11 @@ struct tobj_cam_t {
 };
 
 
+/* Note that CAM (circa FreeBSD 9) cannot directly communicate with a SAS
+ * expander because it isn't a SCSI device. FreeBSD assumes each SAS
+ * expander is paired with a SES (enclosure) device. This seems to be true
+ * for SAS-2 expanders but not the older SAS-1 expanders. Hence device_name
+ * will be something like /dev/ses0 . */
 int
 smp_initiator_open(const char * device_name, int subvalue,
                    const char * i_params, unsigned long long sa,
@@ -157,7 +162,7 @@ smp_send_req(const struct smp_target_obj * tobj, struct smp_req_resp * rresp,
     }
     if (((emsk == CAM_REQ_CMP) || (emsk == CAM_SMP_STATUS_ERROR)) &&
         (rresp->max_response_len > 0)) {
-        if ((emsk == CAM_REQ_CMP_ERR) && (verbose > 3))
+        if ((emsk == CAM_SMP_STATUS_ERROR) && (verbose > 3))
             cam_error_print(tcp->cam_dev, ccb, CAM_ESF_ALL, CAM_EPF_ALL,
                             stderr);
         rresp->act_response_len = -1;
