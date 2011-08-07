@@ -1,0 +1,23 @@
+Build
+-----
+For general build information see the INSTALL file.
+
+
+Device names
+------------
+FreeBSD uses it CAM subsystem to access SAS expanders. In FreeBSD 9 (and
+possibly backports to 8.2) CAM does not recognize SAS expanders directly.
+It assumes that a SAS expander is tightly coupled with a SES target device.
+This seems to be true for SAS-2 expanders but is not necessarily the case
+with SAS-1 expanders.
+
+So if a SES target device is paired with a SAS expander then in FreeBSD
+that expander can be accessed like this:
+  # smp_discover /dev/ses0
+
+This also assumes that the SAS expander is connected to a SAS HBA that
+supports the CAM SAS SMP pass-through.
+
+
+Douglas Gilbert
+6th August 2011
