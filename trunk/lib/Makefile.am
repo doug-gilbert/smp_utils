@@ -17,7 +17,7 @@ if OS_FREEBSD
 
 libsmputils1_la_SOURCES = \
 	smp_lib.c \
-	smp_fre_sel.c
+	smp_fre_cam.c
 
 EXTRA_libsmputils1_la_SOURCES = \
 	smp_dummy.c
