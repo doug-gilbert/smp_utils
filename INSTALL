@@ -1,48 +1,38 @@
-Linux
------
+
 To build and install using the tarball, extract the files from
 the tarball, change directory to the top level within the
 extracted tree, and then:
+  # ./configure
   # make
   # make install
-The second command will most likely require root privileges.
+The last command will most likely require root privileges and will
+place the binaries in the /usr/local/bin directory. Since the utilities
+need root (superuser) permissions some distrubution prefer to place the
+binaries in the /usr/sbin directory. To do that and place the man pages
+in their normal (Linux) location the ./configure line could be expanded
+to:
+  # ../configure --prefix=/usr --bindir=/usr/sbin
+
+If the configure.ac file in the main directory or any of the Makefile.am
+files are changed then this should be run prior to ./configure :
+  # ./autogen.sh
+
+Also if the ./configure script fails (or the following make) then running
+the ./autogen.sh may help.
 
 To clean up after a build use the following command:
-  # make clean
-
-A "spec" file is included for building rpm packages. It is called
-smp_utils.spec . To build binary and source rpms place a copy of the
-gzipped tarball in the "SOURCES" directory and place a copy of
-smp_utils.spec in the "SPEC" directory. These directories are found under
-/usr/src/redhat on redhat/fedora distributions. Then from the "SPEC"
-directory execute "rpmbuild -ba smp_utils.spec". If all goes well a source
-rpm should be found in the SRPMS directory and binary rpms in the RPMS/i386
-directory (for i386 architecture). When the smp_utils binary rpm is
-installed the executables and their associated man pages should be placed in
-appropriate places.
-
-To build debian "deb" (binary) packages, first untar the tarball, then
-change directory to the top level within the smp_utils source. Then:
- # chmod +x debian/rules
- # dpkg-buildpackage -b -rfakeroot
-The binary deb packages will be placed in the parent directory (of
-the smp_utils source directory) if all goes well. The
-build_debian.sh script contains the above commands.
+  # make distclean
 
 
-FreeBSD
--------
-This is an experimental port at this stage and only supports the MPT
-interface. To build and install, extract the files from
-the tarball, change directory to the top level within the
-extracted tree, and then:
-  # make -f Makefile.freebsd
-  # make -f Makefile.freebsd install
-The second command will most likely require root privileges.
+The build depends on libtool since a shared library is produced. A static
+library is also produced. By default the binaries (i.e. the utilities
+in this package) will depend on that shared library. The binaries can
+be linked instead with the static library with this invocation:
+  # ./configure --disable-shared
 
-To clean up after a build use the following command:
-  # make -f Makefile.freebsd clean
+
+For architecture depend information see the README.<os> files.
 
 
 Douglas Gilbert
-6th January 2008
+6th August 2011

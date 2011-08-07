@@ -139,11 +139,12 @@ extern "C" {
 
 struct smp_target_obj {
     char device_name[SMP_MAX_DEVICE_NAME];
-    int subvalue;                       /* adapter number (opt) */
-    unsigned char sas_addr[8];          /* target SMP (opt) */
+    int subvalue;               /* adapter number (opt) */
+    unsigned char sas_addr[8];  /* target SMP (opt) */
     int interface_selector;
     int opened;
     int fd;
+    void * vp;                  /* opaque for pass-through (e.g. CAM) */
 };
 
 /* SAS standards include a 4 byte CRC at the end of each SMP request
