@@ -80,7 +80,7 @@ fi
 
 
 %changelog
-* Fri Aug 05 2011 - dgilbert at interlog dot com
+* Sun Aug 07 2011 - dgilbert at interlog dot com
 - change to ./configure style build, put execs in /usr/sbin
   * smp_utils-0.97
 * Sun Jun 19 2011 - dgilbert at interlog dot com

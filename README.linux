@@ -7,11 +7,11 @@ smp_utils.spec . To build binary and source rpms place a copy of the
 gzipped tarball in the "SOURCES" directory and place a copy of
 smp_utils.spec in the "SPEC" directory. These directories are found under
 /usr/src/redhat on redhat/fedora distributions. Then from the "SPEC"
-directory execute "rpmbuild -ba smp_utils.spec". If all goes well a source
-rpm should be found in the SRPMS directory and binary rpms in the RPMS/i386
-directory (for i386 architecture). When the smp_utils binary rpm is
-installed the executables and their associated man pages should be placed in
-appropriate places.
+directory execute "rpmbuild -ba --target i386 smp_utils.spec". If all goes
+well a source rpm should be found in the SRPMS directory and binary rpms
+in the RPMS/i386 directory (for i386 architecture). When the smp_utils
+binary rpm is installed the executables and their associated man pages
+should be placed in appropriate places.
 
 To build debian "deb" (binary) packages, first untar the tarball, then
 change directory to the top level within the smp_utils source. Then:

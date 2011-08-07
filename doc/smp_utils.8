@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "July 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_UTILS "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_* \- invoke a Serial Attached SCSI Management (SMP) function
 .SH SYNOPSIS
@@ -26,7 +26,10 @@ stdout (when the \fI\-\-raw\fR option is given).
 .PP
 If \fISMP_DEVICE[,N]\fR is not given then the value in the environment
 variable SMP_UTILS_DEVICE is used.
-.SH INTERFACE
+.PP
+This package was originally written for Linux and has been ported to FreeBSD
+and Solaris.
+.SH LINUX INTERFACE
 Currently there are multiple interfaces that allow SMP functions to be passed
 through to a SMP target.
 .PP
@@ -67,6 +70,22 @@ device node made for the bsg driver (e.g. /dev/bsg/expander\-6:0 ). Such
 device nodes are dynamic (i.e. they don't have fixed major and minor
 numbers) and should correspond to the major and minor numbers found in
 the 'sys/class/bsg/<smp_target_device>/dev' file.
+.SH FREEBSD INTERFACE
+The CAM subsystem has been enhanced in FreeBSD 9 to pass-through SMP requests
+and return the corresponding responses. However CAM does not directly
+access expander devices because they are not SCSI devices. It makes the
+assumption that each SAS expander has an integrated SES (enclosure) device
+and that is addressed. This assumption seems to be true for SAS-2 expanders
+but not some SAS-1 expanders. Thus invocations look like this: 
+.PP
+  # smp_discover /dev/ses0
+.PP
+where /dev/ses0 is a SES device associated with a SAS expander.
+.SH SOLARIS INTERFACE
+The USMP pass-through mechanism is used. Invocations look like this:
+.PP
+  # smp_rep_manufacturer /dev/smp/expd0
+.PP
 .SH ENVIRONMENT VARIABLES
 If the device name is not given then the SMP_UTILS_DEVICE environment
 variable is checked and if present its contents are used as the device name.
