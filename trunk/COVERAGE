@@ -1,6 +1,6 @@
                         Function coverage
                         =================
-The following table lists SAS Management Protocol (SMP) functions
+The following table lists SAS Serial Management Protocol (SMP) functions
 in alphabetical order in the left column. The second column is the
 standard or draft that the function first appeared in or was extended.
 The final column is the utility in the smp_utils package that invokes
@@ -68,4 +68,4 @@ placed on the t10 ftp site.
 
 
 Doug Gilbert
-31st July 2011
+9th August 2011

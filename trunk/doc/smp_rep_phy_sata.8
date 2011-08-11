@@ -10,12 +10,13 @@ smp_rep_phy_sata \- invoke REPORT PHY SATA SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) REPORT PHY SATA request function
-to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
-the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
-deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
-to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
-differentiate between HBAs if there are multiple present.
+Sends a SAS Serial Management Protocol (SMP) REPORT PHY SATA request
+function to an SMP target. The SMP target is identified by the
+\fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface, the
+\fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
+uses \fISMP_DEVICE\fR to identify an HBA (an SMP initiator) and needs the
+additional \fI,N\fR to differentiate between HBAs if there are multiple
+present.
 .TP
 \fB\-a\fR, \fB\-\-affiliation\fR=\fIAC\fR
 where \fIAC\fR is the affiliation context relative identifier that is
