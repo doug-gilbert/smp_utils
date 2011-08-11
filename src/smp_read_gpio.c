@@ -43,8 +43,8 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a READ GPIO REGISTER or READ GPIO REGISTER ENHANCED
  * request and outputs its response. The READ GPIO REGISTER function is

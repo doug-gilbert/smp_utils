@@ -11,9 +11,9 @@ smp_zoned_broadcast \- invoke ZONED BROADCAST SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) ZONED BROADCAST function request to a
-SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and the
-\fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may
+Sends a SAS Serial Management Protocol (SMP) ZONED BROADCAST function request
+to an SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may
 be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
@@ -21,7 +21,7 @@ differentiate between HBAs if there are multiple present.
 This function requires zoning to be enabled. To send a Broadcast (Change)
 in the absence of zoning, the least intrusive way seems to be to use
 a PHY CONTROL request to send a link reset to an expander phy.
-Broadcast (Change) should cause a management application client behind a SMP
+Broadcast (Change) should cause a management application client behind an SMP
 initiator port (e.g. a SAS HBA) to start a discover process.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.

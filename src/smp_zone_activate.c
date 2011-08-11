@@ -45,8 +45,8 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a ZONE ACTIVATE function and outputs its response.
  */

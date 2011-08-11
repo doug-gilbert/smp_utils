@@ -43,14 +43,14 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a CONFIG ROUTE INFORMATION function and outputs its
  * response.
  */
 
-static char * version_str = "1.07 20110805";
+static char * version_str = "1.08 20110811";
 
 
 static struct option long_options[] = {
@@ -132,7 +132,7 @@ int main(int argc, char * argv[])
                                0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
@@ -245,7 +245,7 @@ int main(int argc, char * argv[])
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after separator in SMP_DEVICE "
-		    "name\n");
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }

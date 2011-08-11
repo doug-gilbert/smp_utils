@@ -12,14 +12,14 @@ smp_phy_control \- invoke PHY CONTROL SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Management Protocol (SMP) PHY CONTROL function request to a SMP
-target. The SMP target is identified by the \fISMP_DEVICE\fR and the
-\fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be deduced
-from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+Sends a SAS Serial Management Protocol (SMP) PHY CONTROL function request
+to an SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
 .PP
-The PHY CONTROL function is used to change the state of a phy within a SMP
+The PHY CONTROL function is used to change the state of a phy within an SMP
 target. SMP targets are typically SAS expanders which have multiple phys.
 Certain operation values (e.g. 'lr' (link reset) and 'hr' (hard reset))
 change the state of the attached phy. Sending such operation values to the

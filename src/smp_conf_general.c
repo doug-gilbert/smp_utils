@@ -43,13 +43,13 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.06 20110805";    /* spl2r01 */
+static char * version_str = "1.07 20110811";    /* spl2r01 */
 
 
 static struct option long_options[] = {
@@ -148,7 +148,7 @@ int main(int argc, char * argv[])
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_CONFIG_GENERAL,
                                0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;

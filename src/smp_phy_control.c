@@ -44,13 +44,13 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.14 20110805";
+static char * version_str = "1.15 20110811";
 
 
 static struct option long_options[] = {
@@ -196,7 +196,7 @@ int main(int argc, char * argv[])
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, };
-    unsigned char smp_resp[128];
+    unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     struct smp_val_name * vnp;

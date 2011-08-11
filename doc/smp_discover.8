@@ -12,9 +12,9 @@ smp_discover \- invoke DISCOVER SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends one or more SAS Management Protocol (SMP) DISCOVER function requests
-to a SMP target and decodes or outputs the responses. The SMP target is
-identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on
+Sends one or more SAS Serial Management Protocol (SMP) DISCOVER function
+requests to an SMP target and decodes or outputs the responses. The SMP target
+is identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on
 the interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
 The mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP
 initiator) and needs the additional \fI,N\fR to differentiate between HBAs
