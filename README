@@ -1,5 +1,5 @@
 This is a package of utilities. Each utility sends a Serial Attached
-SCSI (SAS) Management Protocol (SMP) request to a SMP target.
+SCSI (SAS) Serial Management Protocol (SMP) request to a SMP target.
 If the request fails then the error is decoded. If the request succeeds
 then the response is either decoded, printed out in hexadecimal or
 output in binary. This package supports multiple interfaces since
@@ -33,4 +33,4 @@ SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-31st July 2011
+9th August 2011

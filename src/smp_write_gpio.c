@@ -43,8 +43,8 @@
 #endif
 #include "smp_lib.h"
 
-/* This is a Serial Attached SCSI (SAS) management protocol (SMP) utility
- * program.
+/* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
+ * utility.
  *
  * This utility issues a WRITE GPIO REGISTER request and outputs its
  * response.  The WRITE GPIO REGISTER function is defined in SFF-8485
