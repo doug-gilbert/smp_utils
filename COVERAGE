@@ -10,7 +10,7 @@ introduced functions have no corresponding utility.
 SMP Function                          Standard         smp_utils utility
 ------------------------------------  ---------------  ---------------------
 CONFIGURE GENERAL                     2                smp_conf_general
-CONFIGURE PHY EVENT                   2    
+CONFIGURE PHY EVENT                   2                smp_conf_phy_event
 CONFIGURE ROUTE INFORMATION           1, 2             smp_conf_route_info
 CONFIGURE ZONE MANAGER PASSWORD       2                smp_conf_zone_man_pass
 CONFIGURE ZONE PERMISSION TABLE       2                smp_conf_zone_perm_tbl
@@ -45,12 +45,8 @@ ZONED BROADCAST                       2                smp_zoned_broadcast
 *  in sas2r16 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
    (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r02) these 4 functions
-   are not defined (their function codes are "restricted").
-
-There are 27 SMP functions defined in sas2r16.pdf plus 2 (or 4 since
-the latter 2 replace the former 2) defined in SFF-8485.
-smp_utils currently implements 28 functions (including 2 that are defined
-in SFF-8485).
+   are not defined (the ENHANCED function codes are "restricted for
+   SFF").
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
@@ -68,4 +64,4 @@ placed on the t10 ftp site.
 
 
 Doug Gilbert
-9th August 2011
+22nd August 2011

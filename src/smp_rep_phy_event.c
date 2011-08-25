@@ -51,9 +51,12 @@
  * response.
  */
 
-static char * version_str = "1.04 20110805";
+static char * version_str = "1.05 20110821";
 
 #define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
+
+/* Comment out following line to disable test option */
+#define SMP_TEST 1
 
 
 static struct option long_options[] = {
@@ -63,17 +66,37 @@ static struct option long_options[] = {
         {"phy", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
+#ifdef SMP_TEST
+        {"test", 0, 0, 't'},
+#endif
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
 };
+
+#ifdef SMP_TEST
+static unsigned char test_resp[] = {0x41, 0x14, 0x0, 15,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, /* rest of header */
+                                              /* vvv counts vvv */
+    0, 0, 0, 0x1, 0, 0, 0, 0x33, 0, 0, 0, 0,  /* invalid dword */
+    0, 0, 0, 0x2, 0, 0, 0, 0x44, 0, 0, 0, 0,  /* running disparity error */
+    0, 0, 0, 0x3, 0, 0, 0, 0x55, 0, 0, 0, 0,  /* loss of dword sync */
+    0, 0, 0, 0x4, 0, 0, 0, 0x66, 0, 0, 0, 0,  /* phy reset problem */
+    0, 0, 0, 0  /* CRC */ };
+#endif
+
 
 static void usage()
 {
     fprintf(stderr, "Usage: "
           "smp_rep_phy_event [--help] [--hex] [--interface=PARAMS] "
           "[--phy=ID]\n"
+#ifdef SMP_TEST
+          "                         [--raw] [--sa=SAS_ADDR] [--test] "
+          "[--verbose] "
+#else
           "                         [--raw] [--sa=SAS_ADDR] [--verbose] "
+#endif
           "[--version]\n"
           "                         SMP_DEVICE[,N]\n"
           "  where:\n"
@@ -88,6 +111,10 @@ static void usage()
           "                         '0x' or trailing 'h'). Depending on "
           "the\n"
           "                         interface, may not be needed\n"
+#ifdef SMP_TEST
+          "    --test|-t            use dummy hard-coded response, ignore "
+          "DEVICE\n"
+#endif
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT PHY EVENT function\n"
@@ -244,6 +271,9 @@ int main(int argc, char * argv[])
     int phy_id = 0;
     int phy_id_given = 0;
     int do_raw = 0;
+#ifdef SMP_TEST
+    int do_test = 0;
+#endif
     int verbose = 0;
     long long sa_ll;
     unsigned long long sa = 0;
@@ -265,8 +295,13 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
+#ifdef SMP_TEST
+        c = getopt_long(argc, argv, "hHI:p:rs:tvV", long_options,
+                        &option_index);
+#else
         c = getopt_long(argc, argv, "hHI:p:rs:vV", long_options,
                         &option_index);
+#endif
         if (c == -1)
             break;
 
@@ -302,6 +337,11 @@ int main(int argc, char * argv[])
             }
             sa = (unsigned long long)sa_ll;
             break;
+#ifdef SMP_TEST
+        case 't':
+            ++do_test;
+            break;
+#endif
         case 'v':
             ++verbose;
             break;
@@ -328,6 +368,10 @@ int main(int argc, char * argv[])
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
+
+#ifdef SMP_TEST
+    if (0 == do_test) {
+#endif
     if (0 == device_name[0]) {
         cp = getenv("SMP_UTILS_DEVICE");
         if (cp)
@@ -375,6 +419,9 @@ int main(int argc, char * argv[])
                              &tobj, verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
+#ifdef SMP_TEST
+    }
+#endif
 
     len = (sizeof(smp_resp) - 8) / 4;
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
@@ -390,6 +437,14 @@ int main(int argc, char * argv[])
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(smp_resp);
     smp_rr.response = smp_resp;
+#ifdef SMP_TEST
+    if (do_test) {
+        res = 0;
+        smp_rr.act_response_len = sizeof(test_resp);
+        memcpy(smp_resp, test_resp, sizeof(test_resp));
+        smp_resp[9] = phy_id;
+    } else
+#endif
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
