@@ -1,14 +1,14 @@
 Build
 -----
 For general build information see the INSTALL file.
-Unfortunately FreeBSD versions 8.2 and early do not support the CAM
+Unfortunately FreeBSD versions 8.2 and earlier do not support the CAM
 SMP pass-through.
 
 
 Device names
 ------------
-FreeBSD uses it CAM subsystem to access SAS expanders. In FreeBSD 9 CAM
-does not recognize SAS expanders directly.  It assumes that a SAS expander
+FreeBSD uses its CAM subsystem to access SAS expanders. In FreeBSD 9 CAM
+does not recognize SAS expanders directly. It assumes that a SAS expander
 is tightly coupled with a SES target device. This seems to be true for SAS-2
 expanders but is not necessarily the case with SAS-1 expanders.
 
@@ -21,4 +21,4 @@ supports the CAM SAS SMP pass-through.
 
 
 Douglas Gilbert
-7th August 2011
+22nd August 2011

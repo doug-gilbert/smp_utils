@@ -64,7 +64,7 @@ fi
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING COVERAGE CREDITS INSTALL NEWS README
-%attr(755,root,root) %{_bindir}/*
+%attr(755,root,root) %{_sbindir}/*
 %{_mandir}/man8/*
 
 %files libs

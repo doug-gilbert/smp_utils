@@ -3,13 +3,14 @@
 ## if OS_LINUX
 
 bin_PROGRAMS = \
-	smp_conf_general smp_conf_route_info smp_conf_zone_man_pass \
-	smp_conf_zone_perm_tbl smp_conf_zone_phy_info smp_discover \
-	smp_discover_list smp_ena_dis_zoning smp_phy_control \
-	smp_phy_test smp_read_gpio smp_rep_broadcast \
-	smp_rep_exp_route_tbl smp_rep_general smp_rep_manufacturer \
-	smp_rep_phy_err_log smp_rep_phy_event smp_rep_phy_event_list \
-	smp_rep_phy_sata smp_rep_route_info smp_rep_self_conf_stat \
+	smp_conf_general smp_conf_phy_event smp_conf_route_info \
+	smp_conf_zone_man_pass smp_conf_zone_perm_tbl \
+	smp_conf_zone_phy_info smp_discover smp_discover_list \
+	smp_ena_dis_zoning smp_phy_control smp_phy_test \
+	smp_read_gpio smp_rep_broadcast smp_rep_exp_route_tbl \
+	smp_rep_general smp_rep_manufacturer smp_rep_phy_err_log \
+	smp_rep_phy_event smp_rep_phy_event_list smp_rep_phy_sata \
+	smp_rep_route_info smp_rep_self_conf_stat \
 	smp_rep_zone_man_pass smp_rep_zone_perm_tbl smp_write_gpio \
 	smp_zone_activate smp_zoned_broadcast smp_zone_lock \
 	smp_zone_unlock
@@ -28,6 +29,9 @@ AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
 
 smp_conf_general_SOURCES =	smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la @os_libs@
+
+smp_conf_phy_event_SOURCES =	smp_conf_phy_event.c
+smp_conf_phy_event_LDADD = ../lib/libsmputils1.la @os_libs@
 
 smp_conf_route_info_SOURCES =	smp_conf_route_info.c
 smp_conf_route_info_LDADD = ../lib/libsmputils1.la @os_libs@
