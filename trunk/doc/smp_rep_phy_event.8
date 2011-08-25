@@ -1,4 +1,4 @@
-.TH SMP_REP_PHY_EVENT "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_PHY_EVENT "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_rep_phy_event \- invoke REPORT PHY EVENT SMP function
 .SH SYNOPSIS
@@ -17,6 +17,10 @@ request to an SMP target. The SMP target is identified by the
 uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
 additional \fI,N\fR to differentiate between HBAs if there are multiple
 present.
+.PP
+Reports zero or more phy event descriptors. Each descriptor contains a phy
+event source, a phy event (i.e. a count) and a peak value detector theshold.
+At least one phy event should be maintained for each phy.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP

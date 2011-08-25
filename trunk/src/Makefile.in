@@ -34,8 +34,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = smp_conf_general$(EXEEXT) smp_conf_route_info$(EXEEXT) \
-	smp_conf_zone_man_pass$(EXEEXT) \
+bin_PROGRAMS = smp_conf_general$(EXEEXT) smp_conf_phy_event$(EXEEXT) \
+	smp_conf_route_info$(EXEEXT) smp_conf_zone_man_pass$(EXEEXT) \
 	smp_conf_zone_perm_tbl$(EXEEXT) \
 	smp_conf_zone_phy_info$(EXEEXT) smp_discover$(EXEEXT) \
 	smp_discover_list$(EXEEXT) smp_ena_dis_zoning$(EXEEXT) \
@@ -64,6 +64,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_smp_conf_general_OBJECTS = smp_conf_general.$(OBJEXT)
 smp_conf_general_OBJECTS = $(am_smp_conf_general_OBJECTS)
 smp_conf_general_DEPENDENCIES = ../lib/libsmputils1.la
+am_smp_conf_phy_event_OBJECTS = smp_conf_phy_event.$(OBJEXT)
+smp_conf_phy_event_OBJECTS = $(am_smp_conf_phy_event_OBJECTS)
+smp_conf_phy_event_DEPENDENCIES = ../lib/libsmputils1.la
 am_smp_conf_route_info_OBJECTS = smp_conf_route_info.$(OBJEXT)
 smp_conf_route_info_OBJECTS = $(am_smp_conf_route_info_OBJECTS)
 smp_conf_route_info_DEPENDENCIES = ../lib/libsmputils1.la
@@ -158,7 +161,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(smp_conf_general_SOURCES) $(smp_conf_route_info_SOURCES) \
+SOURCES = $(smp_conf_general_SOURCES) $(smp_conf_phy_event_SOURCES) \
+	$(smp_conf_route_info_SOURCES) \
 	$(smp_conf_zone_man_pass_SOURCES) \
 	$(smp_conf_zone_perm_tbl_SOURCES) \
 	$(smp_conf_zone_phy_info_SOURCES) $(smp_discover_SOURCES) \
@@ -175,7 +179,7 @@ SOURCES = $(smp_conf_general_SOURCES) $(smp_conf_route_info_SOURCES) \
 	$(smp_zone_activate_SOURCES) $(smp_zone_lock_SOURCES) \
 	$(smp_zone_unlock_SOURCES) $(smp_zoned_broadcast_SOURCES)
 DIST_SOURCES = $(smp_conf_general_SOURCES) \
-	$(smp_conf_route_info_SOURCES) \
+	$(smp_conf_phy_event_SOURCES) $(smp_conf_route_info_SOURCES) \
 	$(smp_conf_zone_man_pass_SOURCES) \
 	$(smp_conf_zone_perm_tbl_SOURCES) \
 	$(smp_conf_zone_phy_info_SOURCES) $(smp_discover_SOURCES) \
@@ -313,6 +317,8 @@ AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
 # AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c99
 smp_conf_general_SOURCES = smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la @os_libs@
+smp_conf_phy_event_SOURCES = smp_conf_phy_event.c
+smp_conf_phy_event_LDADD = ../lib/libsmputils1.la @os_libs@
 smp_conf_route_info_SOURCES = smp_conf_route_info.c
 smp_conf_route_info_LDADD = ../lib/libsmputils1.la @os_libs@
 smp_conf_zone_man_pass_SOURCES = smp_conf_zone_man_pass.c
@@ -447,6 +453,9 @@ clean-binPROGRAMS:
 smp_conf_general$(EXEEXT): $(smp_conf_general_OBJECTS) $(smp_conf_general_DEPENDENCIES) 
 	@rm -f smp_conf_general$(EXEEXT)
 	$(LINK) $(smp_conf_general_OBJECTS) $(smp_conf_general_LDADD) $(LIBS)
+smp_conf_phy_event$(EXEEXT): $(smp_conf_phy_event_OBJECTS) $(smp_conf_phy_event_DEPENDENCIES) 
+	@rm -f smp_conf_phy_event$(EXEEXT)
+	$(LINK) $(smp_conf_phy_event_OBJECTS) $(smp_conf_phy_event_LDADD) $(LIBS)
 smp_conf_route_info$(EXEEXT): $(smp_conf_route_info_OBJECTS) $(smp_conf_route_info_DEPENDENCIES) 
 	@rm -f smp_conf_route_info$(EXEEXT)
 	$(LINK) $(smp_conf_route_info_OBJECTS) $(smp_conf_route_info_LDADD) $(LIBS)
@@ -536,6 +545,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_conf_general.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_conf_phy_event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_conf_route_info.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_conf_zone_man_pass.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smp_conf_zone_perm_tbl.Po@am__quote@
