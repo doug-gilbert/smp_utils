@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.02 20110805";
+static char * version_str = "1.02 20110830";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 
@@ -93,9 +93,10 @@ static void usage()
           "password\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT ZONE MANAGER PASSWORD function\n"

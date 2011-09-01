@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.04 20110805";
+static char * version_str = "1.04 20110830";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
@@ -85,9 +85,10 @@ static void usage()
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP REPORT PHY EVENT LIST function\n"

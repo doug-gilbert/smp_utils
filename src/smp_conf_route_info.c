@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.08 20110811";
+static char * version_str = "1.08 20110830";
 
 
 static struct option long_options[] = {
@@ -95,9 +95,10 @@ static void usage()
           "address\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"
           "Performs a SMP CONFIGURE ROUTE INFORMATION function\n"

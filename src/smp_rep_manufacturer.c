@@ -50,7 +50,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.10 20110805";
+static char * version_str = "1.10 20110830";
 
 
 #define SMP_FN_REPORT_MANUFACTURER_RESP_LEN 64
@@ -83,10 +83,11 @@ static void usage()
           "interface\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "target (use leading\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n"
           "    --zero|-z            zero Allocated Response Length "

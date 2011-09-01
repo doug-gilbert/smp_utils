@@ -56,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.09 20110805";
+static char * version_str = "1.09 20110830";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
@@ -96,11 +96,12 @@ static void usage()
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
           "    --raw|-r             output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading '0x'\n"
-          "                         or trailing 'h'). Depending on "
-          "the interface, may\n"
-          "                         not be needed\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP target "
+          "(use leading\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
           "    --verbose|-v         increase verbosity\n"
           "    --version|-V         print version string and exit\n\n"

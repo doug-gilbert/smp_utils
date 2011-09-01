@@ -51,95 +51,248 @@
  * its response.
  */
 
-static char * version_str = "1.00 20110821";
+static char * version_str = "1.00 20110831";
+
+#define MAX_PHY_EV_SRC 126      /* max in one request */
 
 
 static struct option long_options[] = {
         {"clear", 0, 0, 'C'},
         {"expected", 1, 0, 'E'},
+        {"file", 1, 0, 'f'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"interface", 1, 0, 'I'},
+        {"pes", 1, 0, 'P'},
         {"phy", 1, 0, 'p'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
+        {"thres", 1, 0, 'T'},
         {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
-};
-
-static unsigned char tst_desc[] = {
-    0, 0, 0, 1, 0, 0, 0, 0,
-    0, 0, 0, 2, 0, 0, 0, 0,
-    0, 0, 0, 3, 0, 0, 0, 0,
-    0, 0, 0, 4, 0, 0, 0, 0,
 };
 
 
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_phy_event [--clear] [--expected=EX] [--help] [--hex]\n"
-          "                          [--interface=PARAMS] "
-          "[--phy=ID]\n"
-          "                          [--raw] [--sa=SAS_ADDR]\n"
-          "                          [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "smp_conf_phy_event [--clear] [--expected=EX] [--file=FILE] "
+          "[--help]\n"
+          "                          [--hex] [--interface=PARAMS] "
+          "[--pes=PES,PES...]\n"
+          "                          [--phy=ID] [--raw] [--sa=SAS_ADDR]\n"
+          "                          [--thres=THR,THR...] [--verbose] "
+          "[--version]\n"
+          "                          SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --clear|-C             clear all peak value detectors for "
           "this phy\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
+          "    --file=FILE|-f FILE    read PES, THR pairs from FILE\n"
           "    --help|-h              print out usage message\n"
           "    --hex|-H               print response in hexadecimal\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
-          "    --phy=ID|-p ID       phy identifier (def: 0)\n"
+          "    --pes=PES,PES...|-P PES,PES...    comma separated list "
+          "of Phy\n"
+          "                                      Event Sources\n"
+          "    --phy=ID|-p ID         phy identifier (def: 0)\n"
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                           '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                           interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
+          "    --thres=THR,THR...|-T THR,THR...    comma separated list "
+          "of peak\n"
+          "                                        value detector "
+          "thresholds\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
           "Performs a SMP CONFIGURE PHY EVENT function\n"
           );
 }
 
-/* Read ASCII hex bytes from fname (a file named '-' taken as stdin).
- * There should be either one entry per line or a comma, space or tab
- * separated list of bytes. The first ASCII hex string detected has its
- * length checked; if the length is 1 or 2 then bytes are expected to
- * be space, comma or tab separated; if the length is 3 or more then a
- * string of ACSII hex digits is expected, 2 per byte. Everything from
- * and including a '#' on a line is ignored.
+/* Fetches unsigned int and returns it if found, with *err set to 0 if
+ * err is non-NULL. If unable to decode returns 0, with *err set to 1 if
+ * err is non-NULL. Assumes number is decimal unless prefixed by '0x' (or
+ * '0X') or has a trailing 'h' (or 'H') in which case it is assumed to be
+ * hexadecimal. */
+unsigned int
+get_unum(const char * buf, int * err)
+{
+    int res, len;
+    unsigned unum;
+
+    if ((NULL == buf) || ('\0' == buf[0])) {
+        if (err)
+            *err = 1;
+        return 0;
+    }
+    len = strspn(buf, "0123456789aAbBcCdDeEfFhHxX");
+    if (0 == len) {
+        if (err)
+            *err = 1;
+        return 0;
+    }
+    if (('0' == buf[0]) && (('x' == buf[1]) || ('X' == buf[1])))
+        res = sscanf(buf + 2, "%x", &unum);
+    else if ('H' == toupper(buf[len - 1]))
+        res = sscanf(buf, "%x", &unum);
+    else
+        res = sscanf(buf, "%u", &unum);
+    if (1 == res) {
+        if (err)
+            *err = 0;
+        return unum;
+    } else {
+        if (err)
+            *err = 1;
+        return 0;
+    }
+}
+
+/* Read numbers (up to 8 bits in size) from command line (comma (or
+ * (single) space) separated list). Assumed decimal unless prefixed
+ * by '0x', '0X' or contains trailing 'h' or 'H' (which indicate hex).
  * Returns 0 if ok, or 1 if error. */
 static int
-f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
-          int max_arr_len)
+build_pes_arr(const char * inp, unsigned char * pes_arr,
+              int * pes_arr_len, int max_arr_len)
 {
-    int fn_len, in_len, k, j, m;
-    int no_space = 0;
-    int checked_hexlen = 0;
-    unsigned int h;
+    int in_len, k, err;
     const char * lcp;
-    FILE * fp;
+    unsigned int unum;
+    char * cp;
+    char * c2p;
+
+    if ((NULL == inp) || (NULL == pes_arr) || (NULL == pes_arr_len))
+        return 1;
+    lcp = inp;
+    in_len = strlen(inp);
+    if (0 == in_len)
+        *pes_arr_len = 0;
+    if ('-' == inp[0]) {        /* read from stdin */
+        fprintf(stderr, "'--pes' cannot be read from stdin\n");
+        return 1;
+    } else {        /* list of numbers (default decimal) on command line */
+        k = strspn(inp, "0123456789aAbBcCdDeEfFhHxX, ");
+        if (in_len != k) {
+            fprintf(stderr, "build_pes_arr: error at pos %d\n", k + 1);
+            return 1;
+        }
+        for (k = 0; k < max_arr_len; ++k) {
+            unum = get_unum(lcp, &err);
+            if ((! err) && (unum < 256)) {
+                pes_arr[k] = (unsigned char)unum;
+                cp = strchr(lcp, ',');
+                c2p = strchr(lcp, ' ');
+                if (NULL == cp)
+                    cp = c2p;
+                if (NULL == cp)
+                    break;
+                if (c2p && (c2p < cp))
+                    cp = c2p;
+                lcp = cp + 1;
+            } else {
+                fprintf(stderr, "build_pes_arr: error at pos %d\n",
+                        (int)(lcp - inp + 1));
+                return 1;
+            }
+        }
+        *pes_arr_len = k + 1;
+        if (k == max_arr_len) {
+            fprintf(stderr, "build_pes_arr: array length exceeded\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Read numbers (up to 32 bits in size) from command line (comma (or
+ * (single) space) separated list). Assumed decimal unless prefixed
+ * by '0x', '0X' or contains trailing 'h' or 'H' (which indicate hex).
+ * Returns 0 if ok, or 1 if error. */
+static int
+build_thres_arr(const char * inp, unsigned int * thres_arr,
+                int * thres_arr_len, int max_arr_len)
+{
+    int in_len, k, err;
+    const char * lcp;
+    unsigned int unum;
+    char * cp;
+    char * c2p;
+
+    if ((NULL == inp) || (NULL == thres_arr) || (NULL == thres_arr_len))
+        return 1;
+    lcp = inp;
+    in_len = strlen(inp);
+    if (0 == in_len)
+        *thres_arr_len = 0;
+    if ('-' == inp[0]) {        /* read from stdin */
+        fprintf(stderr, "'--thres' cannot be read from stdin\n");
+        return 1;
+    } else {        /* list of numbers (default decimal) on command line */
+        k = strspn(inp, "0123456789aAbBcCdDeEfFhHxX, ");
+        if (in_len != k) {
+            fprintf(stderr, "build_thres_arr: error at pos %d\n", k + 1);
+            return 1;
+        }
+        for (k = 0; k < max_arr_len; ++k) {
+            unum = get_unum(lcp, &err);
+            if (! err) {
+                thres_arr[k] = unum;
+                cp = strchr(lcp, ',');
+                c2p = strchr(lcp, ' ');
+                if (NULL == cp)
+                    cp = c2p;
+                if (NULL == cp)
+                    break;
+                if (c2p && (c2p < cp))
+                    cp = c2p;
+                lcp = cp + 1;
+            } else {
+                fprintf(stderr, "build_thres_arr: error at pos %d\n",
+                        (int)(lcp - inp + 1));
+                return 1;
+            }
+        }
+        *thres_arr_len = k + 1;
+        if (k == max_arr_len) {
+            fprintf(stderr, "build_num_arr: array length exceeded\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+/* Read numbers from filename (or stdin) line by line (comma (or
+ * (single) space) separated list). Assumed decimal unless prefixed
+ * by '0x', '0X' or contains trailing 'h' or 'H' (which indicate hex).
+ * Returns 0 if ok, or 1 if error. */
+static int
+build_joint_arr(const char * file_name, unsigned char * pes_arr,
+                unsigned int * thres_arr, int * arr_len, int max_arr_len)
+{
     char line[512];
     int off = 0;
+    int in_len, k, j, m, have_stdin, ind, bit0, err;
+    char * lcp;
+    FILE * fp;
+    unsigned int unum;
 
-    if ((NULL == fname) || (NULL == mp_arr) || (NULL == mp_arr_len))
-        return 1;
-    fn_len = strlen(fname);
-    if (0 == fn_len)
-        return 1;
-    if ((1 == fn_len) && ('-' == fname[0]))        /* read from stdin */
+    have_stdin = ((1 == strlen(file_name)) && ('-' == file_name[0]));
+    if (have_stdin)
         fp = stdin;
     else {
-        fp = fopen(fname, "r");
+        fp = fopen(file_name, "r");
         if (NULL == fp) {
-            fprintf(stderr, "Unable to open %s for reading\n", fname);
+            fprintf(stderr, "build_joint_arr: unable to open %s\n",
+                    file_name);
             return 1;
         }
     }
@@ -164,75 +317,58 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         in_len -= m;
         if ('#' == *lcp)
             continue;
-        if (! checked_hexlen) {
-            ++checked_hexlen;
-            k = strspn(lcp, "0123456789aAbBcCdDeEfF");
-            if (k > 2)
-                no_space = 1;
-        }
-
-        k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
+        k = strspn(lcp, "0123456789aAbBcCdDeEfFhHxX ,\t");
         if ((k < in_len) && ('#' != lcp[k])) {
-            fprintf(stderr, "f2hex_arr: syntax error at "
+            fprintf(stderr, "build_joint_arr: syntax error at "
                     "line %d, pos %d\n", j + 1, m + k + 1);
-            goto bad;
+            return 1;
         }
-        if (no_space) {
-            for (k = 0; isxdigit(*lcp) && isxdigit(*(lcp + 1));
-                 ++k, lcp += 2) {
-                if (1 != sscanf(lcp, "%2x", &h)) {
-                    fprintf(stderr, "f2hex_arr: bad hex number in line "
-                            "%d, pos %d\n", j + 1, (int)(lcp - line + 1));
-                    goto bad;
+        for (k = 0; k < 1024; ++k) {
+            unum = get_unum(lcp, &err);
+            if (! err) {
+                ind = ((off + k) >> 1);
+                bit0 = 0x1 & (off + k);
+                if (ind >= max_arr_len) {
+                    fprintf(stderr, "build_joint_arr: array length "
+                            "exceeded\n");
+                    return 1;
                 }
-                if ((off + k) >= max_arr_len) {
-                    fprintf(stderr, "f2hex_arr: array length exceeded\n");
-                    goto bad;
+                if (bit0)
+                    thres_arr[ind] = unum;
+                else {
+                    if (unum > 255) {
+                        fprintf(stderr, "build_joint_arr: pes (%u) too "
+                                "large\n", unum);
+                        return 1;
+                    }
+                    pes_arr[ind] = (unsigned char)unum;
                 }
-                mp_arr[off + k] = h;
+                lcp = strpbrk(lcp, " ,\t");
+                if (NULL == lcp)
+                    break;
+                lcp += strspn(lcp, " ,\t");
+                if ('\0' == *lcp)
+                    break;
+            } else {
+                if ('#' == *lcp) {
+                    --k;
+                    break;
+                }
+                fprintf(stderr, "build_joint_arr: error in "
+                        "line %d, at pos %d\n", j + 1,
+                        (int)(lcp - line + 1));
+                return 1;
             }
-            off += k;
-        } else {
-            for (k = 0; k < 1024; ++k) {
-                if (1 == sscanf(lcp, "%x", &h)) {
-                    if (h > 0xff) {
-                        fprintf(stderr, "f2hex_arr: hex number "
-                                "larger than 0xff in line %d, pos %d\n",
-                                j + 1, (int)(lcp - line + 1));
-                        goto bad;
-                    }
-                    if ((off + k) >= max_arr_len) {
-                        fprintf(stderr, "f2hex_arr: array length "
-                                "exceeded\n");
-                        goto bad;
-                    }
-                    mp_arr[off + k] = h;
-                    lcp = strpbrk(lcp, " ,\t");
-                    if (NULL == lcp)
-                        break;
-                    lcp += strspn(lcp, " ,\t");
-                    if ('\0' == *lcp)
-                        break;
-                } else {
-                    if ('#' == *lcp) {
-                        --k;
-                        break;
-                    }
-                    fprintf(stderr, "f2hex_arr: error in "
-                            "line %d, at pos %d\n", j + 1,
-                            (int)(lcp - line + 1));
-                    goto bad;
-                }
-            }
-            off += (k + 1);
         }
+        off += (k + 1);
     }
-    *mp_arr_len = off;
-    fclose(fp);
+    if (0x1 & off) {
+        fprintf(stderr, "build_joint_arr: expect LBA,NUM pairs but decoded "
+                "odd number\n  from %s\n", have_stdin ? "stdin" : file_name);
+        return 1;
+    }
+    *arr_len = off >> 1;
     return 0;
-bad:
-    fclose(fp);
-    return 1;
 }
 
 static void dStrRaw(const char* str, int len)
@@ -245,18 +381,23 @@ static void dStrRaw(const char* str, int len)
 
 int main(int argc, char * argv[])
 {
-    int res, c, k, len, num_desc, act_resplen;
+    int res, c, k, j, len, num_desc, act_resplen, pes_elem, thres_elem;
     int do_clear = 0;
     int expected_cc = 0;
     int do_hex = 0;
     int phy_id = 0;
     int do_raw = 0;
     int verbose = 0;
+    const char * file_op = NULL;
+    const char * pes_op = NULL;
+    const char * thres_op = NULL;
     long long sa_ll;
     unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
+    unsigned char pes_arr[MAX_PHY_EV_SRC];
+    unsigned int thres_arr[MAX_PHY_EV_SRC];
     unsigned char smp_req[1028];
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
@@ -266,13 +407,15 @@ int main(int argc, char * argv[])
     int ret = 0;
 
     memset(smp_req, 0, sizeof(smp_req));
+    memset(pes_arr, 0, sizeof(pes_arr));
+    memset(thres_arr, 0, sizeof(thres_arr));
     smp_req[0] = SMP_FRAME_TYPE_REQ;
     smp_req[1] = SMP_FN_CONFIG_PHY_EVENT;
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "CE:hHI:p:rs:S:vV", long_options,
+        c = getopt_long(argc, argv, "CE:f:hHI:p:P:rs:S:T:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -287,6 +430,13 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
+            break;
+        case 'f':
+            if (file_op) {
+                fprintf(stderr, "only expected one '--file=' option\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            file_op = optarg;
             break;
         case 'h':
         case '?':
@@ -306,6 +456,13 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
+        case 'P':
+            if (pes_op) {
+                fprintf(stderr, "only expected one '--pes=' option\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            pes_op = optarg;
+            break;
         case 'r':
             ++do_raw;
             break;
@@ -316,6 +473,13 @@ int main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
+            break;
+        case 'T':
+            if (thres_op) {
+                fprintf(stderr, "only expected one '--thres=' option\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            thres_op = optarg;
             break;
         case 'v':
             ++verbose;
@@ -385,23 +549,39 @@ int main(int argc, char * argv[])
             }
         }
     }
-#if 0
-    if (NULL == pconf) {
-        fprintf(stderr, "--pconf=FN option is required (i.e. it's not "
-                "optional)\n");
+
+    if ((0 == do_clear) && (! file_op) && (! pes_op))
+        fprintf(stderr, "warning: without --clear, --file and --pes not "
+                "much will happen\n");
+    if (file_op && pes_op) {
+        fprintf(stderr, "can use either --file= or --pes= but not both\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
-    if (f2hex_arr(pconf, smp_req + 8, &len, sizeof(smp_req) - 12)) {
-        fprintf(stderr, "failed decoding --pconf=FN option\n");
-        return SMP_LIB_SYNTAX_ERROR;
-    num_desc = len / 4;
-    if (0 != (len % 4)) {
-        memset(smp_req + 8 + (4 * num_desc), 0, 4);
-        fprintf(stderr, "warning: pconf data not a multiple of 4, ignore "
-                "excess\n");
+    if (file_op && thres_op) 
+        fprintf(stderr, "warning: ignoring --thres= and taking threshold "
+                "values from --file= argument\n");
+
+    pes_elem = 0;
+    thres_elem = 0;
+    if (pes_op) { 
+        if (build_pes_arr(pes_op, pes_arr, &pes_elem, MAX_PHY_EV_SRC))
+            return SMP_LIB_SYNTAX_ERROR;
+        if (thres_op) {
+            if (build_thres_arr(thres_op, thres_arr, &thres_elem,
+                                MAX_PHY_EV_SRC))
+                return SMP_LIB_SYNTAX_ERROR;
+        }
+        if (thres_elem > pes_elem)
+            fprintf(stderr, "warning: more threshold elements (%d) than "
+                    "phy event source elements (%d)\n", thres_elem, pes_elem);
     }
-#endif
-    num_desc = 4;
+    if (file_op) {
+        if (build_joint_arr(file_op, pes_arr, thres_arr, &pes_elem,
+                            MAX_PHY_EV_SRC))
+            return SMP_LIB_SYNTAX_ERROR;
+    }
+
+    num_desc = pes_elem;
 
     res = smp_initiator_open(device_name, subvalue, i_params, sa,
                              &tobj, verbose);
@@ -415,7 +595,13 @@ int main(int argc, char * argv[])
     smp_req[9] = phy_id;
     smp_req[10] = 2;    /* descriptor 2 dwords long */
     smp_req[11] = num_desc;
-    memcpy(smp_req + 12, tst_desc, sizeof(tst_desc));
+    for (k = 0, j = 12; k < num_desc; ++k, j += 8) {
+        smp_req[j + 3] = pes_arr[k]; 
+        smp_req[j + 4] = (thres_arr[k] >> 24) & 0xff;
+        smp_req[j + 5] = (thres_arr[k] >> 16) & 0xff;
+        smp_req[j + 6] = (thres_arr[k] >> 8) & 0xff;
+        smp_req[j + 7] = thres_arr[k] & 0xff;
+    }
     if (verbose) {
         fprintf(stderr, "    Configure phy event request:");
         for (k = 0; k < (16 + (num_desc * 8)); ++k) {
