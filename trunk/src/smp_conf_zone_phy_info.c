@@ -92,9 +92,10 @@ static void usage()
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                           '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                           interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --save=SAV|-S SAV      SAV: 0 -> shadow (def); 1 -> "
           "saved\n"
           "                           2 -> shadow (and saved if "
@@ -356,7 +357,7 @@ int main(int argc, char * argv[])
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after seperator in SMP_DEVICE "
-		    "name\n");
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
