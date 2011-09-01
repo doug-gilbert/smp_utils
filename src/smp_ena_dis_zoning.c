@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.05 20110805";
+static char * version_str = "1.05 20110830";
 
 
 static struct option long_options[] = {
@@ -92,9 +92,10 @@ static void usage()
           "    --raw|-r               output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                           '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                           interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
           "    --save=SAV|-S SAV      SAV: 0 -> shadow (def); 1 -> "
           "saved\n"
           "                           2 -> shadow (and saved if "

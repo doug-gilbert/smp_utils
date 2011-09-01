@@ -51,7 +51,7 @@
  * response.
  */
 
-static char * version_str = "1.05 20110821";
+static char * version_str = "1.05 20110830";
 
 #define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
 
@@ -93,12 +93,13 @@ static void usage()
           "[--phy=ID]\n"
 #ifdef SMP_TEST
           "                         [--raw] [--sa=SAS_ADDR] [--test] "
-          "[--verbose] "
+          "[--verbose]\n"
+          "                         [--version] SMP_DEVICE[,N]\n"
 #else
           "                         [--raw] [--sa=SAS_ADDR] [--verbose] "
-#endif
           "[--version]\n"
           "                         SMP_DEVICE[,N]\n"
+#endif
           "  where:\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
@@ -108,9 +109,10 @@ static void usage()
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
-          "                         '0x' or trailing 'h'). Depending on "
-          "the\n"
-          "                         interface, may not be needed\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
 #ifdef SMP_TEST
           "    --test|-t            use dummy hard-coded response, ignore "
           "DEVICE\n"
