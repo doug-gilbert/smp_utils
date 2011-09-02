@@ -50,16 +50,20 @@
  * response.
  */
 
-static char * version_str = "1.04 20110830";
+static char * version_str = "1.05 20110901";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
 
 static struct option long_options[] = {
+        {"desc", 0, 0, 'd'},
+        {"force", 0, 0, 'f'},
         {"help", 0, 0, 'h'},
         {"hex", 0, 0, 'H'},
         {"index", 1, 0, 'i'},
         {"interface", 1, 0, 'I'},
+        {"long", 0, 0, 'l'},
+        {"nonz", 0, 0, 'n'},
         {"raw", 0, 0, 'r'},
         {"sa", 1, 0, 's'},
         {"verbose", 0, 0, 'v'},
@@ -70,18 +74,26 @@ static struct option long_options[] = {
 static void usage()
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_phy_event_list [--help] [--hex] [--index=IN]\n"
-          "                              [--interface=PARAMS] [--raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                              [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
+          "smp_rep_phy_event_list [--desc] [--force] [--help] [--hex]\n"
+          "                              [--index=IN] [--interface=PARAMS] "
+          "[--long]\n"
+          "                              [--raw] [--sa=SAS_ADDR] "
+          "[--verbose]\n"
+          "                              [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
+          "    --desc|-d            show descriptor number in output\n"
+          "    --force|-f           force to continue past last descriptor "
+          "index\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --index=IN|-i IN     starting phy event list descriptor "
           "index (def: 1)\n"
           "    --interface=PARAMS|-I PARAMS    specify or override "
           "interface\n"
+          "    --long|-l            show phy event source hex value in "
+          "output\n"
+          "    --nonz|-n            only show phy events with non-zero "
+          "counts\n"
           "    --raw|-r             output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -106,11 +118,15 @@ static void dStrRaw(const char* str, int len)
 /* from sas2r15 */
 static void
 show_phy_event_info(int phy_id, int pes, unsigned int val,
-                    unsigned int thresh_val)
+                    unsigned int thresh_val, int do_long)
 {
     unsigned int u;
 
-    printf("     phy_id=%d: ", phy_id);
+    if (do_long)
+        printf("    phy_id=%d: [0x%x] ", phy_id, (unsigned int)pes);
+    else
+        printf("    %d: ", phy_id);
+
     switch (pes) {
     case 0:
         printf("No event\n");
@@ -169,7 +185,7 @@ show_phy_event_info(int phy_id, int pes, unsigned int val,
     case 0x2b:
         printf("Peak transmitted pathway blocked count: %u\n",
                val & 0xff);
-        printf("    Peak value detector threshold: %u\n",
+        printf("      Peak value detector threshold: %u\n",
                thresh_val & 0xff);
         break;
     case 0x2c:
@@ -182,19 +198,19 @@ show_phy_event_info(int phy_id, int pes, unsigned int val,
                    "%u\n", 33 + (u - 0x8000));
         u = thresh_val & 0xffff;
         if (u < 0x8000)
-            printf("    Peak value detector threshold (us): %u\n",
+            printf("      Peak value detector threshold (us): %u\n",
                    u);
         else
-            printf("    Peak value detector threshold (ms): %u\n",
+            printf("      Peak value detector threshold (ms): %u\n",
                    33 + (u - 0x8000));
         break;
     case 0x2d:
         printf("Peak arbitration time (us): %u\n", val);
-        printf("    Peak value detector threshold: %u\n", thresh_val);
+        printf("      Peak value detector threshold: %u\n", thresh_val);
         break;
     case 0x2e:
         printf("Peak connection time (us): %u\n", val);
-        printf("    Peak value detector threshold: %u\n", thresh_val);
+        printf("      Peak value detector threshold: %u\n", thresh_val);
         break;
     case 0x40:
         printf("Transmitted SSP frame count: %u\n", val);
@@ -243,7 +259,11 @@ show_phy_event_info(int phy_id, int pes, unsigned int val,
 int main(int argc, char * argv[])
 {
     int res, c, k, len, ped_len, num_ped, pes, phy_id, act_resplen;
+    int do_desc = 0;
+    int do_force = 0;
     int do_hex = 0;
+    int do_long = 0;
+    int do_nonz = 0;
     int starting_index = 1;
     int do_raw = 0;
     int verbose = 0;
@@ -259,7 +279,7 @@ int main(int argc, char * argv[])
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     int subvalue = 0;
-    unsigned int first_di, pe_val, pvdt;
+    unsigned int first_di, last_di, pe_val, pvdt;
     char * cp;
     unsigned char * pedp;
     int ret = 0;
@@ -268,12 +288,18 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "hHi:I:rs:vV", long_options,
+        c = getopt_long(argc, argv, "dfhHi:I:lnrs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'd':
+            ++do_desc;
+            break;
+        case 'f':
+            ++do_force;
+            break;
         case 'h':
         case '?':
             usage();
@@ -291,6 +317,12 @@ int main(int argc, char * argv[])
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
+            break;
+        case 'l':
+            ++do_long;
+            break;
+        case 'n':
+            ++do_nonz;
             break;
         case 'r':
             ++do_raw;
@@ -469,9 +501,9 @@ int main(int argc, char * argv[])
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
     first_di = (smp_resp[6] << 8) | smp_resp[7];
+    last_di = (smp_resp[8] << 8) | smp_resp[9];
     printf("  first phy event list descriptor index: %u\n", first_di);
-    printf("  last phy event list descriptor index: %u\n",
-           (smp_resp[8] << 8) | smp_resp[9]);
+    printf("  last phy event list descriptor index: %u\n", last_di);
     printf("  phy event descriptor length: %d dwords\n", smp_resp[10]);
     ped_len = smp_resp[10] * 4;
     num_ped = smp_resp[15];
@@ -484,15 +516,25 @@ int main(int argc, char * argv[])
     }
     pedp = smp_resp + 16;
     for (k = 0; k < num_ped; ++k, pedp += ped_len) {
-        printf("   Descriptor index %u:\n", first_di + k);
+        if ((0 == do_force) && ((first_di + k) > last_di)) {
+            if (do_long)
+                printf("last descriptor index exceeded, exiting\n");
+            break;
+        }
         phy_id = pedp[2];
         pes = pedp[3];
         pe_val = (pedp[4] << 24) | (pedp[5] << 16) | (pedp[6] << 8) |
                  pedp[7];
         pvdt = (pedp[8] << 24) | (pedp[9] << 16) | (pedp[10] << 8) |
                pedp[11];
-        show_phy_event_info(phy_id, pes, pe_val, pvdt);
+        if ((0 == do_nonz) || pe_val) {
+            if (do_desc)
+                printf("   Descriptor index %u:\n", first_di + k);
+            show_phy_event_info(phy_id, pes, pe_val, pvdt, do_long);
+        }
     }
+    if ((k >= num_ped) && ((first_di + k) < last_di))
+        printf("Start next invocation at '--index=%u'\n", first_di + k);
 
 err_out:
     res = smp_initiator_close(&tobj);
