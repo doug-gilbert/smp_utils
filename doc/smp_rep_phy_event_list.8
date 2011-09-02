@@ -1,10 +1,11 @@
-.TH SMP_REP_PHY_EVENT_LIST "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_REP_PHY_EVENT_LIST "8" "September 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_rep_phy_event_list \- invoke REPORT PHY EVENT LIST SMP function
 .SH SYNOPSIS
 .B smp_rep_phy_event_list
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=IN\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-desc\fR] [\fI\-\-force\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-index=IN\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-long\fR]
+[\fI\-\-nonz\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
@@ -25,6 +26,16 @@ each phy.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
+\fB\-d\fR, \fB\-\-desc\fR
+precede each phy event descriptor with a line announcing its descriptor index 
+number. Index numbers start at 1.
+.TP
+\fB\-f\fR, \fB\-\-force\fR
+force the report to continue after the last descriptor index has been
+exceeded. The default action is too stop the report when the last descriptor
+index has been exceeded.
+at 1.
+.TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
 .TP
@@ -34,6 +45,16 @@ output the response (less the CRC field) in hexadecimal.
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
 starting phy event list descriptor index. \fIID\fR is a value between 1 and
 65535. Default is 1.
+.TP
+\fB\-l\fR, \fB\-\-long\fR
+prefix each phy event source string with its numeric identifier in hex.
+Also place "phy_id=" in front of the phy identifier number.
+For example: "phy_id=3: [0x1]: Invalid word count: 29"; without this option
+this line would be: "3: Invalid word count: 29".
+.TP
+\fB\-n\fR, \fB\-\-nonz\fR
+only show phy events with non-zero counts or peak values. The default is to
+show all phy events in the response.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the

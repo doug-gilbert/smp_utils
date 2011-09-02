@@ -1,12 +1,12 @@
-.TH SMP_REP_PHY_EVENT "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_REP_PHY_EVENT "8" "September 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_rep_phy_event \- invoke REPORT PHY EVENT SMP function
 .SH SYNOPSIS
 .B smp_rep_phy_event
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-desc\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-long\fR] [\fI\-\-phy=ID\fR]
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] [\fI\-\-zero\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -24,6 +24,10 @@ At least one phy event should be maintained for each phy.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
+\fB\-d\fR, \fB\-\-desc\fR
+precede each phy event descriptor with a line announcing its descriptor index
+number. Index numbers start at 1.
+.TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
 .TP
@@ -34,6 +38,10 @@ output the response (less the CRC field) in hexadecimal.
 interface specific parameters. In this case "interface" refers to the
 path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
+.TP
+\fB\-l\fR, \fB\-\-long\fR
+prefix each phy event source string with its numeric identifier in hex.
+For example: "[0x1]: Invalid word count: 23"
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
