@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.32 20110805";    /* spl2r02 */
+static char * version_str = "1.33 20110923";    /* spl2r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -762,6 +762,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("  shadow inside ZPSDS persistent: %d\n", !!(rp[104] & 0x20));
         printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
         printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
+        /* 'shadow zoning enabled' added in spl2r03 */
         printf("  shadow zoning enabled: %d\n", !!(rp[104] & 0x1));
         printf("  shadow zone group: %d\n", rp[107]);
     }

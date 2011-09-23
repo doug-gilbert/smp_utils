@@ -10,7 +10,7 @@
 # SMP CONFIGURE ZONE PERMISSION TABLE request shown in the "Zone
 # permission configuration descriptor examples" annex is various
 # SAS-2 (and later) drafts. [It is Annex L in sas2r16.pdf; Annex H in
-# spl-r07.pdf and spl2r01.pdf .]
+# spl-r07.pdf and spl2r03.pdf .]
 
 # 
 # The request in the Annex example turns all the zone group permission

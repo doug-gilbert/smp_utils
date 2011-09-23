@@ -2,13 +2,13 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.97 [20110910] [svn:r109]
+Changelog for smp_utils-0.97 [20110923] [svn:r110]
   - smp_conf_phy_event: new utility
   - change to ./configure style build and use smputils
     runtime and development libraries
   - change binary install from /usr/bin to /usr/sbin
     in debian and rpm (.spec) scripts
-  - sync to SPL-2 (spl2r02)
+  - sync to SPL-2 (spl2r03)
   - take resid into account when calculating the actual
     response length
   - smp_read_gpio, smp_write_gpio: move register type,

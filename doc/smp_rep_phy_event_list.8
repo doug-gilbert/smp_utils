@@ -43,8 +43,11 @@ output the usage message then exit.
 output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
-starting phy event list descriptor index. \fIID\fR is a value between 1 and
-65535. Default is 1.
+starting phy event list descriptor index. \fIIN\fR is a value between 0 and
+65535. The default is 1. If \fIIN\fR is 0 then the response should contain
+no phy event list descriptors but the 'last phy event list descriptor index'
+and 'phy event list descriptor length' fields in the response should be set
+appropriately. The last point was clarified in SPL\-2 revision 3.
 .TP
 \fB\-l\fR, \fB\-\-long\fR
 prefix each phy event source string with its numeric identifier in hex.
