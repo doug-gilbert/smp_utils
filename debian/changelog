@@ -2,7 +2,7 @@ smp-utils (0.97-0.1) unstable; urgency=low
 
   * switch to autotools style build
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Sat, 10 Sep 2011 12:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Fri, 23 Sep 2011 14:00:00 +0200
 
 smp-utils (0.96-0.1) unstable; urgency=low
 

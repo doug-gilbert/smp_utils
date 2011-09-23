@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.24 20110805";    /* spl2r02 */
+static char * version_str = "1.25 20110923";    /* spl2r03 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -645,6 +645,8 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  shadow inside ZPSDS persistent: %d\n", !!(rp[104] & 0x20));
         printf("  shadow requested inside ZPSDS: %d\n", !!(rp[104] & 0x10));
         printf("  shadow zone group persistent: %d\n", !!(rp[104] & 0x4));
+        /* 'shadow zoning enabled' added in spl2r03 */
+        printf("  shadow zoning enabled: %d\n", !!(rp[104] & 0x1));
         printf("  shadow zone group: %d\n", rp[107]);
     }
     if (len > 115) {

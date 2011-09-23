@@ -50,9 +50,11 @@
  * response.
  */
 
-static char * version_str = "1.05 20110901";
+static char * version_str = "1.06 20110923";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
+
+#define DEF_STARTING_INDEX 1
 
 
 static struct option long_options[] = {
@@ -264,7 +266,7 @@ int main(int argc, char * argv[])
     int do_hex = 0;
     int do_long = 0;
     int do_nonz = 0;
-    int starting_index = 1;
+    int starting_index = DEF_STARTING_INDEX;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
