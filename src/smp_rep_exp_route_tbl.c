@@ -50,7 +50,7 @@
  * its response.
  */
 
-static char * version_str = "1.09 20110805";    /* sync with sas2r15 */
+static char * version_str = "1.10 20111014";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -243,7 +243,7 @@ int
 main(int argc, char * argv[])
 {
     int res, c, len, exp_cc, sphy_id, num_desc, desc_len;
-    int k, j, err, off, exp_rtcc;
+    int k, j, off, exp_rtcc;
     long long sa_ll;
     unsigned long long ull;
     char i_params[256];
@@ -427,7 +427,7 @@ main(int argc, char * argv[])
             goto finish;
         }
     }
-    for (k = 0, err = 0; k < num_desc; ++k) {
+    for (k = 0; k < num_desc; ++k) {
         off = 32 + (k * (desc_len * 4));
         printf("  descriptor index %d:\n", k);
         for (j = 0, ull = 0; j < 8; ++j) {

@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.25 20110923";    /* spl2r03 */
+static char * version_str = "1.26 20111014";    /* spl2r03 */
 
 
 #define MAX_DLIST_SHORT_DESCS 40
@@ -1013,7 +1013,7 @@ output_header_info(const unsigned char * resp, struct opts_t * op)
 int
 main(int argc, char * argv[])
 {
-    int res, c, len, hdr_ecc, sphy_id, num_desc, resp_filter, resp_desc_type;
+    int res, c, len, hdr_ecc, num_desc, resp_filter, resp_desc_type;
     int desc_len, k, j, no_more, err, off, adt, fresult;
     long long sa_ll;
     char i_params[256];
@@ -1265,7 +1265,6 @@ main(int argc, char * argv[])
         if ((0 == j) && ((! opts.do_1line) || opts.zpi_fn))
             output_header_info(resp, &opts);
         hdr_ecc = (resp[4] << 8) + resp[5];
-        sphy_id = resp[8];
         z_supported = !!(resp[16] & 0x80);
         z_enabled = !!(resp[16] & 0x40);
         resp_filter = resp[10] & 0xf;
