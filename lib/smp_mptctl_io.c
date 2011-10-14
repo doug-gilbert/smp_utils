@@ -125,12 +125,13 @@ void SmpImmediateIoctl(int fd, int ioc_num);
 int
 issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 {
-        int CmdBlkSize;
         int status = -1;
+#if 0
+        int CmdBlkSize;
 
         CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) + 8;
-
-        // ShowBuf("Command Block Before: ", mpiBlkPtr, CmdBlkSize, 0);
+        ShowBuf("Command Block Before: ", mpiBlkPtr, CmdBlkSize, 0);
+#endif
 
         /* Set the IOC number prior to issuing this command.
          */
