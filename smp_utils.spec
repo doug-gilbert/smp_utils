@@ -46,7 +46,8 @@ developing applications.
 %setup -q
 
 %build
-%configure
+# %configure
+./configure --prefix=/usr --bindir=/usr/sbin
 
 %install
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
