@@ -16,16 +16,61 @@
 //#include <scsi/scsi.h>
 #include <linux/types.h>
 #include <scsi/sg.h>
-#include <linux/bsg.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "smp_lin_bsg.h"
+
+#if defined(IGNORE_LINUX_BSG) || ! defined(HAVE_LINUX_BSG_H)
+
+/* Returns 1 if bsg dev_name else 0 . */
+int
+chk_lin_bsg_device(const char * dev_name, int verbose)
+{
+    dev_name = dev_name;
+    verbose = verbose;
+    return 0;
+}
+
+/* Returns open file desriptor to dev_name bsg device or -1 */
+int
+open_lin_bsg_device(const char * dev_name, int verbose)
+{
+    dev_name = dev_name;
+    verbose = verbose;
+    return -1;
+}
+
+int
+close_lin_bsg_device(int fd)
+{
+    fd = fd;
+    return 0;
+}
+
+/* Returns 0 on success else -1 . */
+int
+send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
+	         int verbose)
+{
+    fd = fd;
+    subvalue = subvalue;
+    rresp = rresp;
+    verbose = verbose;
+    return -1;
+}
+
+
+# else	/* have <linux/bsg.h> and want to use it */
+
+#include <linux/bsg.h>
 
 #define DEF_TIMEOUT_MS 20000    /* 20 seconds */
 
 
+/* Returns 1 if bsg dev_name else 0 . */
 int
 chk_lin_bsg_device(const char * dev_name, int verbose)
 {
@@ -87,6 +132,7 @@ chk_lin_bsg_device(const char * dev_name, int verbose)
     return 0;
 }
 
+/* Returns open file desriptor to dev_name bsg device or -1 */
 int
 open_lin_bsg_device(const char * dev_name, int verbose)
 {
@@ -190,6 +236,7 @@ close_lin_bsg_device(int fd)
     return close(fd);
 }
 
+/* Returns 0 on success else -1 . */
 int
 send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
 	         int verbose)
@@ -254,3 +301,5 @@ send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
         rresp->transport_err = hdr.device_status;
     return 0;
 }
+
+#endif
