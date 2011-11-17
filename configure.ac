@@ -13,11 +13,11 @@ AC_PROG_LIBTOOL
 
 # check for headers
 AC_HEADER_STDC
-# AC_CHECK_HEADERS([linux/types.h linux/bsg.h linux/kdev_t.h], [], [],
-#      [[#ifdef HAVE_LINUX_TYPES_H
-#      # include <linux/types.h>
-#      #endif
-#      ]])
+AC_CHECK_HEADERS([linux/types.h linux/bsg.h], [], [],
+     [[#ifdef HAVE_LINUX_TYPES_H
+     # include <linux/types.h>
+     #endif
+     ]])
 
 # AC_CHECK_FUNCS(getopt_long,
 # 	       GETOPT_O_FILES='',
@@ -55,11 +55,6 @@ esac
 AM_CONDITIONAL(OS_FREEBSD, [echo $host_os | grep 'freebsd' > /dev/null])
 AM_CONDITIONAL(OS_LINUX, [echo $host_os | grep '^linux' > /dev/null])
 AM_CONDITIONAL(OS_SOLARIS, [echo $host_os | grep '^solaris' > /dev/null])
-
-# AC_ARG_ENABLE([no-linux-bsg],
-#   AC_HELP_STRING([--enable-no-linux-bsg], [ignore linux bsg (sgv4) if present]),
-#   AC_DEFINE_UNQUOTED(IGNORE_LINUX_BSG, 1, [ignore linux bsg], )
-# )
 
 AC_CHECK_LIB(smputils1, smp_send_req,
   [SMPUTILS_LIBS="-lsmputils1"; have_smputils=yes], have_smputils=no)
