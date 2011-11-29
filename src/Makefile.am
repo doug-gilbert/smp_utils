@@ -2,7 +2,11 @@
 ## Copied from sg3_utils. Some remnants left commented out as examples
 ## if OS_LINUX
 
-bin_PROGRAMS = \
+# install binaries in a sbin directory (e.g. /usr/sbin). If there
+# are utilities that don't need superuser, then they could be
+# placed in bin_PROGRAMS .
+
+sbin_PROGRAMS = \
 	smp_conf_general smp_conf_phy_event smp_conf_route_info \
 	smp_conf_zone_man_pass smp_conf_zone_perm_tbl \
 	smp_conf_zone_phy_info smp_discover smp_discover_list \

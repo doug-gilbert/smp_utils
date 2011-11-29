@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.97 [20111116] [svn:r113]
+Changelog for smp_utils-0.97 [20111129] [svn:r114]
   - smp_conf_phy_event: new utility
   - change to ./configure style build and use smputils
     runtime and development libraries
