@@ -50,25 +50,26 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.02 20110805";
-
+static char * version_str = "1.02 20111222";
 
 static struct option long_options[] = {
-        {"broadcast", 1, 0, 'b'},
-        {"expected", 1, 0, 'E'},
-        {"fszg", 1, 0, 'F'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"szg", 1, 0, 'S'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"broadcast", 1, 0, 'b'},
+    {"expected", 1, 0, 'E'},
+    {"fszg", 1, 0, 'F'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"szg", 1, 0, 'S'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_zoned_broadcast [--broadcast=BT] [--expected=EX] "
@@ -213,7 +214,8 @@ bad:
     return 1;
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -221,7 +223,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, n, act_resplen;
     int expected_cc = 0;

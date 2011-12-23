@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.97 [20111129] [svn:r114]
+Changelog for smp_utils-0.97 [20111222] [svn:r115]
   - smp_conf_phy_event: new utility
   - change to ./configure style build and use smputils
     runtime and development libraries
@@ -11,6 +11,8 @@ Changelog for smp_utils-0.97 [20111129] [svn:r114]
   - sync to SPL-2 (spl2r03)
   - take resid into account when calculating the actual
     response length
+  - smp_rep_phy_event, smp_rep_phy_event_list: add --enumerate
+    option to list Phy Event Source names
   - smp_read_gpio, smp_write_gpio: move register type,
     index and count fields in enhanced variants
   - add solaris and freebsd ports

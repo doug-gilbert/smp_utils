@@ -51,35 +51,87 @@
  * its response.
  */
 
-static char * version_str = "1.00 20110831";
+static char * version_str = "1.00 20111222";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
+struct pes_name_t {
+    int pes;    /* phy event source, an 8 bit number */
+    const char * pes_name;
+};
 
 static struct option long_options[] = {
-        {"clear", 0, 0, 'C'},
-        {"expected", 1, 0, 'E'},
-        {"file", 1, 0, 'f'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"pes", 1, 0, 'P'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"thres", 1, 0, 'T'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"clear", 0, 0, 'C'},
+    {"enumerate", 0, 0, 'e'},
+    {"expected", 1, 0, 'E'},
+    {"file", 1, 0, 'f'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"pes", 1, 0, 'P'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"thres", 1, 0, 'T'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
+};
+
+static struct pes_name_t pes_name_arr[] = {
+    {0x0, "No event"},
+    /* Phy layer-based phy events (0x1 to 0x1F) */
+    {0x1, "Invalid word count"},
+    {0x2, "Running disparity error count"},
+    {0x3, "Loss of dword synchronization count"},
+    {0x4, "Phy reset problem count"},
+    {0x5, "Elasticity buffer overflow count"},
+    {0x6, "Received ERROR count"},
+    /* SAS arbitration-based phy events (0x20 to 0x3F) */
+    {0x20, "Received address frame error count"},
+    {0x21, "Transmitted abandon-class OPEN_REJECT count"},
+    {0x22, "Received abandon-class OPEN_REJECT count"},
+    {0x23, "Transmitted retry-class OPEN_REJECT count"},
+    {0x24, "Received retry-class OPEN_REJECT count"},
+    {0x25, "Received AIP (WATING ON PARTIAL) count"},
+    {0x26, "Received AIP (WAITING ON CONNECTION) count"},
+    {0x27, "Transmitted BREAK count"},
+    {0x28, "Received BREAK count"},
+    {0x29, "Break timeout count"},
+    {0x2a, "Connection count"},
+    {0x2b, "Peak transmitted pathway blocked count"},   /*PVD */
+    {0x2c, "Peak transmitted arbitration wait time"},   /*PVD */
+    {0x2d, "Peak arbitration time"},                    /*PVD */
+    {0x2e, "Peak connection time"},                     /*PVD */
+    /* SSP related phy events (0x40 to 0x4F) */
+    {0x40, "Transmitted SSP frame count"},
+    {0x41, "Received SSP frame count"},
+    {0x42, "Transmitted SSP frame error count"},
+    {0x43, "Received SSP frame error count"},
+    {0x44, "Transmitted CREDIT_BLOCKED count"},
+    {0x45, "Received CREDIT_BLOCKED count"},
+    /* SATA related phy events (0x50 to 0x5F) */
+    {0x50, "Transmitted SATA frame count"},
+    {0x51, "Received SATA frame count"},
+    {0x52, "SATA flow control buffer overflow count"},
+    /* SMP related phy events (0x60 to 0x6F) */
+    {0x60, "Transmitted SMP frame count"},
+    {0x61, "Received SMP frame count"},
+    {0x63, "Received SMP frame error count"},
+    /* Reserved 0x70 to 0xCF) */
+    /* Vendor specific 0xD0 to 0xFF) */
+
+    {-1, NULL}
 };
 
 
-static void usage()
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
-          "smp_conf_phy_event [--clear] [--expected=EX] [--file=FILE] "
-          "[--help]\n"
-          "                          [--hex] [--interface=PARAMS] "
+          "smp_conf_phy_event [--clear] [--enumerate] [--expected=EX]\n"
+          "                          [--file=FILE] [--help] [--hex]\n"
+          "                          [--interface=PARAMS] "
           "[--pes=PES,PES...]\n"
           "                          [--phy=ID] [--raw] [--sa=SAS_ADDR]\n"
           "                          [--thres=THR,THR...] [--verbose] "
@@ -88,6 +140,9 @@ static void usage()
           "  where:\n"
           "    --clear|-C             clear all peak value detectors for "
           "this phy\n"
+          "    --enumerate|-e         enumerate phy event source names, "
+          "ignore\n"
+          "                           SMP_DEVICE if given\n"
           "    --expected=EX|-E EX    set expected expander change "
           "count to EX\n"
           "    --file=FILE|-f FILE    read PES, THR pairs from FILE\n"
@@ -371,7 +426,8 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
     return 0;
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -379,10 +435,13 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, num_desc, act_resplen, pes_elem, thres_elem;
     int do_clear = 0;
+    int do_enumerate = 0;
     int expected_cc = 0;
     int do_hex = 0;
     int phy_id = 0;
@@ -402,6 +461,7 @@ int main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
+    const struct pes_name_t * pnp;
     int subvalue = 0;
     char * cp;
     int ret = 0;
@@ -415,7 +475,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "CE:f:hHI:p:P:rs:S:T:vV", long_options,
+        c = getopt_long(argc, argv, "CeE:f:hHI:p:P:rs:S:T:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -423,6 +483,9 @@ int main(int argc, char * argv[])
         switch (c) {
         case 'C':
             ++do_clear;
+            break;
+        case 'e':
+            ++do_enumerate;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -506,6 +569,13 @@ int main(int argc, char * argv[])
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
+    }
+
+    if (do_enumerate) {
+        printf("Phy Event Source names (preceded by hex value):\n");
+        for (pnp = pes_name_arr; pnp->pes_name; ++pnp)
+            printf("    [0x%02x] %s\n", pnp->pes, pnp->pes_name);
+        return 0;
     }
     if (0 == device_name[0]) {
         cp = getenv("SMP_UTILS_DEVICE");

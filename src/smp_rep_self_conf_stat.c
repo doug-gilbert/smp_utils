@@ -50,27 +50,28 @@
  * outputs its response.
  */
 
-static char * version_str = "1.02 20110805";
+static char * version_str = "1.02 20111222";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
-
 static struct option long_options[] = {
-        {"brief", 0, 0, 'b'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"last", 0, 0, 'l'},
-        {"one", 0, 0, 'o'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"brief", 0, 0, 'b'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"last", 0, 0, 'l'},
+    {"one", 0, 0, 'o'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_self_conf_stat [--brief] [--help] [--hex] [--index=SDI]\n"
@@ -104,7 +105,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -171,7 +173,8 @@ find_status_description(int status, char * buff, int buff_len)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, sscsd_ind, last_scsd_ind, scsd_len, num_scsd;
     int tot_num_scsd, ind, status, act_resplen;

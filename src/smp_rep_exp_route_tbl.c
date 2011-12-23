@@ -50,22 +50,22 @@
  * its response.
  */
 
-static char * version_str = "1.10 20111014";    /* sync with sas2r15 */
+static char * version_str = "1.10 20111222";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
-        {"brief", no_argument, 0, 'b'},
-        {"help", no_argument, 0, 'h'},
-        {"hex", no_argument, 0, 'H'},
-        {"index", required_argument, 0, 'i'},
-        {"interface", required_argument, 0, 'I'},
-        {"num", required_argument, 0, 'n'},
-        {"phy", 1, 0, 'p'},
-        {"sa", 1, 0, 's'},
-        {"raw", 0, 0, 'r'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"brief", no_argument, 0, 'b'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"num", required_argument, 0, 'n'},
+    {"phy", 1, 0, 'p'},
+    {"sa", 1, 0, 's'},
+    {"raw", 0, 0, 'r'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
 struct opts_t {
@@ -80,8 +80,9 @@ struct opts_t {
     unsigned long long sa;
 };
 
+
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_exp_route_tbl  [--brief] [--help] [--hex] "

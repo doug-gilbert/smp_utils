@@ -50,26 +50,27 @@
  * response.
  */
 
-static char * version_str = "1.08 20110830";
-
+static char * version_str = "1.08 20112222";
 
 static struct option long_options[] = {
-        {"disable", 0, 0, 'd'},
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"routed", 1, 0, 'R'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"disable", 0, 0, 'd'},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"routed", 1, 0, 'R'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_conf_route_info [--disable] [--expected=EX] [--help] "
@@ -105,7 +106,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -113,7 +115,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, act_resplen;
     int do_disable = 0;

@@ -56,28 +56,29 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.09 20110830";
+static char * version_str = "1.09 20111222";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
-
 static struct option long_options[] = {
-        {"count", 1, 0, 'c'},
-        {"enhanced", 0, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"type", 0, 0, 't'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"count", 1, 0, 'c'},
+    {"enhanced", 0, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"type", 0, 0, 't'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_read_gpio   [--count=CO] [--enhanced] [--help] [--hex]\n"
@@ -110,7 +111,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -118,7 +120,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, off, decoded, act_resplen;
     int rcount = 1;

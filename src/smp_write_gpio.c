@@ -57,29 +57,30 @@
  * The remaining write data (first..last register) is not moved.
  */
 
-static char * version_str = "1.09 20110830";
+static char * version_str = "1.09 20111222";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
-
 static struct option long_options[] = {
-        {"count", 1, 0, 'c'},
-        {"data", 1, 0, 'd'},
-        {"enhanced", 0, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"type", 0, 0, 't'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"count", 1, 0, 'c'},
+    {"data", 1, 0, 'd'},
+    {"enhanced", 0, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"type", 0, 0, 't'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_write_gpio [--count=CO] [--data=H,H...] [--enhanced] "
@@ -117,7 +118,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -125,7 +127,8 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-static int read_hex(const char * inp, unsigned char * arr, int * arr_len)
+static int
+read_hex(const char * inp, unsigned char * arr, int * arr_len)
 {
     int in_len, k, j, m, off;
     unsigned int h;
@@ -223,7 +226,8 @@ static int read_hex(const char * inp, unsigned char * arr, int * arr_len)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, act_resplen, off;
     int rcount = 1;

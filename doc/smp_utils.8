@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "September 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_UTILS "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_* \- invoke a SAS Serial Management Protocol (SMP) function
 .SH SYNOPSIS
@@ -184,7 +184,7 @@ This includes transport and operating system errors.
 Finding the SAS address of an expander can be a challenge in some
 environments. An enclosure containing one or more expanders may have the
 expander SAS address(es) printed on the back of the device, a bit like
-ethernet MAC addresses.
+Ethernet MAC addresses.
 .PP
 In the Linux 2.6 kernel series the expander SAS address may well be in the
 sysfs tree but it is not always easy to find. Doing this search may help:
@@ -214,8 +214,21 @@ device sometimes on the same silicon attached via a virtual phy to the
 expander. That SES device may be able to access and control an attached
 enclosure or backplane via SGPIO or I2C on sideband signals (e.g. in a
 SFF\-8087 cable). To interact with a SES device, see the sg_ses utility.
+.PP
+Often expander phys are grouped in fours on the same connector (e.g.
+SFF-8088). Care needs to be taken when multiple expanders are interconnected.
+An enclosure universal port is one in which the "table to table supported" 
+attribute is set (in the REPORT GENERAL response) and the associated phys 
+have the table routing attribute (in the DISCOVER response). Enclosure 
+universal ports were introduced in SAS\-2 and have no restrictions when
+used to interconnect expanders or connect end devices. An enclosure out port
+is one in which the "table to table supported" attribute is clear and the
+associated phys have the table routing attribute. An enclosure in port is one
+in which the associated phys have the subtractive routing attribute. When
+universal ports are not available, an expander interconnect should be between
+an in port and an out port.
 .SH EXAMPLES
-See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
+See "Examples" section in http://sg.danny.cz/sg/smp_utils.html .
 .SH CONFORMING TO
 SAS has multiple generations. The first three generations are approved
 standards: the original SAS (ANSI INCITS 376-2003), SAS 1.1 (INCITS 417-2006)

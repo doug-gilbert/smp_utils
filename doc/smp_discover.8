@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER "8" "September 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_DISCOVER "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
@@ -175,21 +175,6 @@ support 36 phys or less so one DISCOVER LIST response will summarize the
 states of all its phys. With the DISCOVER function only one expander phy's
 state is returned in its response. Other advantages of the DISCOVER LIST
 function are its "phy filter" and "descriptor type" function request fields.
-.PP
-This paragraph discusses expanders in which REPORT GENERAL sets the "table
-to table supported" bit to zero (shown in smp_rep_general output). Expander
-phys with the subtractive routing attribute are associated with "enclosure in
-port(s)". Expander phys with the table or direct routing attribute are
-associated with "enclosure out port(s)". SAS HBAs should be connected to
-enclosure in port(s) while disks and tape drives should be connected to
-enclosure out port(s).
-.PP
-This paragraph discusses expanders in which REPORT GENERAL sets the "table
-to table supported" bit to one. Expander phys can be grouped, typically in
-fours (e.g. SFF-8087 connector), and form "enclosure universal port(s)". Such
-expander ports can be connected to either SAS HBAs, disks, tape drives or
-other SAS expanders. SAS\-2 expanders should set the "table to table
-supported" bit to one.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO

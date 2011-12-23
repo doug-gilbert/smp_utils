@@ -50,28 +50,29 @@
  * response.
  */
 
-static char * version_str = "1.09 20110830";
+static char * version_str = "1.09 20111222";
 
 #define REP_ROUTE_INFO_RESP_LEN 44
 
-
 static struct option long_options[] = {
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"multiple", 0, 0, 'm'},
-        {"num", 1, 0, 'n'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zero", 0, 0, 'z'},
-        {0, 0, 0, 0},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"multiple", 0, 0, 'm'},
+    {"num", 1, 0, 'n'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {"zero", 0, 0, 'z'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_route_info [--help] [--hex] [--index=IN] "
@@ -108,7 +109,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -120,10 +122,10 @@ static void dStrRaw(const char* str, int len)
  * bytes excluding trailing CRC. Returns SMP_LIB errors or
  * -1 for other errors.
  */
-static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
-                        unsigned char * resp, int max_resp_len,
-                        int * resp_len, int do_zero, int do_hex, int do_raw,
-                        int verbose)
+static int
+do_rep_route(struct smp_target_obj * top, int phy_id, int index,
+             unsigned char * resp, int max_resp_len, int * resp_len,
+             int do_zero, int do_hex, int do_raw, int verbose)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ROUTE_INFO,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -229,9 +231,9 @@ static int do_rep_route(struct smp_target_obj * top, int phy_id, int index,
 #define MAX_NUM_INDEXES 16384
 #define MAX_ADJACENT_DISABLED 4
 
-static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
-                       int num_ind, int do_zero, int do_hex, int do_raw,
-                       int verbose)
+static int
+do_multiple(struct smp_target_obj * top, int phy_id, int index, int num_ind,
+            int do_zero, int do_hex, int do_raw, int verbose)
 {
     unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
     unsigned long long ull;
@@ -275,8 +277,9 @@ static int do_multiple(struct smp_target_obj * top, int phy_id, int index,
     return 0;
 }
 
-static int do_single(struct smp_target_obj * top, int phy_id, int index,
-                     int do_zero, int do_hex, int do_raw, int verbose)
+static int
+do_single(struct smp_target_obj * top, int phy_id, int index, int do_zero,
+          int do_hex, int do_raw, int verbose)
 {
     unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
     unsigned long long ull;
@@ -308,7 +311,9 @@ static int do_single(struct smp_target_obj * top, int phy_id, int index,
     return 0;
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c;
     int do_hex = 0;

@@ -1,13 +1,14 @@
-.TH SMP_CONF_PHY_EVENT "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_CONF_PHY_EVENT "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_conf_phy_event \- invoke CONFIGURE PHY EVENT function
 .SH SYNOPSIS
 .B smp_conf_phy_event
-[\fI\-\-clear\fR] [\fI\-\-expected=EX\fR] [\fI\-\-file=FILE\fR]
-[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-pes=PES,PES...\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR]
-[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-thres=THR,THR...\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-clear\fR] [\fI\-\-enumerate\fR] [\fI\-\-expected=EX\fR]
+[\fI\-\-file=FILE\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-pes=PES,PES...\fR]
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-thres=THR,THR...\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -38,6 +39,11 @@ Mandatory arguments to long options are mandatory for short options as well.
 sets the CLEAR PEAKS bit the in function request. This will cause all peak
 value detectors associated with this phy (i.e. \fIID\fR) to be cleared to
 zero.
+.TP
+\fB\-e\fR, \fB\-\-enumerate\fR
+enumerate all of the known Phy Event Source names, one per line preceded by
+its value in hex. Ignores \fISMP_DEVICE\fR if it is given; most other
+options are also ignored. Exits after displaying the names.
 .TP
 \fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
 set the 'expected expander change count' field in the SMP request.

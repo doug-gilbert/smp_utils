@@ -50,40 +50,97 @@
  * response.
  */
 
-static char * version_str = "1.06 20110923";
+static char * version_str = "1.07 20111222";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
 #define DEF_STARTING_INDEX 1
 
-
-static struct option long_options[] = {
-        {"desc", 0, 0, 'd'},
-        {"force", 0, 0, 'f'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"index", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"long", 0, 0, 'l'},
-        {"nonz", 0, 0, 'n'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+struct pes_name_t {
+    int pes;    /* phy event source, an 8 bit number */
+    const char * pes_name;
 };
 
-static void usage()
+static struct option long_options[] = {
+    {"desc", 0, 0, 'd'},
+    {"enumerate", 0, 0, 'e'},
+    {"force", 0, 0, 'f'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"index", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"long", 0, 0, 'l'},
+    {"nonz", 0, 0, 'n'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
+};
+
+static struct pes_name_t pes_name_arr[] = {
+    {0x0, "No event"},
+    /* Phy layer-based phy events (0x1 to 0x1F) */
+    {0x1, "Invalid word count"},
+    {0x2, "Running disparity error count"},
+    {0x3, "Loss of dword synchronization count"},
+    {0x4, "Phy reset problem count"},
+    {0x5, "Elasticity buffer overflow count"},
+    {0x6, "Received ERROR count"},
+    /* SAS arbitration-based phy events (0x20 to 0x3F) */
+    {0x20, "Received address frame error count"},
+    {0x21, "Transmitted abandon-class OPEN_REJECT count"},
+    {0x22, "Received abandon-class OPEN_REJECT count"},
+    {0x23, "Transmitted retry-class OPEN_REJECT count"},
+    {0x24, "Received retry-class OPEN_REJECT count"},
+    {0x25, "Received AIP (WATING ON PARTIAL) count"},
+    {0x26, "Received AIP (WAITING ON CONNECTION) count"},
+    {0x27, "Transmitted BREAK count"},
+    {0x28, "Received BREAK count"},
+    {0x29, "Break timeout count"},
+    {0x2a, "Connection count"},
+    {0x2b, "Peak transmitted pathway blocked count"},   /*PVD */
+    {0x2c, "Peak transmitted arbitration wait time"},   /*PVD */
+    {0x2d, "Peak arbitration time"},                    /*PVD */
+    {0x2e, "Peak connection time"},                     /*PVD */
+    /* SSP related phy events (0x40 to 0x4F) */
+    {0x40, "Transmitted SSP frame count"},
+    {0x41, "Received SSP frame count"},
+    {0x42, "Transmitted SSP frame error count"},
+    {0x43, "Received SSP frame error count"},
+    {0x44, "Transmitted CREDIT_BLOCKED count"},
+    {0x45, "Received CREDIT_BLOCKED count"},
+    /* SATA related phy events (0x50 to 0x5F) */
+    {0x50, "Transmitted SATA frame count"},
+    {0x51, "Received SATA frame count"},
+    {0x52, "SATA flow control buffer overflow count"},
+    /* SMP related phy events (0x60 to 0x6F) */
+    {0x60, "Transmitted SMP frame count"},
+    {0x61, "Received SMP frame count"},
+    {0x63, "Received SMP frame error count"},
+    /* Reserved 0x70 to 0xCF) */
+    /* Vendor specific 0xD0 to 0xFF) */
+
+    {-1, NULL}
+};
+
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
-          "smp_rep_phy_event_list [--desc] [--force] [--help] [--hex]\n"
-          "                              [--index=IN] [--interface=PARAMS] "
-          "[--long]\n"
-          "                              [--raw] [--sa=SAS_ADDR] "
+          "smp_rep_phy_event_list [--desc] [--enumerate] [--force] "
+          "[--help]\n"
+          "                              [--hex] [--index=IN] "
+          "[--interface=PARAMS]\n"
+          "                              [--long] [--raw] [--sa=SAS_ADDR] "
           "[--verbose]\n"
           "                              [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --desc|-d            show descriptor number in output\n"
+          "    --enumerate|-e       enumerate phy event source names, "
+          "ignore\n"
+          "                         SMP_DEVICE if given\n"
           "    --force|-f           force to continue past last descriptor "
           "index\n"
           "    --help|-h            print out usage message\n"
@@ -109,7 +166,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -117,87 +175,99 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
+static const char *
+get_pes_name(int pes, char * b, int blen)
+{
+    int len;
+    const char * res = NULL;
+    const struct pes_name_t * pnp;
+
+    if ((NULL == b) || (blen < 1))
+        return res;
+    for (pnp = pes_name_arr; pnp->pes_name; ++pnp) {
+        if (pes == pnp->pes) {
+            len = strlen(pnp->pes_name);
+            if (len > (blen - 1))
+                len = blen - 1;
+            memcpy(b, pnp->pes_name, len);
+            b[len] = '\0';
+            return b;
+        }
+    }
+    return res;
+}
+
 /* from sas2r15 */
 static void
-show_phy_event_info(int phy_id, int pes, unsigned int val,
+show_phy_event_info(int phy_id, int prev_pid, int pes, unsigned int val,
                     unsigned int thresh_val, int do_long)
 {
     unsigned int u;
+    char b[80];
+    const char * cp;
 
     if (do_long)
         printf("    phy_id=%d: [0x%x] ", phy_id, (unsigned int)pes);
-    else
-        printf("    %d: ", phy_id);
+    else {
+        snprintf(b, sizeof(b) - 1, "    %d: ", phy_id);
+        b[sizeof(b) - 1] = '\0';
+        if (prev_pid == phy_id)
+            memset(b, ' ', strlen(b));
+        printf("%s", b);
+    }
 
     switch (pes) {
     case 0:
         printf("No event\n");
         break;
     case 0x1:
-        printf("Invalid word count: %u\n", val);
-        break;
     case 0x2:
-        printf("Running disparity error count: %u\n", val);
-        break;
     case 0x3:
-        printf("Loss of dword synchronization count: %u\n", val);
-        break;
     case 0x4:
-        printf("Phy reset problem count: %u\n", val);
-        break;
     case 0x5:
-        printf("Elasticity buffer overflow count: %u\n", val);
-        break;
     case 0x6:
-        printf("Received ERROR  count: %u\n", val);
-        break;
     case 0x20:
-        printf("Received address frame error count: %u\n", val);
-        break;
     case 0x21:
-        printf("Transmitted abandon-class OPEN_REJECT count: %u\n", val);
-        break;
     case 0x22:
-        printf("Received abandon-class OPEN_REJECT count: %u\n", val);
-        break;
     case 0x23:
-        printf("Transmitted retry-class OPEN_REJECT count: %u\n", val);
-        break;
     case 0x24:
-        printf("Received retry-class OPEN_REJECT count: %u\n", val);
-        break;
     case 0x25:
-        printf("Received AIP (WATING ON PARTIAL) count: %u\n", val);
-        break;
     case 0x26:
-        printf("Received AIP (WAITING ON CONNECTION) count: %u\n", val);
-        break;
     case 0x27:
-        printf("Transmitted BREAK count: %u\n", val);
-        break;
     case 0x28:
-        printf("Received BREAK count: %u\n", val);
-        break;
     case 0x29:
-        printf("Break timeout count: %u\n", val);
-        break;
     case 0x2a:
-        printf("Connection count: %u\n", val);
+    case 0x40:
+    case 0x41:
+    case 0x42:
+    case 0x43:
+    case 0x44:
+    case 0x45:
+    case 0x50:
+    case 0x51:
+    case 0x52:
+    case 0x60:
+    case 0x61:
+    case 0x63:
+        if ((cp = get_pes_name(pes, b, sizeof(b))))
+            printf("%s: %u\n", cp, val);
+        else
+            printf("Unknown Phy Event Source [0x%x]: %u\n", pes, val);
         break;
+
+
     case 0x2b:
-        printf("Peak transmitted pathway blocked count: %u\n",
-               val & 0xff);
+        printf("%s: %u\n", get_pes_name(pes, b, sizeof(b)), val & 0xff);
         printf("      Peak value detector threshold: %u\n",
                thresh_val & 0xff);
         break;
     case 0x2c:
+        cp = get_pes_name(pes, b, sizeof(b));
         u = val & 0xffff;
         if (u < 0x8000)
-            printf("Peak transmitted arbitration wait time (us): "
-                   "%u\n", u);
+            printf("%s (us): %u\n", cp, u);
         else
-            printf("Peak transmitted arbitration wait time (ms): "
-                   "%u\n", 33 + (u - 0x8000));
+            printf("%s (ms): %u\n", cp, 33 + (u - 0x8000));
         u = thresh_val & 0xffff;
         if (u < 0x8000)
             printf("      Peak value detector threshold (us): %u\n",
@@ -207,48 +277,12 @@ show_phy_event_info(int phy_id, int pes, unsigned int val,
                    33 + (u - 0x8000));
         break;
     case 0x2d:
-        printf("Peak arbitration time (us): %u\n", val);
+        printf("%s (us): %u\n", get_pes_name(pes, b, sizeof(b)), val);
         printf("      Peak value detector threshold: %u\n", thresh_val);
         break;
     case 0x2e:
-        printf("Peak connection time (us): %u\n", val);
+        printf("%s (us): %u\n", get_pes_name(pes, b, sizeof(b)), val);
         printf("      Peak value detector threshold: %u\n", thresh_val);
-        break;
-    case 0x40:
-        printf("Transmitted SSP frame count: %u\n", val);
-        break;
-    case 0x41:
-        printf("Received SSP frame count: %u\n", val);
-        break;
-    case 0x42:
-        printf("Transmitted SSP frame error count: %u\n", val);
-        break;
-    case 0x43:
-        printf("Received SSP frame error count: %u\n", val);
-        break;
-    case 0x44:
-        printf("Transmitted CREDIT_BLOCKED count: %u\n", val);
-        break;
-    case 0x45:
-        printf("Received CREDIT_BLOCKED count: %u\n", val);
-        break;
-    case 0x50:
-        printf("Transmitted SATA frame count: %u\n", val);
-        break;
-    case 0x51:
-        printf("Received SATA frame count: %u\n", val);
-        break;
-    case 0x52:
-        printf("SATA flow control buffer overflow count: %u\n", val);
-        break;
-    case 0x60:
-        printf("Transmitted SMP frame count: %u\n", val);
-        break;
-    case 0x61:
-        printf("Received SMP frame count: %u\n", val);
-        break;
-    case 0x63:
-        printf("Received SMP frame error count: %u\n", val);
         break;
     default:
         printf("Unknown phy event source: %d, val=%u, thresh_val=%u\n",
@@ -258,10 +292,12 @@ show_phy_event_info(int phy_id, int pes, unsigned int val,
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
-    int res, c, k, len, ped_len, num_ped, pes, phy_id, act_resplen;
+    int res, c, k, len, ped_len, num_ped, pes, phy_id, prev_pid, act_resplen;
     int do_desc = 0;
+    int do_enumerate = 0;
     int do_force = 0;
     int do_hex = 0;
     int do_long = 0;
@@ -280,6 +316,7 @@ int main(int argc, char * argv[])
     unsigned char smp_resp[SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
+    const struct pes_name_t * pnp;
     int subvalue = 0;
     unsigned int first_di, last_di, pe_val, pvdt;
     char * cp;
@@ -290,7 +327,7 @@ int main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "dfhHi:I:lnrs:vV", long_options,
+        c = getopt_long(argc, argv, "defhHi:I:lnrs:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -298,6 +335,9 @@ int main(int argc, char * argv[])
         switch (c) {
         case 'd':
             ++do_desc;
+            break;
+        case 'e':
+            ++do_enumerate;
             break;
         case 'f':
             ++do_force;
@@ -362,6 +402,13 @@ int main(int argc, char * argv[])
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
+    }
+
+    if (do_enumerate) {
+        printf("Phy Event Source names (preceded by hex value):\n");
+        for (pnp = pes_name_arr; pnp->pes_name; ++pnp)
+            printf("    [0x%02x] %s\n", pnp->pes, pnp->pes_name);
+        return 0;
     }
     if (0 == device_name[0]) {
         cp = getenv("SMP_UTILS_DEVICE");
@@ -517,7 +564,8 @@ int main(int argc, char * argv[])
         goto err_out;
     }
     pedp = smp_resp + 16;
-    for (k = 0; k < num_ped; ++k, pedp += ped_len) {
+    for (k = 0, prev_pid = -1; k < num_ped;
+         ++k, pedp += ped_len, prev_pid = phy_id) {
         if ((0 == do_force) && ((first_di + k) > last_di)) {
             if (do_long)
                 printf("last descriptor index exceeded, exiting\n");
@@ -532,7 +580,7 @@ int main(int argc, char * argv[])
         if ((0 == do_nonz) || pe_val) {
             if (do_desc)
                 printf("   Descriptor index %u:\n", first_di + k);
-            show_phy_event_info(phy_id, pes, pe_val, pvdt, do_long);
+            show_phy_event_info(phy_id, prev_pid, pes, pe_val, pvdt, do_long);
         }
     }
     if ((k >= num_ped) && ((first_di + k) < last_di))

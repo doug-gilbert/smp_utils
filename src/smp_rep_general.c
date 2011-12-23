@@ -49,27 +49,27 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.22 20110830";    /* spl2r01 */
+static char * version_str = "1.22 20111222";    /* spl2r01 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
-
 static struct option long_options[] = {
-        {"brief", 0, 0, 'b'},
-        {"changecount", 0, 0, 'c'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zero", 0, 0, 'z'},
-        {0, 0, 0, 0},
+    {"brief", 0, 0, 'b'},
+    {"changecount", 0, 0, 'c'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {"zero", 0, 0, 'z'},
+    {0, 0, 0, 0},
 };
 
+
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_general [--brief] [--changecount] [--help] [--hex]\n"
@@ -109,6 +109,7 @@ dStrRaw(const char* str, int len)
     for (k = 0 ; k < len; ++k)
         printf("%c", str[k]);
 }
+
 
 int
 main(int argc, char * argv[])

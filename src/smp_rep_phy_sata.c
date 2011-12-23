@@ -50,26 +50,27 @@
  * response.
  */
 
-static char * version_str = "1.13 20110830";
+static char * version_str = "1.13 20111222";
 
 #define SMP_FN_REPORT_PHY_SATA_RESP_LEN 72
 
-
 static struct option long_options[] = {
-        {"affiliation", 1, 0, 'a'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"phy", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zero", 0, 0, 'z'},
-        {0, 0, 0, 0},
+    {"affiliation", 1, 0, 'a'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"phy", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {"zero", 0, 0, 'z'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_phy_sata [--affiliation=AC] [--help] [--hex]\n"
@@ -103,7 +104,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -111,7 +113,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, act_resplen;
     int aff_context = 0;

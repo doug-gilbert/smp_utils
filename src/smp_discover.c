@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.33 20110923";    /* spl2r03 */
+static char * version_str = "1.34 20111221";    /* spl2r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -98,8 +98,9 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
+
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_discover [--adn] [--brief] [--help] [--hex] [--ignore]\n"
@@ -251,10 +252,10 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 5: snprintf(b, b_len, "phy enabled; reset in progress"); break;
     case 6: snprintf(b, b_len, "phy enabled; unsupported phy attached");
          break;
-    case 8: snprintf(b, b_len, "phy enabled; 1.5 Gbps"); break;
-    case 9: snprintf(b, b_len, "phy enabled; 3 Gbps"); break;
-    case 0xa: snprintf(b, b_len, "phy enabled; 6 Gbps"); break;
-    case 0xb: snprintf(b, b_len, "phy enabled; 12 Gbps"); break;
+    case 8: snprintf(b, b_len, "phy enabled, 1.5 Gbps"); break;
+    case 9: snprintf(b, b_len, "phy enabled, 3 Gbps"); break;
+    case 0xa: snprintf(b, b_len, "phy enabled, 6 Gbps"); break;
+    case 0xb: snprintf(b, b_len, "phy enabled, 12 Gbps"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;

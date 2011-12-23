@@ -50,31 +50,31 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.11 20110811"; /* sync with sas2r15 */
-
+static char * version_str = "1.11 20111222"; /* sync with sas2r15 */
 
 static struct option long_options[] = {
-        {"control", 1, 0, 'c'},
-        {"dwords", 1, 0, 'd'},
-        {"expected", 1, 0, 'E'},
-        {"function", 1, 0, 'f'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"linkrate", 1, 0, 'l'},
-        {"pattern", 1, 0, 'P'},
-        {"phy", 1, 0, 'p'},
-        {"sa", 1, 0, 's'},
-        {"sata", 0, 0, 't'},
-        {"spread", 1, 0, 'S'},
-        {"raw", 0, 0, 'r'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"control", 1, 0, 'c'},
+    {"dwords", 1, 0, 'd'},
+    {"expected", 1, 0, 'E'},
+    {"function", 1, 0, 'f'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"linkrate", 1, 0, 'l'},
+    {"pattern", 1, 0, 'P'},
+    {"phy", 1, 0, 'p'},
+    {"sa", 1, 0, 's'},
+    {"sata", 0, 0, 't'},
+    {"spread", 1, 0, 'S'},
+    {"raw", 0, 0, 'r'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
+
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_phy_test [--control=CO] [--dwords=DW] [--expected=EX]\n"
@@ -124,6 +124,7 @@ dStrRaw(const char* str, int len)
     for (k = 0 ; k < len; ++k)
         printf("%c", str[k]);
 }
+
 
 int
 main(int argc, char * argv[])

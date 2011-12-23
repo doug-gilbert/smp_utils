@@ -49,24 +49,25 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.02 20110805";
+static char * version_str = "1.02 20111222";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
-
 static struct option long_options[] = {
-        {"broadcast", 1, 0, 'b'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"broadcast", 1, 0, 'b'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_broadcast [--broadcast=BT] [--help] [--hex]\n"
@@ -95,7 +96,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -104,7 +106,8 @@ static void dStrRaw(const char* str, int len)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, bd_len, num_bd, btype_hdr, act_resplen;
     int do_hex = 0;
