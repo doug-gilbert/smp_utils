@@ -50,25 +50,26 @@
  * response.
  */
 
-static char * version_str = "1.05 20110830";
-
+static char * version_str = "1.05 20111222";
 
 static struct option long_options[] = {
-        {"disable", 0, 0, 'd'},
-        {"ena-dis", 1, 0, 'e'},
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"disable", 0, 0, 'd'},
+    {"ena-dis", 1, 0, 'e'},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"save", 1, 0, 'S'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_ena_dis_zoning [--disable] [--ena-dis=ED] [--expected=EX] "
@@ -108,7 +109,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -116,7 +118,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, act_resplen;
     int disable = 0;

@@ -50,25 +50,25 @@
  * outputs its response.
  */
 
-static char * version_str = "1.10 20110830";
-
+static char * version_str = "1.10 20111222";
 
 #define SMP_FN_REPORT_MANUFACTURER_RESP_LEN 64
 
-
 static struct option long_options[] = {
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zero", 0, 0, 'z'},
-        {0, 0, 0, 0},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {"zero", 0, 0, 'z'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_manufacturer [--help] [--hex] [--interface=PARAMS] "
@@ -97,7 +97,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -105,7 +106,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, sas1_1, sas2, act_resplen;
     int do_hex = 0;

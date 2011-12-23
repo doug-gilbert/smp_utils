@@ -1,9 +1,9 @@
-.TH SMP_REP_PHY_EVENT "8" "September 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_REP_PHY_EVENT "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
 .SH NAME
 smp_rep_phy_event \- invoke REPORT PHY EVENT SMP function
 .SH SYNOPSIS
 .B smp_rep_phy_event
-[\fI\-\-desc\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-desc\fR] [\fI\-\-enumerate\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-long\fR] [\fI\-\-phy=ID\fR]
 [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
 [\fI\-\-version\fR] [\fI\-\-zero\fR] \fISMP_DEVICE[,N]\fR
@@ -27,6 +27,11 @@ Mandatory arguments to long options are mandatory for short options as well.
 \fB\-d\fR, \fB\-\-desc\fR
 precede each phy event descriptor with a line announcing its descriptor index
 number. Index numbers start at 1.
+.TP
+\fB\-e\fR, \fB\-\-enumerate\fR
+enumerate all of the known Phy Event Source names, one per line preceded by
+its value in hex. Ignores \fISMP_DEVICE\fR if it is given; most other 
+options are also ignored. Exits after displaying the names.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.

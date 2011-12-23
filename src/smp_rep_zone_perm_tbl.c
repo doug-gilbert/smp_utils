@@ -50,11 +50,10 @@
  * its response.
  */
 
-static char * version_str = "1.05 20110805";
+static char * version_str = "1.05 20111222";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
-
 
 static char * decode_rtype[] = {
         "current",
@@ -97,7 +96,8 @@ static struct option long_options[] = {
 };
 
 
-static void usage()
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_zone_perm_tbl [--append] [--bits=COL] [--help] [--hex]\n"
@@ -149,7 +149,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -158,7 +159,8 @@ static void dStrRaw(const char* str, int len)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, m, len, desc_len, num_desc, numzg, max_sszg;
     int desc_per_resp, first, rtype, act_resplen;

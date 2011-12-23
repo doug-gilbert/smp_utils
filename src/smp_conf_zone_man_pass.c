@@ -51,26 +51,27 @@
  * outputs its response.
  */
 
-static char * version_str = "1.02 20110830";
-
+static char * version_str = "1.02 20111222";
 
 static struct option long_options[] = {
-        {"expected", 1, 0, 'E'},
-        {"fpass", 1, 0, 'F'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"new-fpass", 1, 0, 'N'},
-        {"new-pass", 1, 0, 'n'},
-        {"password", 1, 0, 'P'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"expected", 1, 0, 'E'},
+    {"fpass", 1, 0, 'F'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"new-fpass", 1, 0, 'N'},
+    {"new-pass", 1, 0, 'n'},
+    {"password", 1, 0, 'P'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"save", 1, 0, 'S'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_conf_zone_man_pass [--expected=EX] [--fpass=FP] [--help] "
@@ -281,7 +282,8 @@ bad:
 }
 
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -289,7 +291,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, act_resplen;
     int expected_cc = 0;

@@ -50,32 +50,33 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.15 20110811";
-
+static char * version_str = "1.15 20111222";
 
 static struct option long_options[] = {
-        {"attached", 1, 0, 'a'},
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"min", 1, 0, 'm'},
-        {"max", 1, 0, 'M'},
-        {"op", 1, 0, 'o'},
-        {"phy", 1, 0, 'p'},
-        {"pptv", 1, 0, 'P'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"sas_pa", 1, 0, 'q'},
-        {"sas_sl", 1, 0, 'l'},
-        {"sata_pa", 1, 0, 'Q'},
-        {"sata_sl", 1, 0, 'L'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"attached", 1, 0, 'a'},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"min", 1, 0, 'm'},
+    {"max", 1, 0, 'M'},
+    {"op", 1, 0, 'o'},
+    {"phy", 1, 0, 'p'},
+    {"pptv", 1, 0, 'P'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"sas_pa", 1, 0, 'q'},
+    {"sas_sl", 1, 0, 'l'},
+    {"sata_pa", 1, 0, 'Q'},
+    {"sata_sl", 1, 0, 'L'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_phy_control [--attached=ADN] [--expected=EX] [--help] "
@@ -139,7 +140,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -160,7 +162,8 @@ static struct smp_val_name op_abbrev[] = {
     {-1, NULL},
 };
 
-static void list_op_abbrevs()
+static void
+list_op_abbrevs()
 {
     struct smp_val_name * vnp;
 
@@ -170,7 +173,8 @@ static void list_op_abbrevs()
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, act_resplen;
     int expected_cc = 0;
