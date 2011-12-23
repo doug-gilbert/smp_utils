@@ -50,26 +50,27 @@
  * response.
  */
 
-static char * version_str = "1.02 20110830";
+static char * version_str = "1.02 20111222";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 
-
 static struct option long_options[] = {
-        {"fpass", 1, 0, 'F'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"phex", 0, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"report", 1, 0, 'R'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"fpass", 1, 0, 'F'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"phex", 0, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"report", 1, 0, 'R'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_rep_zone_man_pass [--fpass=FP] [--help] [--hex]\n"
@@ -103,7 +104,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -112,7 +114,8 @@ static void dStrRaw(const char* str, int len)
 }
 
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, act_resplen;
     const char * fpass = NULL;

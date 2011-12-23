@@ -51,24 +51,25 @@
  * its response.
  */
 
-static char * version_str = "1.03 20110805";
-
+static char * version_str = "1.03 20111222";
 
 static struct option long_options[] = {
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"pconf", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"pconf", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"save", 1, 0, 'S'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_conf_zone_phy_info [--expected=EX] [--help] [--hex]\n"
@@ -234,7 +235,8 @@ bad:
     return 1;
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -242,7 +244,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, num_desc, act_resplen;
     const char * pconf = NULL;

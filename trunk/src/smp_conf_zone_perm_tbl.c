@@ -51,7 +51,7 @@
  * its response.
  */
 
-static char * version_str = "1.04 20110805";
+static char * version_str = "1.04 20111222";
 
 /* Permission table big enough for 256 source zone groups (rows) and
  * 256 destination zone groups (columns). Each element is a single bit,
@@ -61,25 +61,26 @@ static unsigned char full_perm_tbl[32 * 256];
 static int sszg = 0;
 static int sszg_given = 0;
 
-
 static struct option long_options[] = {
-        {"deduce", 0, 0, 'd'},
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"numzg", 1, 0, 'n'},
-        {"permf", 1, 0, 'P'},
-        {"raw", 0, 0, 'r'},
-        {"sa", 1, 0, 's'},
-        {"save", 1, 0, 'S'},
-        {"start", 1, 0, 'f'},   /* note the short option: 'f' */
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"deduce", 0, 0, 'd'},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"interface", 1, 0, 'I'},
+    {"numzg", 1, 0, 'n'},
+    {"permf", 1, 0, 'P'},
+    {"raw", 0, 0, 'r'},
+    {"sa", 1, 0, 's'},
+    {"save", 1, 0, 'S'},
+    {"start", 1, 0, 'f'},   /* note the short option: 'f' */
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_conf_zone_perm_tbl [--deduce] [--expected=EX] [--help] "
@@ -285,7 +286,8 @@ bad:
     return 1;
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -293,7 +295,9 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+
+int
+main(int argc, char * argv[])
 {
     int res, c, k, j, len, num_desc, numd, desc_len, numzg256;
     int max_desc_per_req, act_resplen;
@@ -435,7 +439,7 @@ int main(int argc, char * argv[])
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
             fprintf(stderr, "expected number after separator in SMP_DEVICE "
-		    "name\n");
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }

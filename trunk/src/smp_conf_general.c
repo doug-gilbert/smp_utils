@@ -49,28 +49,29 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.07 20110811";    /* spl2r01 */
-
+static char * version_str = "1.07 20111222";    /* spl2r01 */
 
 static struct option long_options[] = {
-        {"connect", 1, 0, 'c'},
-        {"expected", 1, 0, 'E'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"inactivity", 1, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"nexus", 1, 0, 'p'},
-        {"open", 1, 0, 'o'},
-        {"power", 1, 0, 'p'},
-        {"raw", 0, 0, 'r'},
-        {"reduced", 1, 0, 'R'},
-        {"sa", 1, 0, 's'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {0, 0, 0, 0},
+    {"connect", 1, 0, 'c'},
+    {"expected", 1, 0, 'E'},
+    {"help", 0, 0, 'h'},
+    {"hex", 0, 0, 'H'},
+    {"inactivity", 1, 0, 'i'},
+    {"interface", 1, 0, 'I'},
+    {"nexus", 1, 0, 'p'},
+    {"open", 1, 0, 'o'},
+    {"power", 1, 0, 'p'},
+    {"raw", 0, 0, 'r'},
+    {"reduced", 1, 0, 'R'},
+    {"sa", 1, 0, 's'},
+    {"verbose", 0, 0, 'v'},
+    {"version", 0, 0, 'V'},
+    {0, 0, 0, 0},
 };
 
-static void usage()
+
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: "
           "smp_conf_general [--connect=CO] [--expected=EX] [--help] "
@@ -113,7 +114,8 @@ static void usage()
           );
 }
 
-static void dStrRaw(const char* str, int len)
+static void
+dStrRaw(const char* str, int len)
 {
     int k;
 
@@ -121,7 +123,8 @@ static void dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-int main(int argc, char * argv[])
+int
+main(int argc, char * argv[])
 {
     int res, c, k, len, act_resplen;
     int expected_cc = 0;
