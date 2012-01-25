@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.97
+%define version 0.98
 %define release 1
 
 Summary:        Utilities for SAS Serial Management Protocol (SMP)
@@ -80,6 +80,9 @@ fi
 
 
 %changelog
+* Tue Jan 24 2012 - dgilbert at interlog dot com
+- xxxxxxxxxxxxxxxxxxxx
+  * smp_utils-0.98
 * Fri Jan 20 2012 - dgilbert at interlog dot com
 - change to ./configure style build, put execs in /usr/sbin
   * smp_utils-0.97

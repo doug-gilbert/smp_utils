@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "January 2012" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -134,36 +134,35 @@ The header section outputs information found in the DISCOVER LIST response's
 header section.
 .PP
 For each descriptor in the DISCOVER LIST response, one line is output
-starting with "  phy  <n>:" where <n> is the phy
-identifier (and they are origin zero). That is followed by the routing
-attribute represented by a single letter which is either "D" for direct
-routing, "S" to subtractive routing or "T" for table routing. Then comes
-the negotiated physical link rate which is either "disabled", "reset
-problem" or "spinup hold". Other states are mapped to "attached". This
-includes enabled phys with nothing connected which appear
-as "attached:[0000000000000000:00]".
+starting with "  phy  <n>:" where <n> is the phy identifier (and 
+they are origin zero). That is followed by the routing attribute represented 
+by a single letter which is either "D" for direct routing, "S" for 
+subtractive routing, "T" or "U". Both "T" and "U" imply table routing, the 
+difference is that if REPORT GENERAL indicates "table to table supported" 
+then "U" is output to indicate that phy can be part of an enclosure
+.B universal
+port; otherwise "T" is used. Next comes the negotiated physical link rate 
+which is either "disabled", "reset problem" or "spinup hold". Other states 
+are mapped to "attached". This includes enabled phys with nothing connected 
+which appear as "attached:[0000000000000000:00]".
 .PP
-Information shown between the brackets is for the attached device.
-Phys that are connected display something
-like: "attached:[5000c50000520a2a:01 " where the first number is the
-attached SAS address (in hex) and the second number is the attached
-device's phy identifier. If the attached device type is other
-than an end device then one of these abbreviations is
-output: "exp" (for expander), "fex" (for fanout
-expander) or "res" (for unknown attached device type). If a phy is
-flagged as "virtual" then the letter "V" appears next. Next are the
-protocols supported by the attached device which are
-shown as "i(<list>)" for initiator protocols and/or "t(<list>)" for
-target protocols. The <list> is made up
-of "PORT_SEL", "SSP", "STP", "SMP" and "SATA" with "+" used as a
-separator. For example a SAS host adapter wi11 most likely appear
-as: "i(SSP+STP+SMP)". This completes the information about the
-attached phy, hence the closing right bracket.
+Information shown between the brackets is for the attached device. Phys that
+are connected display something like: "attached:[5000c50000520a2a:01 " where
+the first number is the attached SAS address (in hex) and the second number
+is the attached device's phy identifier. If the attached device type is other
+than an end device then one of these abbreviations is output: "exp" (for
+expander), "fex" (for fanout expander) or "res" (for unknown attached device
+type). If a phy is flagged as "virtual" then the letter "V" appears next.
+Next are the protocols supported by the attached device which are shown
+as "i(<list>)" for initiator protocols and/or "t(<list>)" for target
+protocols. The <list> is made up of "PORT_SEL", "SSP", "STP", "SMP"
+and "SATA" with "+" used as a separator. For example a SAS host adapter will
+most likely appear as: "i(SSP+STP+SMP)". This completes the information
+about the attached phy, hence the closing right bracket.
 .PP
-If appropriate, the negotiated physical link rate is shown in
-gigabits per second. Here is an example of a line for expander
-phy identifier 11 connected to a SATA target (or SATA "device" to use
-the t13.org term):
+If appropriate, the negotiated physical link rate is shown in gigabits per
+second. Here is an example of a line for expander phy identifier 11 connected
+to a SATA target (or SATA "device" to use the t13.org term):
 .PP
   phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
 .PP
@@ -194,7 +193,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2012 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
