@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_DISCOVER "8" "January 2012" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
@@ -122,14 +122,17 @@ to a header followed by one line per phy. To save space SAS addresses are
 shown in hex without a '0x' prefix or 'h' suffix. The header line gives the
 SAS address of the SMP target itself and assumes it is an expander.
 .PP
-Each line starts with "  phy  <n>:" where <n> is the phy
-identifier (and they are origin zero). That is followed by the routing
-attribute represented by a single letter which is either "D" for direct
-routing, "S" to subtractive routing or "T" for table routing. Then comes
-the negotiated physical link rate which is either "disabled", "reset
-problem" or "spinup hold". Other states are mapped to "attached". This
-includes enabled phys with nothing connected which appear
-as "attached:[0000000000000000:00]".
+Each line starts with "  phy  <n>:" where <n> is the phy identifier (and
+they are origin zero). That is followed by the routing attribute represented
+by a single letter which is either "D" for direct routing, "S" for
+subtractive routing, "T" or "U". Both "T" and "U" imply table routing, the
+difference is that if REPORT GENERAL indicates "table to table supported"
+then "U" is output to indicate that phy can be part of an enclosure
+.B universal
+port; otherwise "T" is used. Next comes the negotiated physical link rate
+which is either "disabled", "reset problem" or "spinup hold". Other states
+are mapped to "attached". This includes enabled phys with nothing connected
+which appear as "attached:[0000000000000000:00]".
 .PP
 Information shown between the brackets is for the attached device.
 Phys that are connected display something
@@ -185,7 +188,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2012 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

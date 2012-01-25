@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,10 +52,11 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.27 20111222";    /* spl2r03 */
+static char * version_str = "1.28 20120123";    /* spl2r03 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
+#define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
 static struct option long_options[] = {
         {"adn", 0, 0, 'A'},
@@ -178,6 +179,88 @@ dStrRaw(const char* str, int len)
     for (k = 0 ; k < len; ++k)
         printf("%c", str[k]);
 }
+
+/* Returns 1 if 'Table to Table Supported' bit set on REPORT GENERAL
+ * respone. Returns 0 otherwise. */
+static int
+has_table2table_routing(struct smp_target_obj * top,
+                        const struct opts_t * optsp)
+{
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
+                               0, 0, 0, 0, 0, 0};
+    struct smp_req_resp smp_rr;
+    unsigned char rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
+    char b[256];
+    char * cp;
+    int len, res, k, act_resplen;
+
+    memset(rp, 0, sizeof(rp));
+    if (optsp->verbose) {
+        fprintf(stderr, "    Report general request: ");
+        for (k = 0; k < (int)sizeof(smp_req); ++k)
+            fprintf(stderr, "%02x ", smp_req[k]);
+        fprintf(stderr, "\n");
+    }
+    memset(&smp_rr, 0, sizeof(smp_rr));
+    smp_rr.request_len = sizeof(smp_req);
+    smp_rr.request = smp_req;
+    smp_rr.max_response_len = sizeof(rp);
+    smp_rr.response = rp;
+    res = smp_send_req(top, &smp_rr, optsp->verbose);
+
+    if (res) {
+        fprintf(stderr, "RG smp_send_req failed, res=%d\n", res);
+        if (0 == optsp->verbose)
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
+        return 0;
+    }
+    if (smp_rr.transport_err) {
+        fprintf(stderr, "RG smp_send_req transport_error=%d\n",
+                smp_rr.transport_err);
+        return 0;
+    }
+    act_resplen = smp_rr.act_response_len;
+    if ((act_resplen >= 0) && (act_resplen < 4)) {
+        fprintf(stderr, "RG response too short, len=%d\n", act_resplen);
+        return 0;
+    }
+    len = rp[3];
+    if ((0 == len) && (0 == rp[2])) {
+        len = smp_get_func_def_resp_len(rp[1]);
+        if (len < 0) {
+            len = 0;
+            if (optsp->verbose > 1)
+                fprintf(stderr, "unable to determine RG response length\n");
+        }
+    }
+    len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
+    if ((act_resplen >= 0) && (len > act_resplen)) {
+        if (optsp->verbose)
+            fprintf(stderr, "actual RG response length [%d] less than "
+                    "deduced length [%d]\n", act_resplen, len);
+        len = act_resplen; 
+    }
+    /* ignore --hex and --raw */
+    if (SMP_FRAME_TYPE_RESP != rp[0]) {
+        fprintf(stderr, "RG expected SMP frame response type, got=0x%x\n",
+                rp[0]);
+        return 0;
+    }
+    if (rp[1] != smp_req[1]) {
+        fprintf(stderr, "RG Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], rp[1]);
+        return 0;
+    }
+    if (rp[2]) {
+        if (optsp->verbose > 1) {
+            cp = smp_get_func_res_str(rp[2], sizeof(b), b);
+            fprintf(stderr, "Report General result: %s\n", cp);
+        }
+        return 0;
+    }
+    return (len > 10) ? !!(0x80 & rp[10]) : 0;
+}
+
 
 static char * smp_attached_device_type[] = {
     "no device attached",
@@ -743,7 +826,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
  * than ZG:1, else -1 . */
 static int
 decode_1line(const unsigned char * resp, int offset, int desc,
-             int z_supported, struct opts_t * op)
+             int z_supported, int has_t2t, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull, adn;
@@ -817,8 +900,8 @@ decode_1line(const unsigned char * resp, int offset, int desc,
     case 1:
         cp = "S";
         break;
-    case 2:
-        cp = "T";
+    case 2:     /* table routing phy when expander does t2t is Universal */
+        cp = has_t2t ? "U" : "T";
         break;
     default:
         cp = "R";
@@ -1024,6 +1107,8 @@ main(int argc, char * argv[])
     int z_supported = 0;
     int z_enabled = 0;
     int zg_not1 = 0;
+    int checked_rg = 0;
+    int has_t2t = 0;
     int ret = 0;
     struct opts_t opts;
 
@@ -1287,8 +1372,12 @@ main(int argc, char * argv[])
         for (k = 0, err = 0; k < num_desc; ++k) {
             off = 48 + (k * desc_len);
             if (opts.do_1line) {
+                if (! checked_rg) {
+                    ++checked_rg;
+                    has_t2t = has_table2table_routing(&tobj, &opts);
+                }
                 res = decode_1line(resp, off, resp_desc_type, z_supported,
-                                   &opts);
+                                   has_t2t, &opts);
                 if (res < 0)
                     ++err;
                 else if (res > 0)
