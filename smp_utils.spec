@@ -64,7 +64,7 @@ fi
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING COVERAGE CREDITS INSTALL NEWS README
-%attr(755,root,root) %{_sbindir}/*
+%attr(755,root,root) %{_bindir}/*
 %{_mandir}/man8/*
 
 %files libs
@@ -80,8 +80,8 @@ fi
 
 
 %changelog
-* Tue Jan 24 2012 - dgilbert at interlog dot com
-- xxxxxxxxxxxxxxxxxxxx
+* Wed Jan 25 2012 - dgilbert at interlog dot com
+- put execs back in /usr/bin
   * smp_utils-0.98
 * Fri Jan 20 2012 - dgilbert at interlog dot com
 - change to ./configure style build, put execs in /usr/sbin
