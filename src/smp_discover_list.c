@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.28 20120123";    /* spl2r03 */
+static char * version_str = "1.29 20120201";    /* spl2r03 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -746,7 +746,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
  * Returns 0 for okay, else -1 . */
 static int
 decode_desc1_multiline(const unsigned char * resp, int offset,
-                       int z_supported, struct opts_t * op)
+                       int z_enabled, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull;
@@ -804,7 +804,7 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
     }
     printf("  routing attribute: %s\n", b);
     if (op->do_brief) {
-        if (z_supported)
+        if (z_enabled)
             printf("  zone group: %d\n", rp[8]);
         return 0;
     }
@@ -822,11 +822,11 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
 }
 
 /* Decodes either descriptor type into one line output. This is a
- * "per phy" function. Returns 0 for ok, 1 for ok plus seen ZG other
- * than ZG:1, else -1 . */
+ * "per phy" function. Returns 0 for ok, 1 for ok plus zoning enabled and
+  * seen ZG other than 1, else -1 (for problem) . */
 static int
 decode_1line(const unsigned char * resp, int offset, int desc,
-             int z_supported, int has_t2t, struct opts_t * op)
+             int z_enabled, int has_t2t, struct opts_t * op)
 {
     const unsigned char *rp;
     unsigned long long ull, adn;
@@ -937,7 +937,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
             printf("\n");
             return 0;
         }
-        if (z_supported && (1 != z_group)) {
+        if (z_enabled && (1 != z_group)) {
             ++zg_not1;
             printf("  ZG:%d\n", z_group);
         } else
@@ -1033,7 +1033,7 @@ decode_1line(const unsigned char * resp, int offset, int desc,
             break;
         }
         printf("%s", cp);
-        if (z_supported && (1 != z_group)) {
+        if (z_enabled && (1 != z_group)) {
             ++zg_not1;
             printf("  ZG:%d", z_group);
         }
@@ -1104,7 +1104,6 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
-    int z_supported = 0;
     int z_enabled = 0;
     int zg_not1 = 0;
     int checked_rg = 0;
@@ -1349,7 +1348,6 @@ main(int argc, char * argv[])
         if ((0 == j) && ((! opts.do_1line) || opts.zpi_fn))
             output_header_info(resp, &opts);
         hdr_ecc = (resp[4] << 8) + resp[5];
-        z_supported = !!(resp[16] & 0x80);
         z_enabled = !!(resp[16] & 0x40);
         resp_filter = resp[10] & 0xf;
         if (opts.filter != resp_filter)
@@ -1376,7 +1374,7 @@ main(int argc, char * argv[])
                     ++checked_rg;
                     has_t2t = has_table2table_routing(&tobj, &opts);
                 }
-                res = decode_1line(resp, off, resp_desc_type, z_supported,
+                res = decode_1line(resp, off, resp_desc_type, z_enabled,
                                    has_t2t, &opts);
                 if (res < 0)
                     ++err;
@@ -1395,7 +1393,7 @@ main(int argc, char * argv[])
                     adt = (resp[off + 2] >> 4) & 7;
                     if ((0 == opts.do_brief) || adt || fresult) {
                         printf("descriptor %d:\n", j + k);
-                        if (decode_desc1_multiline(resp, off, z_supported,
+                        if (decode_desc1_multiline(resp, off, z_enabled,
                                                    &opts))
                             ++err;
                     }
