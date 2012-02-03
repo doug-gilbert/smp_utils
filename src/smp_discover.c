@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.35 20120124";    /* spl2r03 */
+static char * version_str = "1.36 20120201";    /* spl2r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -991,8 +991,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                 continue;
             }
             zg = rp[63];
-            /* (zoning enabled or a zone group > 0) and a zg other than 1 */
-            if (((rp[60] & 0x1) || zg) && (1 != zg))
+            /* zoning_enabled and a zone_group other than 1 */
+            if ((rp[60] & 0x1) && (1 != zg))
                 printf("  ZG:%d\n", zg);
             else
                 printf("\n");
@@ -1092,7 +1092,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("%s", cp);
         if (len > 63) {
             zg = rp[63];
-            if (((rp[60] & 0x1) || zg) && (1 != zg))
+            if ((rp[60] & 0x1) && (1 != zg))
                 printf("  ZG:%d\n", zg);
             else
                 printf("\n");
