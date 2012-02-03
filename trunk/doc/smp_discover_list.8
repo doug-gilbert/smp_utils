@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "January 2012" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "February 2012" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -166,8 +166,8 @@ to a SATA target (or SATA "device" to use the t13.org term):
 .PP
   phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
 .PP
-If the expander supports zoning (i.e. REPORT GENERAL response bit
-for 'zoning supported' is set) and a phy's zone group is other than zg 1
+If the expander has zoning enabled (i.e. REPORT GENERAL response bit
+for 'zoning enabled' is set) and a phy's zone group is other than zg 1
 then the phy's zone group is shown (e.g. "ZG:2").
 .PP
 If the \fI\-\-adn\fR option is given then after the attached SAS address
