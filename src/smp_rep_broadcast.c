@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,9 +49,21 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.02 20111222";
+static char * version_str = "1.03 20120203";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
+
+static const char * broadcast_type_name[] = {
+    "Broadcast (Change)",               /* 0x0 */
+    "Broadcast (Reserved Change 0)",
+    "Broadcast (Reserved Change 1)",
+    "Broadcast (SES)",
+    "Broadcast (Expander)",
+    "Broadcast (Asynchronous event)",
+    "Broadcast (Reserved 3)",
+    "Broadcast (Reserved 4)",
+    "Broadcast (Zone activate)",        /* 0x8 */
+};
 
 static struct option long_options[] = {
     {"broadcast", 1, 0, 'b'},
@@ -105,11 +117,23 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
+static const char *
+get_broadcast_type_str(int bt_num)
+{
+    int max_num = sizeof(broadcast_type_name) /
+                  sizeof(broadcast_type_name[0]);
+
+    if ((bt_num < 0) || (bt_num >= max_num))
+        return "unknown";
+    else
+        return broadcast_type_name[bt_num];
+}
+
 
 int
 main(int argc, char * argv[])
 {
-    int res, c, k, j, len, bd_len, num_bd, btype_hdr, act_resplen;
+    int res, c, k, j, len, bd_len, num_bd, bt, bt_hdr, act_resplen;
     int do_hex = 0;
     int btype = 0;
     int do_raw = 0;
@@ -333,8 +357,9 @@ main(int argc, char * argv[])
     res = (smp_resp[4] << 8) + smp_resp[5];
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
-    btype_hdr = smp_resp[6] & 0xf;
-    printf("  broadcast type: %d\n", btype_hdr);
+    bt_hdr = smp_resp[6] & 0xf;
+    printf("  broadcast type: %d [%s]\n", bt_hdr,
+           get_broadcast_type_str(bt_hdr));
     printf("  broadcast descriptor length: %d dwords\n", smp_resp[10]);
     bd_len = smp_resp[10] * 4;
     num_bd = smp_resp[11];
@@ -348,8 +373,10 @@ main(int argc, char * argv[])
     bdp = smp_resp + 12;
     for (k = 0; k < num_bd; ++k, bdp += bd_len) {
         printf("   Descriptor %d:\n", k + 1);
-        if (verbose || (btype_hdr != (bdp[0] & 0xf)))
-            printf("     broadcast type: %d\n", bdp[0] & 0xf);
+        bt = bdp[0] & 0xf;
+        if (verbose || (bt_hdr != bt))
+            printf("     broadcast type: %d [%s]\n", bt,
+                   get_broadcast_type_str(bt));
         if (0xff == bdp[1])
             printf("     no specific phy id\n");
         else

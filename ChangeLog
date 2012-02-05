@@ -2,10 +2,11 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.98 [20120203] [svn:r119]
+Changelog for smp_utils-0.98 [20120203] [svn:r120]
   - smp_discover, smp_discover_list: in 1 line summary use
     "U" instead of "T" (routing attribute) if "table to
     table supported" set in report general response
+  - smp_rep_broadcast: add broadcast type names
   - change binary install from /usr/sbin to /usr/bin since
     sbin caused problems
   - examples folder script cleanup
