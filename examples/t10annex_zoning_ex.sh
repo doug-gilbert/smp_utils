@@ -64,12 +64,12 @@ echo
 # Then a SMP CONFIGURE ZONE PERMISSION TABLE function is sent.
 # Since --save=SAV is not given, only the shadow values are updated
 # (and won't be copied to the saved value during the activate step).
-# Even though the expander support 256 zone groups, it is still possible
+# Even though the expander supports 256 zone groups, it is still possible
 # to provide 128 zone group style descriptors (which is the default for
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
-echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV
+echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce $SMP_DEV"
+smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"
