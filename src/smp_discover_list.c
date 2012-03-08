@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.29 20120201";    /* spl2r03 */
+static char * version_str = "1.30 20120308";    /* spl2r03 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -731,12 +731,12 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  shadow zoning enabled: %d\n", !!(rp[104] & 0x1));
         printf("  shadow zone group: %d\n", rp[107]);
     }
-    if (len > 115) {
+    if (len > 109) {
         printf("  device slot number: %d\n", rp[108]);
         printf("  device slot group number: %d\n", rp[109]);
-        printf("  device slot group output connector: %.6s\n", rp + 110);
-
     }
+    if (len > 115)
+        printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117) 
         printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
     return 0;

@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.36 20120201";    /* spl2r03 */
+static char * version_str = "1.37 20120308";    /* spl2r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -578,6 +578,10 @@ do_single_list(const unsigned char * rp, int len, int show_exp_cc,
             printf("  conn_p_link=%d\n", rp[47]);
             printf("  conn_type=%d\n", (0x7f & rp[45]));
         }
+        if (len > 109) {
+            printf("  dev_slot_num=%d\n", rp[108]);
+            printf("  dev_slot_grp_num=%d\n", rp[109]);
+        }
     }
     if (! do_brief) {
         printf("  hw_max_p_lrate=%d\n", (0xf & rp[41]));
@@ -849,11 +853,12 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
         printf("  shadow zoning enabled: %d\n", !!(rp[104] & 0x1));
         printf("  shadow zone group: %d\n", rp[107]);
     }
-    if (len > 115) {
+    if (len > 109) {
         printf("  device slot number: %d\n", rp[108]);
         printf("  device slot group number: %d\n", rp[109]);
-        printf("  device slot group output connector: %.6s\n", rp + 110);
     }
+    if (len > 115)
+        printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117)
         printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
     return 0;
