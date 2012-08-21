@@ -2,11 +2,12 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.98 [20120308] [svn:r122]
+Changelog for smp_utils-0.98 [20120318] [svn:r123]
   - smp_discover, smp_discover_list: in 1 line summary use
     "U" instead of "T" (routing attribute) if "table to
-   - output device slot (group) number if len > 109
     table supported" set in report general response
+    - output device slot (group) number if len > 109
+  - smp_discover: '-mm' produces full output for each phy
   - smp_rep_broadcast: add broadcast type names
   - change binary install from /usr/sbin to /usr/bin since
     sbin caused problems

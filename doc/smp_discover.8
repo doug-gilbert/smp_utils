@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER "8" "February 2012" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER "8" "March 2012" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
@@ -64,10 +64,12 @@ list attributes in "name=value" form, one entry per line.
 \fB\-m\fR, \fB\-\-multiple\fR
 loops over multiple phys within SMP target (typically an expander) and
 does a DISCOVER request and outputs a one line summary. Phy 0 is queried
-first, then phy 1, continuing until an error occurs. If \fI\-\-brief\fR is
-given then there is no output for phys that indicate there is no attached
-device; when used twice additionally trims the output line of attached phys.
-See the section below on SINGLE LINE PER PHY FORMAT.
+first, then phy 1, continuing until an error occurs. The starting phy
+and the number of phys "discovered" can be controlled by \fI\-\-phy=ID\fR
+and \fI\-\-num=NUM\fR. If \fI\-\-brief\fR is given then there is no output
+for phys that indicate there is no attached device. When this option is
+used twice then multi-line output is produced for each phy. See the
+section below on SINGLE LINE PER PHY FORMAT.
 .TP
 \fB\-M\fR, \fB\-\-my\fR
 outputs my (this expander's) SAS address in hex (prefixed by "0x"). This

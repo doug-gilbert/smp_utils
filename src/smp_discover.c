@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.37 20120308";    /* spl2r03 */
+static char * version_str = "1.38 20120318";    /* spl2r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -128,6 +128,8 @@ usage(void)
           "    --list|-l            output attribute=value, 1 per line\n"
           "    --multiple|-m        query multiple phys, output 1 line "
           "for each\n"
+          "                         if given twice, full output for each "
+          "phy\n"
           "    --my|-M              output my (expander's) SAS address\n"
           "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
           "is given\n"
@@ -170,8 +172,7 @@ dStrRaw(const char* str, int len)
 /* Returns 1 if 'Table to Table Supported' bit set on REPORT GENERAL
  * respone. Returns 0 otherwise. */
 static int
-has_table2table_routing(struct smp_target_obj * top,
-                        const struct opts_t * optsp)
+has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
                                0, 0, 0, 0, 0, 0};
@@ -182,7 +183,7 @@ has_table2table_routing(struct smp_target_obj * top,
     int len, res, k, act_resplen;
 
     memset(rp, 0, sizeof(rp));
-    if (optsp->verbose) {
+    if (op->verbose) {
         fprintf(stderr, "    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
@@ -193,11 +194,11 @@ has_table2table_routing(struct smp_target_obj * top,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(rp);
     smp_rr.response = rp;
-    res = smp_send_req(top, &smp_rr, optsp->verbose);
+    res = smp_send_req(top, &smp_rr, op->verbose);
 
     if (res) {
         fprintf(stderr, "RG smp_send_req failed, res=%d\n", res);
-        if (0 == optsp->verbose)
+        if (0 == op->verbose)
             fprintf(stderr, "    try adding '-v' option for more debug\n");
         return 0;
     }
@@ -216,13 +217,13 @@ has_table2table_routing(struct smp_target_obj * top,
         len = smp_get_func_def_resp_len(rp[1]);
         if (len < 0) {
             len = 0;
-            if (optsp->verbose > 1)
+            if (op->verbose > 1)
                 fprintf(stderr, "unable to determine RG response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
-        if (optsp->verbose)
+        if (op->verbose)
             fprintf(stderr, "actual RG response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
         len = act_resplen; 
@@ -239,7 +240,7 @@ has_table2table_routing(struct smp_target_obj * top,
         return 0;
     }
     if (rp[2]) {
-        if (optsp->verbose > 1) {
+        if (op->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
             fprintf(stderr, "Report General result: %s\n", cp);
         }
@@ -417,7 +418,7 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
 static int
 do_discover(struct smp_target_obj * top, int disc_phy_id,
             unsigned char * resp, int max_resp_len,
-            int silence_err_report, const struct opts_t * optsp)
+            int silence_err_report, const struct opts_t * op)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -427,15 +428,15 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     int len, res, k, act_resplen;
 
     memset(resp, 0, max_resp_len);
-    if (! optsp->do_zero) {     /* SAS-2 or later */
+    if (! op->do_zero) {     /* SAS-2 or later */
         len = (max_resp_len - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
         smp_req[3] = 2; /* Request Length: in dwords */
     }
-    if (optsp->ign_zp)
+    if (op->ign_zp)
         smp_req[8] |= 0x1;
     smp_req[9] = disc_phy_id;
-    if (optsp->verbose) {
+    if (op->verbose) {
         fprintf(stderr, "    Discover request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             fprintf(stderr, "%02x ", smp_req[k]);
@@ -446,11 +447,11 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = max_resp_len;
     smp_rr.response = resp;
-    res = smp_send_req(top, &smp_rr, optsp->verbose);
+    res = smp_send_req(top, &smp_rr, op->verbose);
 
     if (res) {
         fprintf(stderr, "smp_send_req failed, res=%d\n", res);
-        if (0 == optsp->verbose)
+        if (0 == op->verbose)
             fprintf(stderr, "    try adding '-v' option for more debug\n");
         return -1;
     }
@@ -469,19 +470,19 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
         len = smp_get_func_def_resp_len(resp[1]);
         if (len < 0) {
             len = 0;
-            if (optsp->verbose > 1)
+            if (op->verbose > 1)
                 fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
-        if (optsp->verbose)
+        if (op->verbose)
             fprintf(stderr, "actual response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
         len = act_resplen; 
     }
-    if (optsp->do_hex || optsp->do_raw) {
-        if (optsp->do_hex)
+    if (op->do_hex || op->do_raw) {
+        if (op->do_hex)
             dStrHex((const char *)resp, len, 1);
         else
             dStrRaw((const char *)resp, len);
@@ -490,7 +491,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
         if (resp[1] != smp_req[1])
             return -4 - SMP_LIB_CAT_MALFORMED;
         if (resp[2]) {
-            if (optsp->verbose)
+            if (op->verbose)
                 fprintf(stderr, "Discover result: %s\n",
                         smp_get_func_res_str(resp[2], sizeof(b), b));
             return -4 - resp[2];
@@ -508,7 +509,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
         return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (resp[2]) {
-        if ((optsp->verbose > 0) || (! silence_err_report)) {
+        if ((op->verbose > 0) || (! silence_err_report)) {
             cp = smp_get_func_res_str(resp[2], sizeof(b), b);
             fprintf(stderr, "Discover result: %s\n", cp);
         }
@@ -520,8 +521,8 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
 /* Note that the inner attributes are output in alphabetical order. */
 /* N.B. This function has not been kept up to date. */
 static int
-do_single_list(const unsigned char * rp, int len, int show_exp_cc,
-               int do_brief)
+print_single_list(const unsigned char * rp, int len, int show_exp_cc,
+                  int do_brief)
 {
     int res, j, sas2;
     unsigned long long ull;
@@ -642,26 +643,15 @@ do_single_list(const unsigned char * rp, int len, int show_exp_cc,
     return 0;
 }
 
-/* Output (multiline) for a single phy. Return 0 on success, positive error
- * number suitable for exit status if problems. */
 static int
-do_single(struct smp_target_obj * top, const struct opts_t * optsp)
+print_single(const unsigned char * rp, int len, int just1,
+             const struct opts_t * op)
 {
-    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
-    unsigned long long ull;
+    int j, sas2, res;
     unsigned int ui;
-    int res, len, j, sas2, ret;
+    unsigned long long ull;
     char b[256];
 
-    /* If do_discover() works, returns response length (less CRC bytes) */
-    len = do_discover(top, optsp->phy_id, rp, sizeof(rp), 0,
-                      optsp);
-    if (len < 0)
-        ret = (len < -2) ? (-4 - len) : len;
-    else
-        ret = 0;
-    if (optsp->do_hex || optsp->do_raw)
-        return ret;
     ull = 0;
     if (len > 23) {
         /* fetch my (expander's) SAS addrss */
@@ -671,35 +661,24 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
             ull |= rp[16 + j];
         }
     }
-    if (optsp->do_my) {
-        printf("0x%llx\n", ull);
-        if ((ull > 0) && (SMP_FRES_PHY_VACANT == ret))
-            return 0;
-        else
-            return ret;
-    }
-    if (ret) {
-        if (SMP_FRES_PHY_VACANT == ret)
-            printf("  phy identifier: %d  inaccessible (phy vacant)\n",
-                   optsp->phy_id);
-        return ret;
-    }
-    if (optsp->do_list)
-        return do_single_list(rp, len, 1, optsp->do_brief);
-    printf("Discover response%s:\n", (optsp->do_brief ? " (brief)" : ""));
+    if (just1)
+        printf("Discover response%s:\n", (op->do_brief ? " (brief)" : ""));
+    else
+        printf("phy identifier: %d\n", rp[9]);
     sas2 = !! (rp[3]);
     res = (rp[4] << 8) + rp[5];
-    if (sas2 || (optsp->verbose > 3)) {
-        if (optsp->verbose || (res > 0))
+    if ((sas2 && (! op->do_brief)) || (op->verbose > 3)) {
+        if (op->verbose || (res > 0))
             printf("  expander change count: %d\n", res);
     }
-    printf("  phy identifier: %d\n", rp[9]);
+    if (just1)
+        printf("  phy identifier: %d\n", rp[9]);
     res = ((0x70 & rp[12]) >> 4);
     if (res < 8)
         printf("  attached device type: %s\n", smp_attached_device_type[res]);
-    if ((optsp->do_brief > 1) && (0 == res))
+    if ((op->do_brief > 1) && (0 == res))
         return 0;
-    if (sas2 || (optsp->verbose > 3))
+    if (sas2 || (op->verbose > 3))
         printf("  attached reason: %s\n",
                smp_get_reason(0xf & rp[12], sizeof(b), b));
 
@@ -708,7 +687,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
 
     printf("  attached initiator: ssp=%d stp=%d smp=%d sata_host=%d\n",
            !!(rp[14] & 8), !!(rp[14] & 4), !!(rp[14] & 2), (rp[14] & 1));
-    if (0 == optsp->do_brief) {
+    if (0 == op->do_brief) {
         printf("  attached sata port selector: %d\n",
                !!(rp[15] & 0x80));
         printf("  STP buffer too small: %d\n", !!(rp[15] & 0x10));
@@ -725,8 +704,8 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     }
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
-    if (0 == optsp->do_brief) {
-        if (sas2 || (optsp->verbose > 3)) {
+    if (0 == op->do_brief) {
+        if (sas2 || (op->verbose > 3)) {
             printf("  attached power capable: %d\n", ((rp[33] >> 5) & 0x3));
             printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
             printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
@@ -755,7 +734,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     default: snprintf(b, sizeof(b), "reserved [%d]", res); break;
     }
     printf("  routing attribute: %s\n", b);
-    if (optsp->do_brief) {
+    if (op->do_brief) {
         if ((len > 63) && !!(rp[60] & 0x1))
             printf("  zone group: %d\n", rp[63]);
         return 0;
@@ -864,12 +843,58 @@ do_single(struct smp_target_obj * top, const struct opts_t * optsp)
     return 0;
 }
 
+
+/* Output (multiline) for a single phy. Return 0 on success, positive error
+ * number suitable for exit status if problems. */
+static int
+do_single(struct smp_target_obj * top, const struct opts_t * op)
+{
+    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
+    unsigned long long ull;
+    int j, len, ret;
+
+    /* If do_discover() works, returns response length (less CRC bytes) */
+    len = do_discover(top, op->phy_id, rp, sizeof(rp), 0, op);
+    if (len < 0)
+        ret = (len < -2) ? (-4 - len) : len;
+    else
+        ret = 0;
+    if (op->do_hex || op->do_raw)
+        return ret;
+    ull = 0;
+    if (len > 23) {
+        /* fetch my (expander's) SAS addrss */
+        for (j = 0; j < 8; ++j) {
+            if (j > 0)
+                ull <<= 8;
+            ull |= rp[16 + j];
+        }
+    }
+    if (op->do_my) {
+        printf("0x%llx\n", ull);
+        if ((ull > 0) && (SMP_FRES_PHY_VACANT == ret))
+            return 0;
+        else
+            return ret;
+    }
+    if (ret) {
+        if (SMP_FRES_PHY_VACANT == ret)
+            printf("  phy identifier: %d  inaccessible (phy vacant)\n",
+                   op->phy_id);
+        return ret;
+    }
+    if (op->do_list)
+        return print_single_list(rp, len, 1, op->do_brief);
+    else
+        return print_single(rp, len, 1, op);
+}
+
 #define MAX_PHY_ID 254
 
 /* Calls do_discover() multiple times. Summarizes info into one
  * line per phy. Returns 0 if ok, else function result. */
 static int
-do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
+do_multiple(struct smp_target_obj * top, const struct opts_t * op)
 {
     unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
     unsigned long long ull, adn;
@@ -882,9 +907,9 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
     const char * cp;
 
     expander_sa = 0;
-    num = optsp->do_num ? (optsp->phy_id + optsp->do_num) : MAX_PHY_ID;
-    for (k = optsp->phy_id; k < num; ++k) {
-        len = do_discover(top, k, rp, sizeof(rp), 1, optsp);
+    num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
+    for (k = op->phy_id; k < num; ++k) {
+        len = do_discover(top, k, rp, sizeof(rp), 1, op);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
         else
@@ -911,14 +936,14 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                             "phy_id=%d, was=%llxh, now=%llxh\n", rp[9],
                             expander_sa, ull);
                     expander_sa = ull;
-                } else if (optsp->verbose)
+                } else if (op->verbose)
                     fprintf(stderr, ">> expander's SAS address shown as 0 at "
                             "phy_id=%d\n", rp[9]);
             }
         }
-        if (first && (! optsp->do_raw)) {
+        if (first && (! op->do_raw)) {
             first = 0;
-            if (optsp->sa_given && (optsp->sa != expander_sa))
+            if (op->sa_given && (op->sa != expander_sa))
                 printf("  <<< Warning: reported expander address is not the "
                        "one requested >>>\n");
 #if 0
@@ -927,15 +952,19 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             printf("Device <%016llx>, expander:\n", expander_sa);
 #endif
         }
-        if (optsp->do_hex || optsp->do_raw)
+        if (op->do_hex || op->do_raw)
             continue;
 
-        if (optsp->do_list) {
-            do_single_list(rp, len, 0, optsp->do_brief);
+        if (op->do_list) {
+            print_single_list(rp, len, 0, op->do_brief);
+            continue;
+        }
+        if (op->multiple > 1) {
+            print_single(rp, len, 0, op);
             continue;
         }
         adt = ((0x70 & rp[12]) >> 4);
-        if ((optsp->do_brief > 1) && (0 == adt))
+        if ((op->do_brief > 1) && (0 == adt))
             continue;
 
         negot = rp[13] & 0xf;
@@ -949,7 +978,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         case 2:
             if (! checked_rg) {
                 ++checked_rg;
-                has_t2t = has_table2table_routing(top, optsp);
+                has_t2t = has_table2table_routing(top, op);
             }
             /* table routing phy when expander does t2t is Universal */
             cp = has_t2t ? "U" : "T";
@@ -978,7 +1007,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                    cp);
             continue;
         }
-        if ((optsp->do_brief > 0) && (0 == adt))
+        if ((op->do_brief > 0) && (0 == adt))
             continue;
         if (k != rp[9])
             fprintf(stderr, ">> requested phy_id=%d differs from response "
@@ -991,7 +1020,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
         }
         if ((0 == adt) || (adt > 3)) {
             printf("  phy %3d:%s:attached:[0000000000000000:00]", k, cp);
-            if ((optsp->do_brief > 1) || optsp->do_adn || (len < 64)) {
+            if ((op->do_brief > 1) || op->do_adn || (len < 64)) {
                 printf("\n");
                 continue;
             }
@@ -1003,7 +1032,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
                 printf("\n");
             continue;
         }
-        if (optsp->do_adn && (len > 59)) {
+        if (op->do_adn && (len > 59)) {
             adn = 0;
             for (j = 0; j < 8; ++j) {
                 if (j > 0)
@@ -1072,7 +1101,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * optsp)
             }
             printf("%s)", b);
         }
-        if ((optsp->do_brief > 1) || optsp->do_adn) {
+        if ((op->do_brief > 1) || op->do_adn) {
             printf("]\n");
             continue;
         } else
