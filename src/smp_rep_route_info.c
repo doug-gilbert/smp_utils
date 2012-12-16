@@ -185,7 +185,7 @@ do_rep_route(struct smp_target_obj * top, int phy_id, int index,
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

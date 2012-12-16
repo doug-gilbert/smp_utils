@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2011 Douglas Gilbert.
+ * Copyright (c) 2007-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * its response.
  */
 
-static char * version_str = "1.10 20111222";    /* sync with sas2r15 */
+static char * version_str = "1.10 20121217";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -202,7 +202,7 @@ do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
         if (optsp->verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (optsp->do_hex || optsp->do_raw) {
         if (optsp->do_hex)
@@ -410,7 +410,8 @@ main(int argc, char * argv[])
         printf("  zone configuring: %d\n", !!(resp[8] & 0x4));
         printf("  configuring: %d\n", !!(resp[8] & 0x2));
         printf("  zone enabled: %d\n", !!(resp[8] & 0x1));
-        printf("  expander route table descriptor length: %d dwords\n", desc_len);
+        printf("  expander route table descriptor length: %d dwords\n",
+	       desc_len);
     }
     printf("  number of expander route table descriptors: %d\n", num_desc);
     printf("  first routed SAS address index: %d\n",

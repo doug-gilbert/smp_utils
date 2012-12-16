@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.09 20111222";
+static char * version_str = "1.09 20121217";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
@@ -334,7 +334,8 @@ main(int argc, char * argv[])
     if (enhanced) {
         len = smp_resp[3];
         if ((len != rcount) && verbose)
-            fprintf(stderr, "requested %d dwords but received %d\n", rcount, len);
+            fprintf(stderr, "requested %d dwords but received %d\n", rcount,
+                    len);
     } else
         len = rcount;
     len = 4 + (len * 4);      /* length in bytes, excluding 4 byte CRC */
@@ -342,7 +343,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

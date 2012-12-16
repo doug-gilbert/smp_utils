@@ -238,7 +238,7 @@ has_table2table_routing(struct smp_target_obj * top,
         if (optsp->verbose)
             fprintf(stderr, "actual RG response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     /* ignore --hex and --raw */
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
@@ -502,7 +502,7 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         if (op->verbose)
             fprintf(stderr, "actual response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (op->do_hex || op->do_raw) {
         if (op->do_hex)
@@ -737,7 +737,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     }
     if (len > 115)
         printf("  device slot group output connector: %.6s\n", rp + 110);
-    if (len > 117) 
+    if (len > 117)
         printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
     return 0;
 }
@@ -1273,9 +1273,10 @@ main(int argc, char * argv[])
         (NULL == opts.zpi_fn))
         ++opts.do_summary;
     if (opts.zpi_fn) {
-        if (opts.do_summary || opts.desc_type_given || opts.filter || opts.do_adn) {
-            fprintf(stderr, "--zpi=FN clashes with --summary, --adn, --filter and "
-                    "--descriptor=TY options\n");
+        if (opts.do_summary || opts.desc_type_given || opts.filter ||
+            opts.do_adn) {
+            fprintf(stderr, "--zpi=FN clashes with --summary, --adn, "
+                    "--filter and --descriptor=TY options\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
         if (! opts.num_given)
@@ -1411,7 +1412,7 @@ main(int argc, char * argv[])
     }
     if ((zg_not1) && (0 == opts.do_brief) && (NULL == opts.zpi_fn))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
-    
+
 err_out:
     if (opts.zpi_filep && (stdout != opts.zpi_filep))
         fclose(opts.zpi_filep);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * its response.
  */
 
-static char * version_str = "1.05 20111222";
+static char * version_str = "1.05 20121217";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -427,7 +427,7 @@ main(int argc, char * argv[])
             if (verbose)
                 fprintf(stderr, "actual response length [%d] less than "
                         "deduced length [%d]\n", act_resplen, len);
-            len = act_resplen; 
+            len = act_resplen;
         }
         if (do_hex || do_raw) {
             if (do_hex)
@@ -441,8 +441,8 @@ main(int argc, char * argv[])
             if (smp_resp[2]) {
                 ret = smp_resp[2];
                 if (verbose)
-                    fprintf(stderr, "Report zone permission table result: %s\n",
-                            smp_get_func_res_str(ret, sizeof(b), b));
+                    fprintf(stderr, "Report zone permission table result: "
+                            "%s\n", smp_get_func_res_str(ret, sizeof(b), b));
             }
             goto err_out;
         }

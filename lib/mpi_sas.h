@@ -256,5 +256,3 @@ typedef struct _MSG_SAS_IOUNIT_CONTROL_REPLY
   SasIoUnitControlReply_t, MPI_POINTER pSasIoUnitControlReply_t;
 
 #endif
-
-

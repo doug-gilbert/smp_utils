@@ -627,13 +627,13 @@ main(int argc, char * argv[])
         fprintf(stderr, "can use either --file= or --pes= but not both\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
-    if (file_op && thres_op) 
+    if (file_op && thres_op)
         fprintf(stderr, "warning: ignoring --thres= and taking threshold "
                 "values from --file= argument\n");
 
     pes_elem = 0;
     thres_elem = 0;
-    if (pes_op) { 
+    if (pes_op) {
         if (build_pes_arr(pes_op, pes_arr, &pes_elem, MAX_PHY_EV_SRC))
             return SMP_LIB_SYNTAX_ERROR;
         if (thres_op) {
@@ -666,7 +666,7 @@ main(int argc, char * argv[])
     smp_req[10] = 2;    /* descriptor 2 dwords long */
     smp_req[11] = num_desc;
     for (k = 0, j = 12; k < num_desc; ++k, j += 8) {
-        smp_req[j + 3] = pes_arr[k]; 
+        smp_req[j + 3] = pes_arr[k];
         smp_req[j + 4] = (thres_arr[k] >> 24) & 0xff;
         smp_req[j + 5] = (thres_arr[k] >> 16) & 0xff;
         smp_req[j + 6] = (thres_arr[k] >> 8) & 0xff;
@@ -723,7 +723,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

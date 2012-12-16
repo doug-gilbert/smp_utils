@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.11 20111222"; /* sync with sas2r15 */
+static char * version_str = "1.11 20121217"; /* sync with sas2r15 */
 
 static struct option long_options[] = {
     {"control", 1, 0, 'c'},
@@ -397,7 +397,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)
@@ -417,12 +417,14 @@ main(int argc, char * argv[])
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n", smp_resp[0]);
+        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n", smp_req[1], smp_resp[1]);
+        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }

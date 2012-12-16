@@ -180,7 +180,7 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
                     }
                     arr[off + k] = h;
                     lcp = strpbrk(lcp, " ,\t");
-                    if (NULL == lcp) 
+                    if (NULL == lcp)
                         break;
                     lcp += strspn(lcp, " ,\t");
                     if ('\0' == *lcp)
@@ -365,7 +365,7 @@ main(int argc, char * argv[])
         usage();
         return SMP_LIB_SYNTAX_ERROR;
     }
-    if ((rcount * 4) != arr_len) { 
+    if ((rcount * 4) != arr_len) {
         fprintf(stderr, "number of data bytes given (%d) needs "
                 "to be 4 times count (%d)\n", arr_len, rcount);
         return SMP_LIB_SYNTAX_ERROR;
@@ -467,7 +467,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

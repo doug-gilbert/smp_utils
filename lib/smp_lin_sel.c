@@ -80,7 +80,7 @@ smp_initiator_open(const char * device_name, int subvalue,
         }
     }
     if ((I_SGV4 == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) { 
+        (0 == tobj->interface_selector)) {
         res = chk_lin_bsg_device(device_name, verbose);
         if (res || force) {
             if (0 == tobj->interface_selector)
@@ -99,7 +99,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             fprintf(stderr, "chk_lin_bsg_device: failed\n");
     }
     if ((I_MPT == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) { 
+        (0 == tobj->interface_selector)) {
         res = chk_mpt_device(device_name, verbose);
         if (res || force) {
             if (0 == tobj->interface_selector)
@@ -160,4 +160,3 @@ smp_initiator_close(struct smp_target_obj * tobj)
     tobj->opened = 0;
     return 0;
 }
-

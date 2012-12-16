@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * its response.
  */
 
-static char * version_str = "1.03 20111222";
+static char * version_str = "1.03 20121217";
 
 static struct option long_options[] = {
     {"expected", 1, 0, 'E'},
@@ -412,7 +412,7 @@ main(int argc, char * argv[])
     smp_req[3] = num_desc + 1;
     smp_req[4] = (expected_cc >> 8) & 0xff;
     smp_req[5] = expected_cc & 0xff;
-    smp_req[6] = (1 << 2) | (do_save & 0x3);    /* descriptor length is 1 dword */
+    smp_req[6] = (1 << 2) | (do_save & 0x3);/* descriptor length is 1 dword */
     smp_req[7] = num_desc;
     if (verbose) {
         fprintf(stderr, "    Configure zone phy information request:");
@@ -465,7 +465,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)
