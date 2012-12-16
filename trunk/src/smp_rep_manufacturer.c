@@ -46,7 +46,7 @@
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
  *
- * This utility issues a REPORT MANUFACTURER INFORMATION function and 
+ * This utility issues a REPORT MANUFACTURER INFORMATION function and
  * outputs its response.
  */
 
@@ -288,7 +288,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

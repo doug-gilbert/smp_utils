@@ -101,7 +101,7 @@ close_mpt_device(int fd)
 {
     return close(fd);
 }
-        
+
 
 /*****************************************************************
  *                                                               *
@@ -129,7 +129,8 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 #if 0
         int CmdBlkSize;
 
-        CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) + 8;
+        CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) +
+		     8;
         ShowBuf("Command Block Before: ", mpiBlkPtr, CmdBlkSize, 0);
 #endif
 
@@ -152,9 +153,11 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
                  */
                 pReply = (MPIDefaultReply_t *) mpiBlkPtr->replyFrameBufPtr;
                 if ((pReply) && (pReply->MsgLength > 0)) {
-                        // >>>>> pReply->IOCStatus = le16_to_cpu(pReply->IOCStatus); <<<<
+                        // >>>>> pReply->IOCStatus =
+			//	 le16_to_cpu(pReply->IOCStatus); <<<<
 
-                        // ShowBuf("Reply Frame : ", pReply, pReply->MsgLength * 4, 0);
+                        // ShowBuf("Reply Frame : ", pReply,
+			//	   pReply->MsgLength * 4, 0);
 
                         status = pReply->IOCStatus & MPI_IOCSTATUS_MASK;
 
@@ -243,43 +246,43 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
             (smpReply->SASStatus != MPI_SASSTATUS_SUCCESS)) {
                 if (verbose) {
                         switch(smpReply->SASStatus) {
-                        case MPI_SASSTATUS_UNKNOWN_ERROR: 
+                        case MPI_SASSTATUS_UNKNOWN_ERROR:
                                 fprintf(stderr, "Unknown SAS (SMP) error\n");
                                 break;
-                        case MPI_SASSTATUS_INVALID_FRAME: 
+                        case MPI_SASSTATUS_INVALID_FRAME:
                                 fprintf(stderr, "Invalid frame\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_BAD_DEST: 
+                        case MPI_SASSTATUS_UTC_BAD_DEST:
                                 fprintf(stderr, "Unable to connect (bad "
                                         "destination)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_BREAK_RECEIVED: 
+                        case MPI_SASSTATUS_UTC_BREAK_RECEIVED:
                                 fprintf(stderr, "Unable to connect (break "
                                         "received)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED: 
+                        case MPI_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED:
                                 fprintf(stderr, "Unable to connect (connect "
                                         "rate not supported)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_PORT_LAYER_REQUEST: 
+                        case MPI_SASSTATUS_UTC_PORT_LAYER_REQUEST:
                                 fprintf(stderr, "Unable to connect (port "
                                         "layer request)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED: 
+                        case MPI_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED:
                                 fprintf(stderr, "Unable to connect (protocol "
                                         "(SMP target) not supported)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_WRONG_DESTINATION: 
+                        case MPI_SASSTATUS_UTC_WRONG_DESTINATION:
                                 fprintf(stderr, "Unable to connect (wrong "
                                         "destination)\n");
                                 break;
-                        case MPI_SASSTATUS_SHORT_INFORMATION_UNIT: 
+                        case MPI_SASSTATUS_SHORT_INFORMATION_UNIT:
                                 fprintf(stderr, "Short information unit\n");
                                 break;
-                        case MPI_SASSTATUS_DATA_INCORRECT_DATA_LENGTH: 
+                        case MPI_SASSTATUS_DATA_INCORRECT_DATA_LENGTH:
                                 fprintf(stderr, "Incorrect data length\n");
                                 break;
-                        case MPI_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT: 
+                        case MPI_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT:
                                 fprintf(stderr, "Initiator response "
                                         "timeout\n");
                                 break;
@@ -317,7 +320,8 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         } else
                 ret = 0;
 
-        memcpy(rresp->response, mpiBlkPtr->dataInBufPtr, rresp->max_response_len);
+        memcpy(rresp->response, mpiBlkPtr->dataInBufPtr,
+	       rresp->max_response_len);
         rresp->act_response_len = -1;
 
 err_out:
@@ -343,7 +347,8 @@ SmpTwoSGLsIoctl(int fd, int ioc_num)
         uint numBytes;
         int  status;
         /* here is my hard coded expander sas address */
-        unsigned char expanderSasAddr[] = {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
+        unsigned char expanderSasAddr[] =
+			 {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;
@@ -381,7 +386,7 @@ SmpTwoSGLsIoctl(int fd, int ioc_num)
          * Bit7: 0=two SGLs 1=Payload returned in Reply
          */
         memset(smpReq, 0, sizeof(smpReq));
-        smpReq->RequestDataLength = sizeof(smp_request);        // <<<<<<<<<<<< ??
+        smpReq->RequestDataLength = sizeof(smp_request);  // <<<<<<<<<< ??
         smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
         memcpy(&smpReq->SASAddress, expanderSasAddr, 8);
 
@@ -428,7 +433,8 @@ SmpImmediateIoctl(int fd, int ioc_num)
         uint numBytes;
         int  status;
         /* here is my hard coded expander sas address */
-        unsigned char expanderSasAddr[] = {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
+        unsigned char expanderSasAddr[] =
+			 {0x9C, 0x03, 0x00, 0x00, 0x60, 0x05, 0x06, 0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2012 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.05 20111222";
+static char * version_str = "1.05 20121217";
 
 static struct option long_options[] = {
     {"disable", 0, 0, 'd'},
@@ -136,7 +136,8 @@ main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_ENABLE_DISABLE_ZONING,
+    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ,
+                               SMP_FN_ENABLE_DISABLE_ZONING,
                                0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
@@ -334,7 +335,7 @@ main(int argc, char * argv[])
         if (verbose)
             fprintf(stderr, "actual response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (do_hex || do_raw) {
         if (do_hex)

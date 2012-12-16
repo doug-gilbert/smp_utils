@@ -205,7 +205,8 @@ open_lin_bsg_device(const char * dev_name, int verbose)
         ret = open(buff, O_RDWR);
         if (ret < 0) {
             if (verbose) {
-                perror("open_lin_bsg_device: open() temporary device node failed");
+                perror("open_lin_bsg_device: open() temporary device node "
+		       "failed");
                 fprintf(stderr, "\t\ttried to open %s\n", buff);
             }
             goto close_sysfs;
@@ -253,7 +254,7 @@ send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
     hdr.guard = 'Q';
     hdr.protocol = BSG_PROTOCOL_SCSI;
     hdr.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
-    
+
     hdr.request_len = sizeof(cmd);      /* unused */
     hdr.request = (uintptr_t) cmd;
 
