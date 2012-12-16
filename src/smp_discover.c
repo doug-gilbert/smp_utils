@@ -226,7 +226,7 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
         if (op->verbose)
             fprintf(stderr, "actual RG response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     /* ignore --hex and --raw */
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
@@ -479,7 +479,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
         if (op->verbose)
             fprintf(stderr, "actual response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
-        len = act_resplen; 
+        len = act_resplen;
     }
     if (op->do_hex || op->do_raw) {
         if (op->do_hex)
@@ -614,7 +614,7 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
         printf("  req_iz_cbe=%d\n", !! (0x40 & rp[60]));
     }
     printf("  routing_attr=%d\n", rp[44] & 0xf);
-    
+
     for (ull = 0, j = 0; j < 8; ++j) {
         if (j > 0)
             ull <<= 8;

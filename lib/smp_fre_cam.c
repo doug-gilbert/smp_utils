@@ -72,7 +72,7 @@ smp_initiator_open(const char * device_name, int subvalue,
     int j;
     struct cam_device* cam_dev;
     struct tobj_cam_t * tcp;
-    
+
     i_params = i_params;
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
@@ -193,4 +193,3 @@ smp_initiator_close(struct smp_target_obj * tobj)
     tobj->opened = 0;
     return 0;
 }
-
