@@ -62,7 +62,7 @@ This interface is more generic and supported by several SAS HBA drivers
 including mptsas (and mpt2sas). It was introduced in the linux 2.6.24
 kernel. The SMP functions are passed to the kernel using a format known
 as "SCSI Generic Version 4" which gives this interface its name: "sgv4"
-or just "sg". The SAS transport layer within the SCSI sub-system unpacks
+or just "sg". The SAS transport layer within the SCSI sub\-system unpacks
 the SMP requests and forwards them to SAS low level drivers that support
 this interface. The \fISMP_DEVICE\fR is either a member of
 the '/sys/class/bsg' directory (e.g. /sys/class/bsg/expander\-6:0 ) or a
@@ -71,18 +71,18 @@ device nodes are dynamic (i.e. they don't have fixed major and minor
 numbers) and should correspond to the major and minor numbers found in
 the 'sys/class/bsg/<smp_target_device>/dev' file.
 .SH FREEBSD INTERFACE
-The CAM subsystem has been enhanced in FreeBSD 9 to pass-through SMP requests
+The CAM subsystem has been enhanced in FreeBSD 9 to pass\-through SMP requests
 and return the corresponding responses. However CAM does not directly
 access expander devices because they are not SCSI devices. It makes the
 assumption that each SAS expander has an integrated SES (enclosure) device
-and that is addressed. This assumption seems to be true for SAS-2 expanders
-but not some SAS-1 expanders. Thus invocations look like this: 
+and that is addressed. This assumption seems to be true for SAS\-2 expanders
+but not some SAS\-1 expanders. Thus invocations look like this: 
 .PP
   # smp_discover /dev/ses0
 .PP
 where /dev/ses0 is a SES device associated with a SAS expander.
 .SH SOLARIS INTERFACE
-The USMP pass-through mechanism is used. Invocations look like this:
+The USMP pass\-through mechanism is used. Invocations look like this:
 .PP
   # smp_rep_manufacturer /dev/smp/expd0
 .PP
@@ -192,7 +192,7 @@ sysfs tree but it is not always easy to find. Doing this search may help:
   # find /sys \-name "*expander*"
 .PP
 That should show the suffix on any expanders that have been detected. Then
-a command like 'cat /sys/class/sas_device/expander-6:0/sas_address' should
+a command like 'cat /sys/class/sas_device/expander\-6:0/sas_address' should
 show its SAS address.
 .PP
 Another approach is to work backwards from SCSI devices (i.e. logical
@@ -216,7 +216,7 @@ enclosure or backplane via SGPIO or I2C on sideband signals (e.g. in a
 SFF\-8087 cable). To interact with a SES device, see the sg_ses utility.
 .PP
 Often expander phys are grouped in fours on the same connector (e.g.
-SFF-8088). Care needs to be taken when multiple expanders are interconnected.
+SFF\-8088). Care needs to be taken when multiple expanders are interconnected.
 An enclosure
 .B universal
 port is one in which the "table to table supported" attribute is set (in
@@ -241,8 +241,8 @@ port.
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html .
 .SH CONFORMING TO
 SAS has multiple generations. The first three generations are approved
-standards: the original SAS (ANSI INCITS 376-2003), SAS 1.1 (INCITS 417-2006)
-and SAS\-2 (ANSI INCITS 457-2010) . SAS\-2.1 technical work is ongoing and
+standards: the original SAS (ANSI INCITS 376\-2003), SAS 1.1 (INCITS 417\-2006)
+and SAS\-2 (ANSI INCITS 457\-2010) . SAS\-2.1 technical work is ongoing and
 it has been split into two documents, the one of interest is called the SAS
 Protocol Layer (SPL) and  at the time of writing the most recent draft is
 spl\-r07.pdf (see section 9.4.3 for SMP functions). Technical work on SAS\-3
@@ -254,7 +254,7 @@ http://www.t10.org site. INCITS policy now requires a registration to view
 these drafts, a break from t10.org tradition.
 .PP
 The two utilities for reading and writing to GPIO registers, smp_read_gpio
-and smp_write_gpio, are defined in the Small Form Factor document SFF-8485
+and smp_write_gpio, are defined in the Small Form Factor document SFF\-8485
 found at http://www.sffcommittee.com . "Enhanced" versions of the
 corresponding SMP functions have been mentioned in some drafts but no
 definitions have been published and the references have been removed in more
