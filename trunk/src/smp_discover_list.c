@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.30 20120308";    /* spl2r03 */
+static char * version_str = "1.31 20130124";    /* spl3r2 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -606,6 +606,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     printf("  attached SAS address: 0x%llx\n", ull);
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == op->do_brief) {
+        printf("  attached persistent capable: %d\n", !!(rp[33] & 0x80));
         printf("  attached power capable: %d\n", ((rp[33] >> 5) & 0x3));
         printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
         printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));

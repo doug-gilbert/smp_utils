@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.38 20120318";    /* spl2r03 */
+static char * version_str = "1.39 20130124";    /* spl3r2 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -706,6 +706,7 @@ print_single(const unsigned char * rp, int len, int just1,
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == op->do_brief) {
         if (sas2 || (op->verbose > 3)) {
+            printf("  attached persistent capable: %d\n", !!(rp[33] & 0x80));
             printf("  attached power capable: %d\n", ((rp[33] >> 5) & 0x3));
             printf("  attached slumber capable: %d\n", !!(rp[33] & 0x10));
             printf("  attached partial capable: %d\n", !!(rp[33] & 0x8));
