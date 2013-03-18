@@ -21,12 +21,13 @@ directory.
 
 
 The reference documents are:
-  sas-r05.pdf          www.t10.org   draft prior to original SAS spec
-  sas1r10.pdf          www.t10.org   draft prior to SAS 1.1 spec
-  sas2r16.pdf          www.t10.org   draft prior to SAS-2
-  spl-r07.pdf          www.t10.org   draft prior to SAS-2.1
-  spl2r03.pdf          www.t10.org   current draft
-  SFF_8485.PDF         www.sffcommittee.com   SGPIO revision 0.7
+  sas-r05.pdf      www.t10.org   draft prior to original SAS spec
+  sas1r10.pdf      www.t10.org   draft prior to SAS 1.1 spec
+  sas2r16.pdf      www.t10.org   draft prior to SAS-2
+  spl-r07.pdf      www.t10.org   draft prior to SPL ANSI INCITS 476-2011
+  spl2r04c.pdf     www.t10.org   draft prior to SPL-2
+  spl3r02.pdf      www.t10.org   current draft
+  SFF_8485.PDF     www.sffcommittee.com   SGPIO revision 0.7
 
 In SAS-2.1 the physical layer was put into a document of that name
 (i.e. SAS-2.1) while the higher layers were put in a new document called
@@ -34,4 +35,4 @@ the SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-17th December 2012
+18th March 2013
