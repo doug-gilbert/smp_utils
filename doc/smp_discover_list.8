@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "February 2012" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "March 2013" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -24,7 +24,7 @@ If the \fI\-\-phy=ID\fR option is not given then \fI\-\-summary\fR is
 assumed. When \fI\-\-summary\fR is given or assumed, this utility shows
 the disposition of each active expander phy in table form. One row is shown
 for each phy and is described in the SINGLE LINE PER PHY FORMAT section
-below. For this purpose disabled and errored expander phys are
+below. For this purpose disabled expander phys and those with errors are
 considered "active" and can be suppressed from the output by adding the
 \fI\-\-brief\fR option.
 .PP
@@ -193,7 +193,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2012 Douglas Gilbert
+Copyright \(co 2006\-2013 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

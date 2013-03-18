@@ -127,7 +127,7 @@ if [ $res -ne 0 ] ; then
 fi
 echo
 
-# And the last active step in the SMP ZONE UNLOCK function being sent.
+# And the last active step is the SMP ZONE UNLOCK function being sent.
 # This will send a Broadcast (Change) [to any affected phys] so any
 # connected servers will "see" the change [by doing a "discover process"].
 echo "smp_zone_unlock $SMP_DEV"
