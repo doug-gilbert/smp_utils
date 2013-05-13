@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.39 20130124";    /* spl3r2 */
+static char * version_str = "1.40 20130510";    /* spl3r3 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -553,6 +553,7 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
     printf("  att_phy_id=%d\n", rp[32]);
     if (sas2 && (! do_brief)) {
         printf("  att_pow_cap=%d\n", (rp[33] >> 5) & 0x3);
+        printf("  att_pwr_dis_cap=%d\n", !!(rp[34] & 1));
         printf("  att_reason=%d\n", (0xf & rp[12]));
         printf("  att_req_iz=%d\n", !!(0x2 & rp[33]));
     }
@@ -606,6 +607,10 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
         printf("  pp_timeout=%d\n", (0xf & rp[43]));
         printf("  pr_max_p_lrate=%d\n", ((0xf0 & rp[41]) >> 4));
         printf("  pr_min_p_lrate=%d\n", ((0xf0 & rp[40]) >> 4));
+        if (sas2) {
+            printf("  pwr_dis_ctl_cap=%d\n", (rp[49] & 0x30) >> 4);
+            printf("  pwr_dis_sig=%d\n", (rp[49] & 0xc0) >> 6);
+        }
     }
     if ((! do_brief) && (len > 95))
             printf("  reason=%d\n", (0xf0 & rp[94]) >> 4);
@@ -714,6 +719,7 @@ print_single(const unsigned char * rp, int len, int just1,
                    !!(rp[33] & 4));
             printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
             printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+            printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         }
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1, sizeof(b), b));
@@ -751,6 +757,8 @@ print_single(const unsigned char * rp, int len, int just1,
         printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
         printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
         printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
+        printf("  pwr_dis signal: %d\n", (rp[49] & 0xc0) >> 6);
+        printf("  pwr_dis control capable: %d\n", (rp[49] & 0x30) >> 4);
         printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
         printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
         printf("  sata slumber enabled: %d\n", !!(rp[49] & 0x2));

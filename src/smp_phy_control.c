@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,27 +50,28 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.15 20111222";
+static char * version_str = "1.16 20130510";
 
 static struct option long_options[] = {
-    {"attached", 1, 0, 'a'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"min", 1, 0, 'm'},
-    {"max", 1, 0, 'M'},
-    {"op", 1, 0, 'o'},
-    {"phy", 1, 0, 'p'},
-    {"pptv", 1, 0, 'P'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"sas_pa", 1, 0, 'q'},
-    {"sas_sl", 1, 0, 'l'},
-    {"sata_pa", 1, 0, 'Q'},
-    {"sata_sl", 1, 0, 'L'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"attached", required_argument, 0, 'a'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"min", required_argument, 0, 'm'},
+    {"max", required_argument, 0, 'M'},
+    {"op", required_argument, 0, 'o'},
+    {"phy", required_argument, 0, 'p'},
+    {"pptv", required_argument, 0, 'P'},
+    {"pwrdis", required_argument, 0, 'D'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"sas_pa", required_argument, 0, 'q'},
+    {"sas_sl", required_argument, 0, 'l'},
+    {"sata_pa", required_argument, 0, 'Q'},
+    {"sata_sl", required_argument, 0, 'L'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -83,13 +84,13 @@ usage(void)
           "[--hex]\n"
           "                       [--interface=PARAMS] [--max=MA] "
           "[--min=MI] [--op=OP]\n"
-          "                       [--phy=ID] [--pptv=TI] [--raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                       [--sas_pa=CO] [--sas_sl=CO] "
-          "[--sata_pa=CO]\n"
-          "                       [--sata_sl=CO] [--version] "
-          "[--verbose] [--version]\n"
-          "                       SMP_DEVICE[,N]\n"
+          "                       [--phy=ID] [--pptv=TI] [--pwrdis=PDC] "
+          "[--raw]\n"
+          "                       [--sa=SAS_ADDR] [--sas_pa=CO] "
+          "[--sas_sl=CO]\n"
+          "                       [--sata_pa=CO] [--sata_sl=CO] "
+          "[--version]\n"
+          "                       [--verbose] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --attached=ADN|-a ADN    attached device name [a decimal "
           "number,\n"
@@ -122,6 +123,8 @@ usage(void)
           "    --pptv=TI|-P TI          partial pathway timeout value "
           "(microseconds)\n"
           "                             (if given sets UPPTV bit)\n"
+          "    --pwrdis=PDC|-D PDC      sets power disable control field "
+          "(def: 0)\n"
           "    --raw|-r                 output response in binary\n"
           "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
           "target (use leading\n"
@@ -188,6 +191,7 @@ main(int argc, char * argv[])
     int sata_sl = 0;
     int pptv = -1;
     int phy_id = 0;
+    int pwrdis = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -212,7 +216,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "a:E:hHI:l:L:m:M:o:p:P:q:Q;rs:vV",
+        c = getopt_long(argc, argv, "a:D:E:hHI:l:L:m:M:o:p:P:q:Q;rs:vV",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -225,6 +229,13 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             adn = (unsigned long long)sa_ll;
+            break;
+        case 'D':
+           pwrdis = smp_get_num(optarg);
+           if ((pwrdis < 0) || (pwrdis > 3)) {
+                fprintf(stderr, "bad argument to '--pwrdis'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -439,6 +450,7 @@ main(int argc, char * argv[])
     smp_req[32] |= (do_min << 4);
     smp_req[33] |= (do_max << 4);
     smp_req[34] = (sas_sl << 6) | (sas_pa << 4) | (sata_sl << 2) | sata_pa;
+    smp_req[35] = (pwrdis << 6);        /* added spl3r3 */
     if (verbose) {
         fprintf(stderr, "    Phy control request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k) {

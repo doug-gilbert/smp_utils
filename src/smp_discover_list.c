@@ -52,31 +52,31 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.31 20130124";    /* spl3r2 */
+static char * version_str = "1.32 20130510";    /* spl3r3 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
 static struct option long_options[] = {
-        {"adn", 0, 0, 'A'},
-        {"brief", 0, 0, 'b'},
-        {"descriptor", 1, 0, 'd'},
-        {"filter", 1, 0, 'f'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"ignore", 0, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"list", 0, 0, 'l'},    /* placeholder, not implemented */
-        {"num", 1, 0, 'n'},
-        {"one", 0, 0, 'o'},
-        {"phy", 1, 0, 'p'},
-        {"sa", 1, 0, 's'},
-        {"summary", 0, 0, 'S'},
-        {"raw", 0, 0, 'r'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zpi", 1, 0, 'Z'},
+        {"adn", no_argument, 0, 'A'},
+        {"brief", no_argument, 0, 'b'},
+        {"descriptor", required_argument, 0, 'd'},
+        {"filter", required_argument, 0, 'f'},
+        {"help", no_argument, 0, 'h'},
+        {"hex", no_argument, 0, 'H'},
+        {"ignore", no_argument, 0, 'i'},
+        {"interface", required_argument, 0, 'I'},
+        {"list", no_argument, 0, 'l'},    /* placeholder, not implemented */
+        {"num", required_argument, 0, 'n'},
+        {"one", no_argument, 0, 'o'},
+        {"phy", required_argument, 0, 'p'},
+        {"sa", required_argument, 0, 's'},
+        {"summary", no_argument, 0, 'S'},
+        {"raw", no_argument, 0, 'r'},
+        {"verbose", no_argument, 0, 'v'},
+        {"version", no_argument, 0, 'V'},
+        {"zpi", required_argument, 0, 'Z'},
         {0, 0, 0, 0},
 };
 
@@ -613,6 +613,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));
         printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
         printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+        printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1,
                                   sizeof(b), b));
@@ -651,6 +652,8 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
     printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
     printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
     printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
+    printf("  pwr_dis signal: %d\n", (rp[49] & 0xc0) >> 6);
+    printf("  pwr_dis control capable: %d\n", (rp[49] & 0x30) >> 4);
     printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
     printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
     printf("  sata slumber enabled: %d\n", !!(rp[49] & 0x2));

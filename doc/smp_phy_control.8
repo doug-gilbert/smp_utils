@@ -1,4 +1,4 @@
-.TH SMP_PHY_CONTROL "8" "March 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_PHY_CONTROL "8" "May 2013" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_phy_control \- invoke PHY CONTROL SMP function
 .SH SYNOPSIS
@@ -6,9 +6,10 @@ smp_phy_control \- invoke PHY CONTROL SMP function
 [\fI\-\-attached=ADN\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR]
 [\fI\-\-min=MI\fR] [\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR]
-[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-sas_pa=CO\fR]
-[\fI\-\-sas_sl=CO\fR] [\fI\-\-sata_pa=CO\fR] [\fI\-\-sata_sl=CO\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-pwrdis=PDC\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-sas_pa=CO\fR] [\fI\-\-sas_sl=CO\fR] [\fI\-\-sata_pa=CO\fR]
+[\fI\-\-sata_sl=CO\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -127,6 +128,13 @@ phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
 partial pathway timeout value. The units are microseconds and the permitted
 values are between 0 and 15 inclusive. 7 microseconds is recommended by
 sas2r07.
+.TP
+\fB\-D\fR, \fB\-\-pwrdis\fR=\fIPDC\fR
+where \fIPDC\fR is the power disable control value. The default value is 0
+which means no change. The value of 1 is reserved; 2, if supported, instructs
+the management device server to negate the POWER DISABLE signal; while 3, if
+supported, instructs it to assert that signal. This applies to the phy
+given by \fIID\fR (which defaults to 0).
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response (less the CRC field) to stdout in binary. All error
