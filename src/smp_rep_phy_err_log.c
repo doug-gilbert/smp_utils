@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.12 20111222";
+static const char * version_str = "1.13 20130604";
 
 #define SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN 32
 

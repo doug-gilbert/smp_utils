@@ -50,7 +50,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static char * version_str = "1.16 20130510";
+static const char * version_str = "1.17 20130604";
 
 static struct option long_options[] = {
     {"attached", required_argument, 0, 'a'},
