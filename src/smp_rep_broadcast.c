@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.03 20120203";
+static const char * version_str = "1.04 20130604";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 

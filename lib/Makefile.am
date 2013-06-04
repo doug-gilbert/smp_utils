@@ -37,9 +37,13 @@ EXTRA_libsmputils1_la_SOURCES = \
 endif
 
 
+# for C++ testing
+## CC = g++ -std=c++11
+## CC = g++
 
+# -std=<s> can be c99, c11, gnu11, etc. Default is gnu89 (gnu90 is the same)
 AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
-# AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c99
+## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c11
 
 lib_LTLIBRARIES = libsmputils1.la
 

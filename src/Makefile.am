@@ -27,9 +27,13 @@ bin_PROGRAMS = \
 
 ## endif
 
+# for C++ testing
+## CC = g++ -std=c++11
+## CC = g++
 
+# -std=<s> can be c99, c11, gnu11, etc. Default is gnu89 (gnu90 is the same)
 AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
-# AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c99
+## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c11
 
 smp_conf_general_SOURCES =	smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la @os_libs@

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 #include "smp_lib.h"
 
 
-static char * version_str = "1.19 20110805";    /* spl-2 rev 2 */
+static const char * version_str = "1.20 20130604";    /* spl-2 rev 2 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -283,7 +283,7 @@ smp_get_num(const char * buf)
 {
     int res, num, n, len;
     unsigned int unum;
-    char * cp;
+    const char * cp;
     char c = 'c';
     char c2, c3;
 
@@ -366,7 +366,7 @@ smp_get_llnum(const char * buf)
     int res, len;
     long long num, ll;
     unsigned long long unum;
-    char * cp;
+    const char * cp;
     char c = 'c';
     char c2, c3;
 

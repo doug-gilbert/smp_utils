@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * its response.
  */
 
-static char * version_str = "1.00 20111222";
+static const char * version_str = "1.00 20111222";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -221,8 +221,8 @@ build_pes_arr(const char * inp, unsigned char * pes_arr,
     int in_len, k, err;
     const char * lcp;
     unsigned int unum;
-    char * cp;
-    char * c2p;
+    const char * cp;
+    const char * c2p;
 
     if ((NULL == inp) || (NULL == pes_arr) || (NULL == pes_arr_len))
         return 1;
@@ -278,8 +278,8 @@ build_thres_arr(const char * inp, unsigned int * thres_arr,
     int in_len, k, err;
     const char * lcp;
     unsigned int unum;
-    char * cp;
-    char * c2p;
+    const char * cp;
+    const char * c2p;
 
     if ((NULL == inp) || (NULL == thres_arr) || (NULL == thres_arr_len))
         return 1;

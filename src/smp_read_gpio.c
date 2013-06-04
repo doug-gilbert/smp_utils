@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static char * version_str = "1.09 20121217";
+static const char * version_str = "1.10 20130604";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 

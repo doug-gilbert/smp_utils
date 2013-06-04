@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static char * version_str = "1.11 20121217"; /* sync with sas2r15 */
+static const char * version_str = "1.12 20130604"; /* sync with sas2r15 */
 
 static struct option long_options[] = {
     {"control", 1, 0, 'c'},

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.22 20111222";    /* spl2r01 */
+static const char * version_str = "1.23 20130604";    /* spl2r01 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 

@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static char * version_str = "1.32 20130510";    /* spl3r3 */
+static const char * version_str = "1.32 20130604";    /* spl3r3 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -262,7 +262,7 @@ has_table2table_routing(struct smp_target_obj * top,
 }
 
 
-static char * smp_attached_device_type[] = {
+static const char * smp_attached_device_type[] = {
     "no device attached",
     "end device",
     "expander device",            /* was 'edge expander' in SAS-1.1 */
@@ -273,7 +273,7 @@ static char * smp_attached_device_type[] = {
     "reserved [7]",
 };
 
-static char * smp_short_attached_device_type[] = {
+static const char * smp_short_attached_device_type[] = {
     "",         /* was "no " */
     "",         /* was "end" */
     "exp",

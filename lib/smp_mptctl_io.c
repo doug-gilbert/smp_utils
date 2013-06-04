@@ -39,8 +39,8 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT_DEV_MINOR 220
 #define MPT2_DEV_MINOR 221
 
-static const char null_sas_addr[8];
-static int mptcommand = MPTCOMMAND;
+static const char null_sas_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0, };
+static int mptcommand = (int)MPTCOMMAND;
 
 
 /* Part of interface to upper level. */
@@ -87,9 +87,9 @@ open_mpt_device(const char * dev_name, int verbose)
     } else if (fstat(res, &st) >= 0) {
         if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
             (MPT2_DEV_MINOR == minor(st.st_rdev)))
-            mptcommand = MPT2COMMAND;
+            mptcommand = (int)MPT2COMMAND;
         else
-            mptcommand = MPTCOMMAND;
+            mptcommand = (int)MPTCOMMAND;
     } else if (verbose)
         perror("open_mpt_device: stat failed");
     return res;
@@ -130,7 +130,7 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
         int CmdBlkSize;
 
         CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) +
-		     8;
+                     8;
         ShowBuf("Command Block Before: ", mpiBlkPtr, CmdBlkSize, 0);
 #endif
 
@@ -154,10 +154,10 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
                 pReply = (MPIDefaultReply_t *) mpiBlkPtr->replyFrameBufPtr;
                 if ((pReply) && (pReply->MsgLength > 0)) {
                         // >>>>> pReply->IOCStatus =
-			//	 le16_to_cpu(pReply->IOCStatus); <<<<
+                        //       le16_to_cpu(pReply->IOCStatus); <<<<
 
                         // ShowBuf("Reply Frame : ", pReply,
-			//	   pReply->MsgLength * 4, 0);
+                        //         pReply->MsgLength * 4, 0);
 
                         status = pReply->IOCStatus & MPI_IOCSTATUS_MASK;
 
@@ -202,7 +202,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         }
         numBytes = offsetof(SmpPassthroughRequest_t, SGL) +
                    (2 * sizeof(SGESimple64_t));
-        mpiBlkPtr = malloc(sizeof(mpiIoctlBlk_t) + numBytes);
+        mpiBlkPtr = (mpiIoctlBlk_t *)malloc(sizeof(mpiIoctlBlk_t) + numBytes);
         if (mpiBlkPtr == NULL)
                 goto err_out;
         memset(mpiBlkPtr, 0, sizeof(mpiIoctlBlk_t) + numBytes);
@@ -217,7 +217,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         mpiBlkPtr->dataOutSize = rresp->request_len - 4;
         mpiBlkPtr->dataOutBufPtr = (char *)rresp->request;
         mpiBlkPtr->dataInSize = rresp->max_response_len + 4;
-        mpiBlkPtr->dataInBufPtr = malloc(mpiBlkPtr->dataInSize);
+        mpiBlkPtr->dataInBufPtr = (char *)malloc(mpiBlkPtr->dataInSize);
         if(mpiBlkPtr->dataInBufPtr == NULL)
                 goto err_out;
         memset(mpiBlkPtr->dataInBufPtr, 0, mpiBlkPtr->dataInSize);
@@ -321,7 +321,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
                 ret = 0;
 
         memcpy(rresp->response, mpiBlkPtr->dataInBufPtr,
-	       rresp->max_response_len);
+               rresp->max_response_len);
         rresp->act_response_len = -1;
 
 err_out:
@@ -348,7 +348,7 @@ SmpTwoSGLsIoctl(int fd, int ioc_num)
         int  status;
         /* here is my hard coded expander sas address */
         unsigned char expanderSasAddr[] =
-			 {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
+                         {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;
@@ -434,7 +434,7 @@ SmpImmediateIoctl(int fd, int ioc_num)
         int  status;
         /* here is my hard coded expander sas address */
         unsigned char expanderSasAddr[] =
-			 {0x9C, 0x03, 0x00, 0x00, 0x60, 0x05, 0x06, 0x50};
+                         {0x9C, 0x03, 0x00, 0x00, 0x60, 0x05, 0x06, 0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;

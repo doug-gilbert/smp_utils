@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -206,7 +206,7 @@ extern const char * smp_lib_version();
 
 struct smp_val_name {
     int value;
-    char * name;
+    const char * name;
 };
 
 /* <<< General purpose (i.e. not SMP specific) utility functions >>> */

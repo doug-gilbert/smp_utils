@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.02 20111222";
+static const char * version_str = "1.03 20130604";
 
 static struct option long_options[] = {
     {"expected", 1, 0, 'E'},
@@ -141,7 +141,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
     int checked_hexlen = 0;
     unsigned int h;
     const char * lcp;
-    char * cp;
+    const char * cp;
     FILE * fp;
     char line[512];
     int off = 0;

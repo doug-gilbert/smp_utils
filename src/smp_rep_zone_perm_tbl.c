@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,19 +50,19 @@
  * its response.
  */
 
-static char * version_str = "1.05 20121217";
+static const char * version_str = "1.06 20130604";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
 
-static char * decode_rtype[] = {
+static const char * decode_rtype[] = {
         "current",
         "shadow",
         "saved",
         "default",
 };
 
-static char * decode_numzg[] = {
+static const char * decode_numzg[] = {
         "128",
         "256",
         "?",
