@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static char * version_str = "1.02 20111222";
+static const char * version_str = "1.03 20130604";
 
 static struct option long_options[] = {
     {"broadcast", 1, 0, 'b'},
@@ -246,6 +246,7 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
+    const char * ccp;
     int ret = 0;
 
     memset(smp_req, 0, sizeof smp_req);
@@ -328,9 +329,9 @@ main(int argc, char * argv[])
         }
     }
     if (0 == device_name[0]) {
-        cp = getenv("SMP_UTILS_DEVICE");
-        if (cp)
-            strncpy(device_name, cp, sizeof(device_name) - 1);
+        ccp = getenv("SMP_UTILS_DEVICE");
+        if (ccp)
+            strncpy(device_name, ccp, sizeof(device_name) - 1);
         else {
             fprintf(stderr, "missing device name on command line\n    [Could "
                     "use environment variable SMP_UTILS_DEVICE instead]\n");
@@ -347,9 +348,9 @@ main(int argc, char * argv[])
         }
     }
     if (0 == sa) {
-        cp = getenv("SMP_UTILS_SAS_ADDR");
-        if (cp) {
-           sa_ll = smp_get_llnum(cp);
+        ccp = getenv("SMP_UTILS_SAS_ADDR");
+        if (ccp) {
+           sa_ll = smp_get_llnum(ccp);
            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
@@ -388,10 +389,10 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             smp_req[8 + k] = n;
-            cp = strchr(zgl, ',');
-            if (NULL == cp)
+            ccp = strchr(zgl, ',');
+            if (NULL == ccp)
                 break;
-            zgl = cp + 1;
+            zgl = ccp + 1;
         }
         if (k > 255) {
             fprintf(stderr, "failed decoding --szg option, max "
@@ -507,8 +508,8 @@ main(int argc, char * argv[])
 
     }
     if (smp_resp[2]) {
-        cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Zoned broadcast result: %s\n", cp);
+        ccp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
+        fprintf(stderr, "Zoned broadcast result: %s\n", ccp);
         ret = smp_resp[2];
         goto err_out;
     }

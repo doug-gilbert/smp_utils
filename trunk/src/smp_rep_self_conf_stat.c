@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * outputs its response.
  */
 
-static char * version_str = "1.02 20111222";
+static const char * version_str = "1.03 20130604";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 

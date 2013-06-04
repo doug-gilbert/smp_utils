@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
  * The remaining write data (first..last register) is not moved.
  */
 
-static char * version_str = "1.09 20111222";
+static const char * version_str = "1.10 20130604";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
@@ -133,7 +133,7 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
     int in_len, k, j, m, off;
     unsigned int h;
     const char * lcp;
-    char * cp;
+    const char * cp;
     char line[1024];
 
     if ((NULL == inp) || (NULL == arr) || (NULL == arr_len))

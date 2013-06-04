@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Douglas Gilbert.
+ * Copyright (c) 2007-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * its response.
  */
 
-static char * version_str = "1.10 20121217";    /* sync with sas2r15 */
+static const char * version_str = "1.11 20130604";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -411,7 +411,7 @@ main(int argc, char * argv[])
         printf("  configuring: %d\n", !!(resp[8] & 0x2));
         printf("  zone enabled: %d\n", !!(resp[8] & 0x1));
         printf("  expander route table descriptor length: %d dwords\n",
-	       desc_len);
+               desc_len);
     }
     printf("  number of expander route table descriptors: %d\n", num_desc);
     printf("  first routed SAS address index: %d\n",

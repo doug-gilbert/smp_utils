@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * response.
  */
 
-static char * version_str = "1.05 20121217";
+static const char * version_str = "1.06 20130604";
 
 static struct option long_options[] = {
     {"disable", 0, 0, 'd'},

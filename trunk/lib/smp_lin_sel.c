@@ -51,7 +51,7 @@ smp_initiator_open(const char * device_name, int subvalue,
                    struct smp_target_obj * tobj, int verbose)
 {
     int force = 0;
-    char * cp;
+    const char * cp;
     int res, j;
 
     if ((NULL == tobj) || (NULL == device_name))

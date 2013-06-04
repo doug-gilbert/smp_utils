@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a ZONE LOCK function and outputs its response.
  */
 
-static char * version_str = "1.03 20111222";
+static const char * version_str = "1.04 20130604";
 
 static struct option long_options[] = {
     {"expected", 1, 0, 'E'},
@@ -127,7 +127,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
     int checked_hexlen = 0;
     unsigned int h;
     const char * lcp;
-    char * cp;
+    const char * ccp;
     FILE * fp;
     char line[512];
     int off = 0;
@@ -238,13 +238,13 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
     fclose(fp);
     return 0;
 astring:
-    cp = strchr(lcp + 1, *lcp);
-    if (NULL == cp) {
+    ccp = strchr(lcp + 1, *lcp);
+    if (NULL == ccp) {
         fprintf(stderr, "f2hex_arr: unterminated ASCII string on line "
                 "%d, starts: %s\n", j + 1, lcp);
         goto bad;
     }
-    k = (cp - lcp) - 1;
+    k = (ccp - lcp) - 1;
     if (k > 0) {
         if ((off + k) > max_arr_len) {
             fprintf(stderr, "f2hex_arr: array length exceeded\n");
@@ -302,6 +302,7 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
+    const char * ccp;
     int ret = 0;
 
     memset(password, 0, sizeof password);
@@ -391,9 +392,9 @@ main(int argc, char * argv[])
         }
     }
     if (0 == device_name[0]) {
-        cp = getenv("SMP_UTILS_DEVICE");
-        if (cp)
-            strncpy(device_name, cp, sizeof(device_name) - 1);
+        ccp = getenv("SMP_UTILS_DEVICE");
+        if (ccp)
+            strncpy(device_name, ccp, sizeof(device_name) - 1);
         else {
             fprintf(stderr, "missing device name on command line\n    [Could "
                     "use environment variable SMP_UTILS_DEVICE instead]\n");
@@ -410,9 +411,9 @@ main(int argc, char * argv[])
         }
     }
     if (0 == sa) {
-        cp = getenv("SMP_UTILS_SAS_ADDR");
-        if (cp) {
-           sa_ll = smp_get_llnum(cp);
+        ccp = getenv("SMP_UTILS_SAS_ADDR");
+        if (ccp) {
+           sa_ll = smp_get_llnum(ccp);
            if (-1LL == sa_ll) {
                 fprintf(stderr, "bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
@@ -538,8 +539,8 @@ main(int argc, char * argv[])
         goto err_out;
     }
     if (smp_resp[2]) {
-        cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Zone lock result: %s\n", cp);
+        ccp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
+        fprintf(stderr, "Zone lock result: %s\n", ccp);
         ret = smp_resp[2];
         if (smp_resp[8] | smp_resp[9] | smp_resp[10] | smp_resp[11]) {
             fprintf(stderr, "Active zone manager SAS address (hex): ");

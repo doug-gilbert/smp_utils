@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Douglas Gilbert.
+ * Copyright (c) 2006-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static char * version_str = "1.07 20111222";    /* spl2r01 */
+static const char * version_str = "1.08 20130604";    /* spl2r01 */
 
 static struct option long_options[] = {
     {"connect", 1, 0, 'c'},
