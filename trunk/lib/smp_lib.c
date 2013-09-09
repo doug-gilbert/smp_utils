@@ -151,7 +151,8 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_NO_PHYSICAL_PRESENCE, "No physical presence"},
     {SMP_FRES_SAVING_NOT_SUPPORTED, "Saving not supported"},
     {SMP_FRES_SOURCE_ZONE_GROUP, "Source zone group does not exist"},
-    {SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED, "Disable password not supported"},
+    {SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED, "Disabled password not supported"},
+    {SMP_FRES_INVALID_FIELD_IN_REQUEST, "Invalid field in SMP request"},
     {0x0, NULL},
 };
 
