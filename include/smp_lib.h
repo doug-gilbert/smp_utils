@@ -117,6 +117,7 @@ extern "C" {
 #define SMP_FRES_SAVING_NOT_SUPPORTED 0x27
 #define SMP_FRES_SOURCE_ZONE_GROUP 0x28
 #define SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED 0x29
+#define SMP_FRES_INVALID_FIELD_IN_REQUEST 0x2a
 
 /* Utilities can use these process status values for syntax errors and
    file (device node) problems (e.g. not found or permissions). Numbers

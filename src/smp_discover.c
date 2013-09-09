@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.41 20130604";    /* spl3r3 */
+static const char * version_str = "1.42 20130909";    /* spl3r4 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124

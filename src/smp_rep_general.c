@@ -49,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.23 20130604";    /* spl2r01 */
+static const char * version_str = "1.24 20130909";    /* spl3r04 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -373,6 +373,7 @@ main(int argc, char * argv[])
         /* following "externally" word added in SAS-2 */
         printf("  externally configurable route table: %d\n",
                !!(smp_resp[10] & 0x1));
+        printf("  initiates SSP close: %d\n", !!(smp_resp[11] & 0x1));
         if (smp_resp[12]) { /* assume naa-5 present */
             /* not in SAS-1; in SAS-1.1 and SAS-2 */
             printf("  enclosure logical identifier (hex): ");
@@ -382,6 +383,13 @@ main(int argc, char * argv[])
         }
         if ((0 == smp_resp[12]) && verbose)
             printf("  enclosure logical identifier <empty>\n");
+        k = (smp_resp[28] << 8) + smp_resp[29];
+        if (0 == k) {
+            if (verbose)
+                printf("  SSP maximum connect time unlimited\n");
+        } else
+            printf("  SSP maximum connect time limit: %d (100 usec units)\n",
+                   k);
         if (len < 36)
             goto err_out;
         printf("  STP bus inactivity timer: %d (unit: 100ms)\n",

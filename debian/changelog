@@ -2,7 +2,7 @@ smp-utils (0.98-0.1) unstable; urgency=low
 
   * switch binaries back to /usr/bin (or /usr/local/bin)
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Tue, 04 Jun 2013 12:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 09 Sep 2013 11:00:00 -0400
 
 smp-utils (0.97-0.1) unstable; urgency=low
 

@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.98 [20130604] [svn:r130]
+Changelog for smp_utils-0.98 [20130909] [svn:r131]
   - smp_discover, smp_discover_list: in 1 line summary use
     "U" instead of "T" (routing attribute) if "table to
     table supported" set in report general response
@@ -11,6 +11,8 @@ Changelog for smp_utils-0.98 [20130604] [svn:r130]
     - add pwr_dis_* fields (spl3r3)
   - smp_discover: '-mm' produces full output for each phy
   - smp_rep_broadcast: add broadcast type names
+  - smp_general: add initiates ssp close and ssp maximum
+    connect time limit fields (spl3r04)
   - change binary install from /usr/sbin to /usr/bin since
     sbin caused problems
   - examples folder script cleanup
