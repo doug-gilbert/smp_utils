@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.32 20130604";    /* spl3r3 */
+static const char * version_str = "1.33 20130912";    /* spl3r3 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -61,6 +61,7 @@ static const char * version_str = "1.32 20130604";    /* spl3r3 */
 static struct option long_options[] = {
         {"adn", no_argument, 0, 'A'},
         {"brief", no_argument, 0, 'b'},
+        {"cap", no_argument, 0, 'c'},
         {"descriptor", required_argument, 0, 'd'},
         {"filter", required_argument, 0, 'f'},
         {"help", no_argument, 0, 'h'},
@@ -83,6 +84,7 @@ static struct option long_options[] = {
 struct opts_t {
     int do_adn;
     int do_brief;
+    int do_cap_phy;
     int desc_type;
     int desc_type_given;
     int filter;
@@ -107,16 +109,15 @@ static void
 usage(void)
 {
     fprintf(stderr, "Usage: "
-          "smp_discover_list  [--adn] [--brief] [--descriptor=TY] "
-          "[--filter=FI]\n"
-          "                          [--help] [--hex] [--ignore] "
-          "[--interface=PARAMS]\n"
-          "                          [--num=NUM] [--one] [--phy=ID] "
-          "[--raw]\n"
-          "                          [--sa=SAS_ADDR] [--summary] "
-          "[--verbose]\n"
-          "                          [--version] [--zpi=FN] "
-          "<smp_device>[,<n>]\n");
+          "smp_discover_list  [--adn] [--brief] [--cap] [--descriptor=TY]\n"
+          "                          [--filter=FI] [--help] [--hex] "
+          "[--ignore]\n"
+          "                          [--interface=PARAMS] [--num=NUM] "
+          "[--one]\n"
+          "                          [--phy=ID] [--raw] [--sa=SAS_ADDR] "
+          "[--summary]\n"
+          "                          [--verbose] [--version] [--zpi=FN]\n"
+          "                          <smp_device>[,<n>]\n");
     fprintf(stderr,
           "  where:\n"
           "    --adn|-A             output attached device name in one "
@@ -124,6 +125,7 @@ usage(void)
           "                         phy mode (i.e. with --one)\n"
           "    --brief|-b           brief: less output, can be used "
           "multiple times\n"
+          "    --cap|-c             decode phy capabilities bits\n"
           "    --descriptor=TY|-d TY    descriptor type:\n"
           "                         0 -> long (as in DISCOVER); 1 -> "
           "short (24 byte)\n"
@@ -541,6 +543,49 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     return 0;
 }
 
+static const char * g_name[] = {"G1", "G2", "G3", "G4"};
+static const char * g_name_long[] =
+        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)"};
+
+static void
+decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
+{
+    int g14_byte, k, skip, g;
+    const char * cp;
+
+    printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
+           ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
+    g14_byte = (p_cap >> 16) & 0xff;
+    for (skip = 0, k = 3; k >= 0; --k) {
+        cp = op->verbose ? g_name_long[3 - k] : g_name[3 - k];
+        g = (g14_byte >> (k * 2)) & 0x3;
+        switch (g) {
+        case 0:
+            ++skip;
+            break;
+        case 1:
+            printf("    %s: with SSC", cp);
+            break;
+        case 2:
+            printf("    %s: without SSC", cp);
+            break;
+        case 3:
+            printf("    %s: with+without SSC", cp);
+            break;
+        default:
+            printf("    %s: g14_byte=0x%x, k=%d", cp, g14_byte, k);
+            break;
+        }
+        if ((2 == k) && (0 == skip)) {
+            printf("\n");
+            skip = 2;
+        }
+        if ((1 == k) && (skip < 2))
+            printf("\n");
+    }
+    printf("\n");
+}
+
 /* long format: as described in (full, single) DISCOVER response
  * Returns 0 for okay, else -1 . */
 static int
@@ -693,6 +738,8 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
             ui |= rp[76 + j];
         }
         printf("  programmed phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
@@ -700,6 +747,8 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
             ui |= rp[80 + j];
         }
         printf("  current phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
@@ -707,6 +756,8 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
             ui |= rp[84 + j];
         }
         printf("  attached phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
     }
     if (len > 95) {
         printf("  reason: %s\n",
@@ -1120,8 +1171,8 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "Abd:f:hHiI:ln:op:rs:SvVZ:", long_options,
-                        &option_index);
+        c = getopt_long(argc, argv, "Abcd:f:hHiI:ln:op:rs:SvVZ:",
+                        long_options, &option_index);
         if (c == -1)
             break;
 
@@ -1131,6 +1182,9 @@ main(int argc, char * argv[])
             break;
         case 'b':
             ++opts.do_brief;
+            break;
+        case 'c':
+            ++opts.do_cap_phy;
             break;
         case 'd':
            opts.desc_type = smp_get_num(optarg);

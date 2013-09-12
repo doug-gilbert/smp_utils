@@ -1,9 +1,9 @@
-.TH SMP_DISCOVER_LIST "8" "March 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "September 2013" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
 .B smp_discover_list
-[\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-descriptor=TY\fR]
+[\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-cap\fR] [\fI\-\-descriptor=TY\fR]
 [\fI\-\-filter=FI\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
 [\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR] [\fI\-\-one\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
@@ -46,6 +46,15 @@ is not available in the short format (e.g. \fI\-\-descriptor=1\fR).
 .TP
 \fB\-b\fR, \fB\-\-brief\fR
 reduce the decoded response output.
+.TP
+\fB\-c\fR, \fB\-\-cap\fR
+decode and print phy capabilities bits fields (see SNW-3 in draft). Each
+expander phy has three of these fields: programmed, current and attached.
+By default these fields are only printed out in hex, or not at all if
+the \fI\-\-brief\fR option is given or implied. Of the three the attached
+phy capability field is probably the most interesting. If the
+\fI\-\-verbose\fR option is given, then the various "G" identifiers are
+expanded (e.g. instead of "G4:" it prints "G4 (12 Gbps):").
 .TP
 \fB\-d\fR, \fB\-\-descriptor\fR=\fITY\fR
 set the "descriptor type" field in the request. When \fITY\fR is 0 then the
@@ -134,16 +143,16 @@ The header section outputs information found in the DISCOVER LIST response's
 header section.
 .PP
 For each descriptor in the DISCOVER LIST response, one line is output
-starting with "  phy  <n>:" where <n> is the phy identifier (and 
-they are origin zero). That is followed by the routing attribute represented 
-by a single letter which is either "D" for direct routing, "S" for 
-subtractive routing, "T" or "U". Both "T" and "U" imply table routing, the 
-difference is that if REPORT GENERAL indicates "table to table supported" 
+starting with "  phy  <n>:" where <n> is the phy identifier (and
+they are origin zero). That is followed by the routing attribute represented
+by a single letter which is either "D" for direct routing, "S" for
+subtractive routing, "T" or "U". Both "T" and "U" imply table routing, the
+difference is that if REPORT GENERAL indicates "table to table supported"
 then "U" is output to indicate that phy can be part of an enclosure
 .B universal
-port; otherwise "T" is used. Next comes the negotiated physical link rate 
-which is either "disabled", "reset problem" or "spinup hold". Other states 
-are mapped to "attached". This includes enabled phys with nothing connected 
+port; otherwise "T" is used. Next comes the negotiated physical link rate
+which is either "disabled", "reset problem" or "spinup hold". Other states
+are mapped to "attached". This includes enabled phys with nothing connected
 which appear as "attached:[0000000000000000:00]".
 .PP
 Information shown between the brackets is for the attached device. Phys that
@@ -171,7 +180,7 @@ for 'zoning enabled' is set) and a phy's zone group is other than zg 1
 then the phy's zone group is shown (e.g. "ZG:2").
 .PP
 If the \fI\-\-adn\fR option is given then after the attached SAS address
-and the attached device's phy identifier are output an extra field is 
+and the attached device's phy identifier are output an extra field is
 inserted containing the "attached device name" field. For a SAS disk this
 should be its target device name (in NAA\-5 format) and for a SATA disk its
 WWN (if provided, also in NAA\-5 format). Also when the \fI\-\-adn\fR option
