@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.42 20130909";    /* spl3r4 */
+static const char * version_str = "1.43 20130912";    /* spl3r4 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -62,6 +62,7 @@ static const char * version_str = "1.42 20130909";    /* spl3r4 */
 struct opts_t {
     int do_adn;
     int do_brief;
+    int do_cap_phy;
     int do_hex;
     int ign_zp;
     int do_list;
@@ -79,23 +80,24 @@ struct opts_t {
 };
 
 static struct option long_options[] = {
-        {"adn", 0, 0, 'A'},
-        {"brief", 0, 0, 'b'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"ignore", 0, 0, 'i'},
-        {"interface", 1, 0, 'I'},
-        {"list", 0, 0, 'l'},
-        {"multiple", 0, 0, 'm'},
-        {"my", 0, 0, 'M'},
-        {"num", 1, 0, 'n'},
-        {"phy", 1, 0, 'p'},
-        {"sa", 1, 0, 's'},
-        {"summary", 0, 0, 'S'},
-        {"raw", 0, 0, 'r'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
-        {"zero", 0, 0, 'z'},
+        {"adn", no_argument, 0, 'A'},
+        {"brief", no_argument, 0, 'b'},
+        {"cap", no_argument, 0, 'c'},
+        {"help", no_argument, 0, 'h'},
+        {"hex", no_argument, 0, 'H'},
+        {"ignore", no_argument, 0, 'i'},
+        {"interface", required_argument, 0, 'I'},
+        {"list", no_argument, 0, 'l'},
+        {"multiple", no_argument, 0, 'm'},
+        {"my", no_argument, 0, 'M'},
+        {"num", required_argument, 0, 'n'},
+        {"phy", required_argument, 0, 'p'},
+        {"sa", required_argument, 0, 's'},
+        {"summary", no_argument, 0, 'S'},
+        {"raw", no_argument, 0, 'r'},
+        {"verbose", no_argument, 0, 'v'},
+        {"version", no_argument, 0, 'V'},
+        {"zero", no_argument, 0, 'z'},
         {0, 0, 0, 0},
 };
 
@@ -104,7 +106,8 @@ static void
 usage(void)
 {
     fprintf(stderr, "Usage: "
-          "smp_discover [--adn] [--brief] [--help] [--hex] [--ignore]\n"
+          "smp_discover [--adn] [--brief] [--cap] [--help] [--hex] "
+          "[--ignore]\n"
           "                    [--interface=PARAMS] [--list] [--my] "
           "[--multiple]\n"
           "                    [--num=NUM] [--phy=ID] [--raw] "
@@ -118,6 +121,7 @@ usage(void)
           "                         phy mode (i.e. with --multiple)\n"
           "    --brief|-b           less output, can be used multiple "
           "times\n"
+          "    --cap|-c             decode phy capabilities bits\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --ignore|-i          sets the Ignore Zone Group bit; "
@@ -648,6 +652,49 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
     return 0;
 }
 
+static const char * g_name[] = {"G1", "G2", "G3", "G4"};
+static const char * g_name_long[] =
+        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)"};
+
+static void
+decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
+{
+    int g14_byte, k, skip, g;
+    const char * cp;
+
+    printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
+           ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
+    g14_byte = (p_cap >> 16) & 0xff;
+    for (skip = 0, k = 3; k >= 0; --k) {
+        cp = op->verbose ? g_name_long[3 - k] : g_name[3 - k];
+        g = (g14_byte >> (k * 2)) & 0x3;
+        switch (g) {
+        case 0:
+            ++skip;
+            break;
+        case 1:
+            printf("    %s: with SSC", cp);
+            break;
+        case 2:
+            printf("    %s: without SSC", cp);
+            break;
+        case 3:
+            printf("    %s: with+without SSC", cp);
+            break;
+        default:
+            printf("    %s: g14_byte=0x%x, k=%d", cp, g14_byte, k);
+            break;
+        }
+        if ((2 == k) && (0 == skip)) {
+            printf("\n");
+            skip = 2;
+        }
+        if ((1 == k) && (skip < 2))
+            printf("\n");
+    }
+    printf("\n");
+}
+
 static int
 print_single(const unsigned char * rp, int len, int just1,
              const struct opts_t * op)
@@ -799,6 +846,8 @@ print_single(const unsigned char * rp, int len, int just1,
             ui |= rp[76 + j];
         }
         printf("  programmed phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
@@ -806,6 +855,8 @@ print_single(const unsigned char * rp, int len, int just1,
             ui |= rp[80 + j];
         }
         printf("  current phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
         ui = 0;
         for (j = 0; j < 4; ++j) {
             if (j > 0)
@@ -813,6 +864,8 @@ print_single(const unsigned char * rp, int len, int just1,
             ui |= rp[84 + j];
         }
         printf("  attached phy capabilities: 0x%x\n", ui);
+        if (op->do_cap_phy)
+            decode_phy_cap(ui, op);
     }
     if (len > 95) {
         printf("  reason: %s\n",
@@ -1164,7 +1217,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "AbhHiI:lmMn:p:rs:SvVz", long_options,
+        c = getopt_long(argc, argv, "AbchHiI:lmMn:p:rs:SvVz", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -1175,6 +1228,9 @@ main(int argc, char * argv[])
             break;
         case 'b':
             ++opts.do_brief;
+            break;
+        case 'c':
+            ++opts.do_cap_phy;
             break;
         case 'h':
         case '?':

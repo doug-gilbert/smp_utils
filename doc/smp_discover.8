@@ -1,13 +1,13 @@
-.TH SMP_DISCOVER "8" "March 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER "8" "September 2013" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
 .B smp_discover
-[\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
-[\fI\-\-ignore\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-list\fR]
-[\fI\-\-multiple\fR] [\fI\-\-my\fR] [\fI\-\-num=NUM\fR] [\fI\-\-phy=ID\fR]
-[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-summary\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
+[\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-cap\fR] [\fI\-\-help\fR]
+[\fI\-\-hex\fR] [\fI\-\-ignore\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-list\fR] [\fI\-\-multiple\fR] [\fI\-\-my\fR] [\fI\-\-num=NUM\fR]
+[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-summary\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
@@ -41,6 +41,15 @@ reduce the decoded response output. If used twice will exit if there is no
 attached device (after outputting that). When used with \fI\-\-multiple\fR,
 unattached phys are not listed; when used twice, trims attached phys
 output.
+.TP
+\fB\-c\fR, \fB\-\-cap\fR
+decode and print phy capabilities bits fields (see SNW-3 in draft). Each
+expander phy has three of these fields: programmed, current and attached.
+By default these fields are only printed out in hex, or not at all if
+the \fI\-\-brief\fR option is given or implied. Of the three the attached
+phy capability field is probably the most interesting. If the
+\fI\-\-verbose\fR option is given, then the various "G" identifiers are
+expanded (e.g. instead of "G4:" it prints "G4 (12 Gbps):").
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -174,7 +183,7 @@ line length reasonable.
 .SH NOTES
 In SAS\-2 and later both the DISCOVER and DISCOVER LIST functions are
 available. The DISCOVER LIST function should be favoured for several
-reasons: its response can hold up to 40 descriptors each describing the 
+reasons: its response can hold up to 40 descriptors each describing the
 state of one expander phy. The vast majority of expander chips on the market
 support 36 phys or less so one DISCOVER LIST response will summarize the
 states of all its phys. With the DISCOVER function only one expander phy's
