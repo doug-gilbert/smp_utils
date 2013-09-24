@@ -12,10 +12,9 @@ creating a file with a name like local_share.conf in the
 /usr/local/etc/man.d/ directory and placing this line in it:
     MANPATH /usr/local/share/man
 
-This package is new in FreeBSD 9.0 and a "ports" entry has only recently
-been added to build and install it. In the absence of a "ports" entry for
-smp_utils, /usr/ports/sysutils/sg3_utils could be used as a template as
-it is a closely related package.
+This package was too new to be included in the "ports" collection of FreeBSD
+9.0 RELEASE. This package can be found in FreeBSD 9.1 RELEASE ports
+collection in the /usr/ports/sysutils/smp_utils directory .
 
 
 Device names
@@ -34,4 +33,4 @@ supports the CAM SAS SMP pass-through.
 
 
 Douglas Gilbert
-3rd February 2012
+19th September 2013
