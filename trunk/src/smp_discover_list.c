@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.33 20130912";    /* spl3r3 */
+static const char * version_str = "1.34 20130919";    /* spl3r3 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -550,11 +550,12 @@ static const char * g_name_long[] =
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
-    int g14_byte, k, skip, g;
+    int g14_byte, k, skip, g, prev_nl;
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
            ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
+    prev_nl = 1;
     g14_byte = (p_cap >> 16) & 0xff;
     for (skip = 0, k = 3; k >= 0; --k) {
         cp = op->verbose ? g_name_long[3 - k] : g_name[3 - k];
@@ -565,25 +566,33 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             break;
         case 1:
             printf("    %s: with SSC", cp);
+            prev_nl = 0;
             break;
         case 2:
             printf("    %s: without SSC", cp);
+            prev_nl = 0;
             break;
         case 3:
             printf("    %s: with+without SSC", cp);
+            prev_nl = 0;
             break;
         default:
             printf("    %s: g14_byte=0x%x, k=%d", cp, g14_byte, k);
+            prev_nl = 0;
             break;
         }
         if ((2 == k) && (0 == skip)) {
             printf("\n");
             skip = 2;
+            prev_nl = 1;
         }
-        if ((1 == k) && (skip < 2))
+        if ((1 == k) && (skip < 2)) {
             printf("\n");
+            prev_nl = 1;
+        }
     }
-    printf("\n");
+    if (! prev_nl)
+        printf("\n");
 }
 
 /* long format: as described in (full, single) DISCOVER response
@@ -723,7 +732,7 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
         if (len < 76)
             return 0;
         printf("  self-configuration status: %d\n", rp[64]);
-        printf("  self-configuration level completed: %d\n", rp[65]);
+        printf("  self-configuration levels completed: %d\n", rp[65]);
         ull = 0;
         for (j = 0; j < 8; ++j) {
             if (j > 0)
