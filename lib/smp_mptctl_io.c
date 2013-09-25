@@ -1,4 +1,12 @@
+/* This is a glue interface between the more generic smp_utils code
+ * and LSI-specific code in Linux. The code in this file above the
+ * "Copyright 2000-2002 LSI Logic" banner line can be consider to be
+ * covered by the (Free)BSD license used by the rest of smp_utils.
+ */
+
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -38,6 +46,7 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT_DEV_MAJOR 10
 #define MPT_DEV_MINOR 220
 #define MPT2_DEV_MINOR 221
+#define MPT3_DEV_MINOR 222
 
 static const char null_sas_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0, };
 static int mptcommand = (int)MPTCOMMAND;
@@ -56,19 +65,21 @@ chk_mpt_device(const char * dev_name, int verbose)
     }
     if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev))) {
         if ((MPT_DEV_MINOR == minor(st.st_rdev)) ||
-            (MPT2_DEV_MINOR == minor(st.st_rdev)))
+            (MPT2_DEV_MINOR == minor(st.st_rdev)) ||
+            (MPT3_DEV_MINOR == minor(st.st_rdev)))
             return 1;
     }
     if (verbose) {
         if (S_ISCHR(st.st_mode))
             fprintf(stderr, "chk_mpt_device: wanted char device "
-                    "major,minor=%d,%d-%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
-                    MPT_DEV_MINOR, MPT2_DEV_MINOR, major(st.st_rdev),
-                    minor(st.st_rdev));
+                    "major,minor=%d,[%d,%d,%d]\n    got=%d,%d\n",
+                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR,
+                    MPT3_DEV_MINOR, major(st.st_rdev), minor(st.st_rdev));
         else
-            fprintf(stderr, "chk_mpt_device: wanted char device "
-                    "major,minor=%d,%d-%d\n    but didn't get char device\n",
-                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR);
+            fprintf(stderr, "chk_mpt_device: wanted char device major,minor"
+                    "=%d,[%d,%d,%d]\n    but didn't get char device\n",
+                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR,
+                    MPT3_DEV_MINOR);
     }
     return 0;
 }
@@ -86,7 +97,8 @@ open_mpt_device(const char * dev_name, int verbose)
             perror("open_mpt_device failed");
     } else if (fstat(res, &st) >= 0) {
         if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
-            (MPT2_DEV_MINOR == minor(st.st_rdev)))
+            ((MPT2_DEV_MINOR == minor(st.st_rdev)) ||
+             (MPT3_DEV_MINOR == minor(st.st_rdev))))
             mptcommand = (int)MPT2COMMAND;
         else
             mptcommand = (int)MPTCOMMAND;
@@ -228,7 +240,10 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         /* PassthroughFlags
          * Bit7: 0=two SGLs 1=Payload returned in Reply
          */
-        memset(smpReq, 0, sizeof(smpReq));
+        /* >>> memo LSI: bug fix on following line's 3rd argument (thanks
+         * to clang compiler) */
+        memset(smpReq, 0, sizeof(*smpReq));
+
         smpReq->RequestDataLength = rresp->request_len - 4; // <<<<<<<<<<<< ??
         smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
         ucp = (unsigned char *)&smpReq->SASAddress;
