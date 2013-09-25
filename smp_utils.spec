@@ -80,7 +80,7 @@ fi
 
 
 %changelog
-* Thu Sep 12 2013 - dgilbert at interlog dot com
+* Wed Sep 25 2013 - dgilbert at interlog dot com
 - put execs back in /usr/bin
   * smp_utils-0.98
 * Fri Jan 20 2012 - dgilbert at interlog dot com
