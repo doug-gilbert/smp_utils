@@ -41,7 +41,7 @@ fi
 if [ $2 ] ; then
     PERMISSION_FILE="$2"
 else
-    PERMISSION_FILE="permf_8i9t.txt"
+    PERMISSION_FILE="permf_8i9i.txt"
 fi
 
 # the zone phy information file name is either the third argument, or
