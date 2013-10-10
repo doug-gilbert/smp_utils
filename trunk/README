@@ -11,10 +11,12 @@ README.freebsd and for Solaris see README.solaris .
 See COVERAGE file for more information about the coverage of various
 SMP functions.
 
-Each utility in the smp_utils package has a corresponding man page.
-Additionally there is a 'smp_utils' man page that contains common
-information, including options used by most or all utilities plus
-the various exit status values.
+Each utility in the smp_utils package has a corresponding man page. These
+are found in the doc directory. Additionally there is 'smp_utils' man page
+that contains common information, including options used by most or all
+utilities plus the various exit status values. There is also a Linux
+specific 'bsg_sas_smp.txt' file that discusses the use of the bsg driver
+to send SMP requests.
 
 There are examples of setting up and disabling zoning in the examples
 directory.
@@ -35,4 +37,4 @@ the SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-25th September 2013
+9th October 2013

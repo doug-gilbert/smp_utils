@@ -18,7 +18,7 @@ the expander will restore the previous settings **.
 The zoning_ex.sh script is relatively generic with the tailoring to
 a set of zone permissions and mapping of expander phys to zone groups
 being done by these two files in this directory:
-    permf_8i9t.txt  ***
+    permf_8i9i.txt  ***
     pconf_2i2t.txt
 or, alternatively the permission file and the phy info file can be given
 on the script command line (following the expander device node name).
@@ -32,9 +32,9 @@ REPORT ZONE PERMISSION TABLE function. After zoning was set up on the
 author's equipment, the smp_rep_zone_perm_tbl utility was called twice,
 the second time with the --nocomma option, and the output placed in
 these files:
-    rep_permf_8i9t.txt
-    rep_nocom_permf_8i9t.txt
-Note that the input permission file (i.e. permf_8i9t.txt) was formatted
+    rep_permf_8i9i.txt
+    rep_nocom_permf_8i9i.txt
+Note that the input permission file (i.e. permf_8i9i.txt) was formatted
 as if there are only 128 zone groups but the output shows there are
 actually 256 zone groups. The expander obviously can cope with this. Also
 the smp_rep_zone_perm_tbl utility was called without --multiple so less
@@ -77,7 +77,7 @@ command.
       def_permf.txt
       def_pconf.txt
 
-*** The permf_8i9t.txt assumes an expander that does not do the descriptor
+*** The permf_8i9i.txt assumes an expander that does not do the descriptor
     transpose discussed in the t10 annex example above. This should not
     cause a problem on an expander that does perform the descriptor
     transpose.
