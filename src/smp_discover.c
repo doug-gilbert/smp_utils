@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.44 20130919";    /* spl3r4 */
+static const char * version_str = "1.45 20140426";    /* spl3r6g */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -255,7 +255,7 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
 
 static const char * smp_attached_device_type[] = {
     "no device attached",
-    "end device",
+    "SAS or SATA device",         /* was 'end device' */
     "expander device",            /* was 'edge expander' in SAS-1.1 */
     "expander device (fanout)",   /* marked as obsolete in SAS-2.0 */
     "reserved [4]",
