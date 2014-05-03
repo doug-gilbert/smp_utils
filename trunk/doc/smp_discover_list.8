@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER_LIST "8" "September 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "April 2014" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
@@ -67,9 +67,9 @@ is placed in the descriptors of this function's response.
 set the filter field in the request. When \fIFI\fR is 0 (default) fetch
 descriptors for all phys. When \fIFI\fR is 1 only fetch descriptors for
 phys attached to (other) expanders. When \fIFI\fR is 2 only fetch
-descriptors for phys attached to expanders or end devices. When \fIFI\fR
-is 1 or 2, expander phys that would yield "phy vacant" (indicating they
-are hidden by zoning) are filtered out.
+descriptors for phys attached to expanders, SAS or SATA devices. When
+\fIFI\fR is 1 or 2, expander phys that would yield "phy vacant" (indicating
+they are hidden by zoning) are filtered out.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -159,15 +159,16 @@ Information shown between the brackets is for the attached device. Phys that
 are connected display something like: "attached:[5000c50000520a2a:01 " where
 the first number is the attached SAS address (in hex) and the second number
 is the attached device's phy identifier. If the attached device type is other
-than an end device then one of these abbreviations is output: "exp" (for
-expander), "fex" (for fanout expander) or "res" (for unknown attached device
-type). If a phy is flagged as "virtual" then the letter "V" appears next.
-Next are the protocols supported by the attached device which are shown
-as "i(<list>)" for initiator protocols and/or "t(<list>)" for target
-protocols. The <list> is made up of "PORT_SEL", "SSP", "STP", "SMP"
-and "SATA" with "+" used as a separator. For example a SAS host adapter will
-most likely appear as: "i(SSP+STP+SMP)". This completes the information
-about the attached phy, hence the closing right bracket.
+than an SAS or SATA device then one of these abbreviations is
+output: "exp" (for expander), "fex" (for fanout expander) or "res" (for
+unknown attached device type). If a phy is flagged as "virtual" then the
+letter "V" appears next. Next are the protocols supported by the attached
+device which are shown as "i(<list>)" for initiator protocols
+and/or "t(<list>)" for target protocols. The <list> is made up
+of "PORT_SEL", "SSP", "STP", "SMP" and "SATA" with "+" used as a separator.
+For example a SAS host adapter will most likely appear as: "i(SSP+STP+SMP)".
+This completes the information about the attached phy, hence the closing
+right bracket.
 .PP
 If appropriate, the negotiated physical link rate is shown in gigabits per
 second. Here is an example of a line for expander phy identifier 11 connected
@@ -202,7 +203,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2013 Douglas Gilbert
+Copyright \(co 2006\-2014 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "October 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_UTILS "8" "April 2014" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_* \- invoke a SAS Serial Management Protocol (SMP) function
 .SH SYNOPSIS
@@ -224,7 +224,7 @@ the REPORT GENERAL response) and the associated phys have the table routing
 attribute (in the DISCOVER response). Enclosure
 .B universal
 ports were introduced in SAS\-2 and have few restrictions when used to
-interconnect expanders or connect end devices. An enclosure
+interconnect expanders or connect SAS or SATA devices. An enclosure
 .B out
 port is one in which the "table to table supported" attribute is clear and
 the associated phys have the table routing attribute. An enclosure
@@ -277,7 +277,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2013 Douglas Gilbert
+Copyright \(co 2006\-2014 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

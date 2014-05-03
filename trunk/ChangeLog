@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.98 [20131009] [svn:r135]
+Changelog for smp_utils-0.98 [20140426] [svn:r136]
   - smp_discover, smp_discover_list: in 1 line summary use
     "U" instead of "T" (routing attribute) if "table to
     table supported" set in report general response
@@ -10,6 +10,7 @@ Changelog for smp_utils-0.98 [20131009] [svn:r135]
     - add attached persistent capable bit (spl3r2)
     - add pwr_dis_* fields (spl3r3)
     - add '--cap' option to decode phy capabilities
+    - change 'end device' to 'SAS or SATA device'
   - smp_discover: '-mm' produces full output for each phy
   - smp_rep_broadcast: add broadcast type names
   - smp_general: add initiates ssp close and ssp maximum
