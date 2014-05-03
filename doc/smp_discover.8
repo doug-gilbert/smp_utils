@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER "8" "September 2013" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER "8" "April 2014" "smp_utils\-0.98" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
@@ -150,7 +150,7 @@ Phys that are connected display something
 like: "attached:[5000c50000520a2a:01 " where the first number is the
 attached SAS address (in hex) and the second number is the attached
 device's phy identifier. If the attached device type is other
-than an end device then one of these abbreviations is
+than a SAS or SATA device then one of these abbreviations is
 output: "exp" (for expander), "fex" (for fanout
 expander) or "res" (for unknown attached device type). If a phy is
 flagged as "virtual" then the letter "V" appears next. Next are the
@@ -193,13 +193,16 @@ function are its "phy filter" and "descriptor type" function request fields.
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html
 .SH CONFORMING TO
 The SMP DISCOVER function was introduced in SAS\-1, with small additions
-in SAS\-1.1 . There have been a large number of additions in SAS\-2 .
+in SAS\-1.1 . There were a large number of additions in SAS\-2 . After
+SAS\-2 the protocol sections of SAS were split into another document
+series known as SPL. Now SPL and SPL\-2 are standards and SPL\-3 is in
+the draft stage.
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2013 Douglas Gilbert
+Copyright \(co 2006\-2014 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

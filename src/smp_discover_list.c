@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
  */
 
-static const char * version_str = "1.34 20130919";    /* spl3r3 */
+static const char * version_str = "1.35 20140426";    /* spl3r6g */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -134,7 +134,7 @@ usage(void)
           "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
           "expander\n"
           "                         attached; 2 -> expander "
-          "or end device\n"
+          "or SAS device\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --ignore|-i          sets the Ignore Zone Group bit; "
@@ -266,7 +266,7 @@ has_table2table_routing(struct smp_target_obj * top,
 
 static const char * smp_attached_device_type[] = {
     "no device attached",
-    "end device",
+    "SAS or SATA device",         /* used to be called "end device" */
     "expander device",            /* was 'edge expander' in SAS-1.1 */
     "expander device (fanout)",   /* marked as obsolete in SAS-2.0 */
     "reserved [4]",
