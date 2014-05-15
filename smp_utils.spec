@@ -80,8 +80,8 @@ fi
 
 
 %changelog
-* Sat Apr 26 2014 - dgilbert at interlog dot com
-- put execs back in /usr/bin
+* Thu May 15 2014 - dgilbert at interlog dot com
+- put execs back in /usr/bin, add aac interface
   * smp_utils-0.98
 * Fri Jan 20 2012 - dgilbert at interlog dot com
 - change to ./configure style build, put execs in /usr/sbin

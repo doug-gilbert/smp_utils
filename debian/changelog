@@ -1,8 +1,8 @@
 smp-utils (0.98-0.1) unstable; urgency=low
 
-  * switch binaries back to /usr/bin (or /usr/local/bin)
+  * switch binaries back to /usr/bin (or /usr/local/bin); add aac interface
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Sat, 26 Apr 2014 23:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Thu, 15 May 2014 15:00:00 +0200
 
 smp-utils (0.97-0.1) unstable; urgency=low
 
