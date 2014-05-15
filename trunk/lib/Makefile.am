@@ -5,7 +5,8 @@ libsmputils1_la_SOURCES = \
 	smp_lib.c \
 	smp_lin_bsg.c \
 	smp_lin_sel.c \
-	smp_mptctl_io.c
+	smp_mptctl_io.c \
+	smp_aac_io.c
 
 EXTRA_libsmputils1_la_SOURCES = \
 	smp_dummy.c
