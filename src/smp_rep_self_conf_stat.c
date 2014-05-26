@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 Douglas Gilbert.
+ * Copyright (c) 2011-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * outputs its response.
  */
 
-static const char * version_str = "1.03 20130604";
+static const char * version_str = "1.04 20140526";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
@@ -76,7 +76,7 @@ usage(void)
     fprintf(stderr, "Usage: "
           "smp_rep_self_conf_stat [--brief] [--help] [--hex] [--index=SDI]\n"
           "                              [--interface=PARAMS] [--last] "
-          "[--one] [raw]\n"
+          "[--one] [--raw]\n"
           "                              [--sa=SAS_ADDR] [--verbose] "
           "[--version]\n"
           "                              SMP_DEVICE[,N]\n"
