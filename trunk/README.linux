@@ -32,7 +32,7 @@ Alternatively MPT Fusion HBAs can use the mpt*sas driver's interface
 whose device node has the form "/dev/mptctl[,N]", "/dev/mpt2ctl[,N]"
 or "/dev/mpt3ctl[,N]" depending on the SAS generation of the HBA.
 
-For Adaptec/PMC SAS RAID controllers that use the Linux aacraid driver
+For Adaptec/PMC SAS RAID controllers that use the Linux aacraid driver,
 the bsg interface is not available. Their pass-through has device node
 names of the form /dev/aac[N[,E_ID]] where "N" is the raid controller
 number (typically 0) and "E_ID" is the expander identifier (typically 0).
@@ -41,4 +41,4 @@ RAID controller with one attached expander, "/dev/aac" should access it.
 
 
 Douglas Gilbert
-15th May 2014
+26th May 2014

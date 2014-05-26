@@ -48,11 +48,11 @@
  *
  * This utility issues a DISCOVER function and outputs its response.
  *
- * Defined in SAS-2 (most recent draft sas2r16.pdf) and SPL which defines
- * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
+ * First defined in SAS-1. From and including SAS-2.1 this function is
+ * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.45 20140426";    /* spl3r6g */
+static const char * version_str = "1.46 20140526";    /* spl3r07 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -108,8 +108,8 @@ usage(void)
     fprintf(stderr, "Usage: "
           "smp_discover [--adn] [--brief] [--cap] [--help] [--hex] "
           "[--ignore]\n"
-          "                    [--interface=PARAMS] [--list] [--my] "
-          "[--multiple]\n"
+          "                    [--interface=PARAMS] [--list] "
+          "[--multiple] [--my]\n"
           "                    [--num=NUM] [--phy=ID] [--raw] "
           "[--sa=SAS_ADDR]\n"
           "                    [--summary] [--verbose] [--version] "
