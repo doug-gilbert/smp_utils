@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static const char * version_str = "1.17 20130604";
+static const char * version_str = "1.18 20140526";
 
 static struct option long_options[] = {
     {"attached", required_argument, 0, 'a'},
@@ -110,12 +110,6 @@ usage(void)
           "                             11->12 Gbps)\n"
           "    --min=MI|-m MI           programmable minimum physical link "
           "speed\n"
-          "    --sas_pa=CO|-q CO        Enable SAS Partial field; CO: "
-          "0->leave (def)\n"
-          "                             1->manage (enable), 2->disable\n"
-          "    --sas_sl=CO|-l CO        Enable Slumber Partial field\n"
-          "    --sata_pa=CO|-Q CO       Enable SATA Partial field\n"
-          "    --sata_sl=CO|-L CO       Enable SATA Slumber field\n"
           "    --op=OP|-o OP            OP (operation) is a number or "
           "abbreviation.\n"
           "                             Default: 0 (nop). See below\n"
@@ -132,6 +126,12 @@ usage(void)
           "Depending on\n"
           "                                 the interface, may not be "
           "needed\n"
+          "    --sas_pa=CO|-q CO        Enable SAS Partial field; CO: "
+          "0->leave (def)\n"
+          "                             1->manage (enable), 2->disable\n"
+          "    --sas_sl=CO|-l CO        Enable Slumber Partial field\n"
+          "    --sata_pa=CO|-Q CO       Enable SATA Partial field\n"
+          "    --sata_sl=CO|-L CO       Enable SATA Slumber field\n"
           "    --verbose|-v             increase verbosity\n"
           "    --version|-V             print version string and exit\n\n"
           "Performs a SMP PHY CONTROL function. Operation codes (OP): "

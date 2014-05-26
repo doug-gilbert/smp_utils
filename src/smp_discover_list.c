@@ -48,11 +48,11 @@
  *
  * This utility issues a DISCOVER LIST function and outputs its response.
  *
- * Defined in SAS-2 (most recent draft sas2r16.pdf) and SPL which defines
- * the upper layers of SAS-2.1 . The most recent SPL draft is spl-r07.pdf .
+ * First defined in SAS-2. From and including SAS-2.1 this function is
+ * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.35 20140426";    /* spl3r6g */
+static const char * version_str = "1.35 20140526";    /* spl3r07 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8

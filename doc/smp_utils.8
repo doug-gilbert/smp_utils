@@ -75,7 +75,7 @@ to specify the SAS address of the SMP target.
 .TP
 \fBsgv4\fR (\fBsg\fR)
 This interface is more generic and supported by several SAS HBA drivers
-including mptsas (and mpt2sas). It was introduced in the linux 2.6.24
+including mptsas (and mpt2sas). It was introduced in the Linux 2.6.24
 kernel. The SMP functions are passed to the kernel via the bsg driver using
 a format known as "SCSI Generic Version 4" which gives this interface its
 name: "sgv4" or just "sg". The SAS transport layer within the SCSI
@@ -112,7 +112,7 @@ environment variable is checked and if present its contents are used as the
 SAS address. SAS addresses are usually given in hex indicated by a
 leading '0x' or trailing 'h'.
 .PP
-If either or both environment variables and the coresponding command line
+If either or both environment variables and the corresponding command line
 options are given, then the command line options take precedence.
 .SH COMMON OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
@@ -256,19 +256,19 @@ port.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html .
 .SH CONFORMING TO
-SAS has multiple generations. The first three generations are approved
-standards: the original SAS (ANSI INCITS 376\-2003), SAS 1.1 (INCITS
-417\-2006) and SAS\-2 (ANSI INCITS 457\-2010) . SAS\-2.1 technical work is
-complete and it has been split into two documents, the one of interest is
-called the SAS Protocol Layer (SPL ANSI INCITS 476\-2011). The draft just
-prior to that standard is spl\-r07.pdf (see section 9.4.3 for SMP functions).
-Technical work on SAS\-2 is almost complete with the SMP functions defined
-in spl2r04c.pdf section 9.4.3. Work has commenced on SPL\-3 and the most
-recent draft is spl3r04.pdf. To avoid confusion, the multiple generations of
-SAS will be referred to in these man pages as SAS 1, 1.1, 2, 2.1 (SPL) and
-3 (SPL\-2 and SPL\-3). Roughly speaking SAS\-1 runs at 3 Gbps, SAS\-2 at 6
-Gbps and SAS\-3 at 12 Gbps. Drafts, including those just prior to
-standardization can be found at the http://www.t10.org site. INCITS policy
+SAS has multiple generations. The early standards are: the original
+SAS (ANSI INCITS 376\-2003), SAS 1.1 (INCITS 417\-2006) and SAS\-2 (ANSI
+INCITS 457\-2010) . SAS\-2.1 work was split into an electrical and physical
+layers document (standardized as SAS\-2.1 ANSI INCITS 478\-2011) with the
+upper level layers placed in a document called the SAS Protocol Layer and
+it was standardized as SPL ANSI INCITS 476\-2011. Next came SPL\-2 which
+was standardized as SPL\-2 ANSI INCITS 505\-2013. SPL\-3 is near
+standardization and its most recent draft is spl3r07.pdf. To avoid
+confusion, the multiple generations of SAS will be referred to in these man
+pages as SAS 1, 1.1, 2, 2.1 (SPL) and 3 (SPL\-2 and SPL\-3). Roughly
+speaking SAS\-1 runs at 3 Gbps, SAS\-2 at 6 Gbps and SAS\-3 at 12 Gbps.
+Drafts, including those just prior to standardization can be found at the
+http://www.t10.org site (e.g. spl\-r07.pdf and spl2r04c.pdf). INCITS policy
 now requires a registration to view these drafts, a break from t10.org
 tradition.
 .PP

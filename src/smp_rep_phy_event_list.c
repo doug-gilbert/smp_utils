@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 Douglas Gilbert.
+ * Copyright (c) 2011-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -133,9 +133,10 @@ usage(void)
           "[--help]\n"
           "                              [--hex] [--index=IN] "
           "[--interface=PARAMS]\n"
-          "                              [--long] [--raw] [--sa=SAS_ADDR] "
-          "[--verbose]\n"
-          "                              [--version] SMP_DEVICE[,N]\n"
+          "                              [--long] [--nonz] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                              [--verbose] [--version] "
+          "SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --desc|-d            show descriptor number in output\n"
           "    --enumerate|-e       enumerate phy event source names, "

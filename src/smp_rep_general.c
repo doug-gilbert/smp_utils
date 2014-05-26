@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.24 20130909";    /* spl3r04 */
+static const char * version_str = "1.25 20140526";    /* spl3r04 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -75,7 +75,7 @@ usage(void)
           "smp_rep_general [--brief] [--changecount] [--help] [--hex]\n"
           "                       [--interface=PARAMS] [--raw] "
           "[--sa=SAS_ADDR]\n"
-          "                       [--verbose] [--version] [--zero]"
+          "                       [--verbose] [--version] [--zero] "
           "SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --brief|-b           brief report, only important settings\n"
