@@ -1,4 +1,4 @@
-AC_INIT(smp_utils, 0.98, dgilbert@interlog.com)
+AC_INIT(smp_utils, 0.99, dgilbert@interlog.com)
 
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
