@@ -1,12 +1,12 @@
-.TH SMP_DISCOVER_LIST "8" "April 2014" "smp_utils\-0.98" SMP_UTILS
+.TH SMP_DISCOVER_LIST "8" "September 2014" "smp_utils\-0.99" SMP_UTILS
 .SH NAME
 smp_discover_list \- invoke DISCOVER LIST SMP function
 .SH SYNOPSIS
 .B smp_discover_list
 [\fI\-\-adn\fR] [\fI\-\-brief\fR] [\fI\-\-cap\fR] [\fI\-\-descriptor=TY\fR]
-[\fI\-\-filter=FI\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-ignore\fR]
-[\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR] [\fI\-\-one\fR]
-[\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-dsn\fR] [\fI\-\-filter=FI\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-ignore\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-num=NUM\fR]
+[\fI\-\-one\fR] [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-summary\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
 [\fI\-\-zpi=FN\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
@@ -62,6 +62,16 @@ set the "descriptor type" field in the request. When \fITY\fR is 0 then the
 field) is placed in the descriptors of this function's response. When
 \fITY\fR is 1 the short format (i.e. 24 byte per descriptor) information
 is placed in the descriptors of this function's response.
+.TP
+\fB\-D\fR, \fB\-\-dsn\fR
+outputs the device slot number at the end of each summary line. In summary
+mode one line is output per expander phy. It is output in the
+form "dsn=<val>" where <val> is decimal in the range from 0 to 254 inclusive.
+It is not output if it is not available or has the value 255. The device
+slot number is not available in short format, so with this option in summary
+mode, if the \fI\-\-descriptor=1\fR is not given, then the longer format is
+chosen. An expander typically contains a SES device which yields device slot
+numbers in its Additional Element Status diagnostic page.
 .TP
 \fB\-f\fR, \fB\-\-filter\fR=\fIFI\fR
 set the filter field in the request. When \fIFI\fR is 0 (default) fetch
