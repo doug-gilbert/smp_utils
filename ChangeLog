@@ -2,8 +2,9 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20140530] [svn:r139]
-  - xxxxxxxxxxx
+Changelog for smp_utils-0.99 [20140921] [svn:r140]
+  - smp_discover(_list): add --dsn option to show
+    device slot number in single line per phy summary
 
 Changelog for smp_utils-0.98 [20140526] [svn:r138]
   - add Linux aacraid support, interface name : aac

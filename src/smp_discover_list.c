@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.35 20140526";    /* spl3r07 */
+static const char * version_str = "1.35 20140919";    /* spl3r07 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -63,6 +64,7 @@ static struct option long_options[] = {
         {"brief", no_argument, 0, 'b'},
         {"cap", no_argument, 0, 'c'},
         {"descriptor", required_argument, 0, 'd'},
+        {"dsn", no_argument, 0, 'D'},
         {"filter", required_argument, 0, 'f'},
         {"help", no_argument, 0, 'h'},
         {"hex", no_argument, 0, 'H'},
@@ -85,7 +87,8 @@ struct opts_t {
     int do_adn;
     int do_brief;
     int do_cap_phy;
-    int desc_type;
+    int do_dsn;
+    int desc_type;              /* 0 -> full, 1 -> short format */
     int desc_type_given;
     int filter;
     int do_hex;
@@ -105,12 +108,32 @@ struct opts_t {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
+    pr2serr("Usage: "
           "smp_discover_list  [--adn] [--brief] [--cap] [--descriptor=TY]\n"
-          "                          [--filter=FI] [--help] [--hex] "
+          "                          [--dsn] [--filter=FI] [--help] [--hex] "
           "[--ignore]\n"
           "                          [--interface=PARAMS] [--num=NUM] "
           "[--one]\n"
@@ -118,7 +141,7 @@ usage(void)
           "[--summary]\n"
           "                          [--verbose] [--version] [--zpi=FN]\n"
           "                          <smp_device>[,<n>]\n");
-    fprintf(stderr,
+    pr2serr(
           "  where:\n"
           "    --adn|-A             output attached device name in one "
           "line per\n"
@@ -131,6 +154,9 @@ usage(void)
           "short (24 byte)\n"
           "                         default is 1 if --brief given, "
           "else default is 0\n"
+          "    --dsn|-D             show device slot number in 1 line "
+          "per phy\n"
+          "                         output, if available\n"
           "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
           "expander\n"
           "                         attached; 2 -> expander "
@@ -154,7 +180,7 @@ usage(void)
           "Depending on\n"
           "                                 the interface, may not be "
           "needed\n");
-    fprintf(stderr,
+    pr2serr(
           "    --summary|-S         output 1 line per active phy; "
           "typically\n"
           "                         equivalent to: '-o -d 1 -n 254 -b' .\n"
@@ -198,10 +224,10 @@ has_table2table_routing(struct smp_target_obj * top,
 
     memset(rp, 0, sizeof(rp));
     if (optsp->verbose) {
-        fprintf(stderr, "    Report general request: ");
+        pr2serr("    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
-            fprintf(stderr, "%02x ", smp_req[k]);
-        fprintf(stderr, "\n");
+            pr2serr("%02x ", smp_req[k]);
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
@@ -211,19 +237,19 @@ has_table2table_routing(struct smp_target_obj * top,
     res = smp_send_req(top, &smp_rr, optsp->verbose);
 
     if (res) {
-        fprintf(stderr, "RG smp_send_req failed, res=%d\n", res);
+        pr2serr("RG smp_send_req failed, res=%d\n", res);
         if (0 == optsp->verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         return 0;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "RG smp_send_req transport_error=%d\n",
+        pr2serr("RG smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
         return 0;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "RG response too short, len=%d\n", act_resplen);
+        pr2serr("RG response too short, len=%d\n", act_resplen);
         return 0;
     }
     len = rp[3];
@@ -232,31 +258,30 @@ has_table2table_routing(struct smp_target_obj * top,
         if (len < 0) {
             len = 0;
             if (optsp->verbose > 1)
-                fprintf(stderr, "unable to determine RG response length\n");
+                pr2serr("unable to determine RG response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (optsp->verbose)
-            fprintf(stderr, "actual RG response length [%d] less than "
-                    "deduced length [%d]\n", act_resplen, len);
+            pr2serr("actual RG response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
         len = act_resplen;
     }
     /* ignore --hex and --raw */
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
-        fprintf(stderr, "RG expected SMP frame response type, got=0x%x\n",
-                rp[0]);
+        pr2serr("RG expected SMP frame response type, got=0x%x\n", rp[0]);
         return 0;
     }
     if (rp[1] != smp_req[1]) {
-        fprintf(stderr, "RG Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], rp[1]);
+        pr2serr("RG Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                rp[1]);
         return 0;
     }
     if (rp[2]) {
         if (optsp->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
-            fprintf(stderr, "Report General result: %s\n", cp);
+            pr2serr("Report General result: %s\n", cp);
         }
         return 0;
     }
@@ -457,15 +482,15 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         smp_req[10] |= 0x80;
     smp_req[11] = op->desc_type & 0xf;
     if (op->verbose) {
-        fprintf(stderr, "    Discover list request: ");
+        pr2serr("    Discover list request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k) {
             if (0 == (k % 16))
-                fprintf(stderr, "\n      ");
+                pr2serr("\n      ");
             else if (0 == (k % 8))
-                fprintf(stderr, " ");
-            fprintf(stderr, "%02x ", smp_req[k]);
+                pr2serr(" ");
+            pr2serr("%02x ", smp_req[k]);
         }
-        fprintf(stderr, "\n");
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
@@ -475,19 +500,19 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
 
     res = smp_send_req(top, &smp_rr, op->verbose);
     if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        pr2serr("smp_send_req failed, res=%d\n", res);
         if (0 == op->verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         return -1;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
+        pr2serr("smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
         return -1;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", act_resplen);
+        pr2serr("response too short, len=%d\n", act_resplen);
         return SMP_LIB_CAT_MALFORMED;
     }
     len = resp[3];
@@ -496,13 +521,13 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
         if (len < 0) {
             len = 0;
             if (op->verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+                pr2serr("unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (op->verbose)
-            fprintf(stderr, "actual response length [%d] less than "
+            pr2serr("actual response length [%d] less than "
                     "deduced length [%d]\n", act_resplen, len);
         len = act_resplen;
     }
@@ -517,26 +542,25 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
             return SMP_LIB_CAT_MALFORMED;
         if (resp[2]) {
             if (op->verbose)
-                fprintf(stderr, "Discover list result: %s\n",
+                pr2serr("Discover list result: %s\n",
                         smp_get_func_res_str(resp[2], sizeof(b), b));
             return resp[2];
         }
         return 0;
     }
     if (SMP_FRAME_TYPE_RESP != resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                resp[0]);
+        pr2serr("expected SMP frame response type, got=0x%x\n", resp[0]);
         return SMP_LIB_CAT_MALFORMED;
     }
     if (resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], resp[1]);
+        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                resp[1]);
         return SMP_LIB_CAT_MALFORMED;
     }
     if (resp[2]) {
         if (SMP_FRES_NO_PHY != resp[2]) {
             cp = smp_get_func_res_str(resp[2], sizeof(b), b);
-            fprintf(stderr, "Discover list result: %s\n", cp);
+            pr2serr("Discover list result: %s\n", cp);
         }
         return resp[2];
     }
@@ -598,16 +622,14 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 /* long format: as described in (full, single) DISCOVER response
  * Returns 0 for okay, else -1 . */
 static int
-decode_desc0_multiline(const unsigned char * resp, int offset,
-                       int hdr_ecc, struct opts_t * op)
+decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
+                       struct opts_t * op)
 {
-    const unsigned char *rp;
     unsigned long long ull;
     unsigned int ui;
     int func_res, phy_id, ecc, adt, route_attr, len, j;
     char b[256];
 
-    rp = resp + offset;
     phy_id = rp[9];
     func_res = rp[2];
     len = 4 + (rp[3] * 4);        /* length in bytes, excluding 4 byte CRC */
@@ -809,15 +831,13 @@ decode_desc0_multiline(const unsigned char * resp, int offset,
 /* short format: only DISCOVER LIST has this abridged 24 byte descriptor.
  * Returns 0 for okay, else -1 . */
 static int
-decode_desc1_multiline(const unsigned char * resp, int offset,
-                       int z_enabled, struct opts_t * op)
+decode_desc1_multiline(const unsigned char * rp, int z_enabled,
+                       struct opts_t * op)
 {
-    const unsigned char *rp;
     unsigned long long ull;
     int func_res, phy_id, adt, route_attr, j;
     char b[256];
 
-    rp = resp + offset;
     phy_id = rp[0];
     func_res = rp[1];
     printf("  phy identifier: %d\n", phy_id);
@@ -889,10 +909,9 @@ decode_desc1_multiline(const unsigned char * resp, int offset,
  * "per phy" function. Returns 0 for ok, 1 for ok plus zoning enabled and
   * seen ZG other than 1, else -1 (for problem) . */
 static int
-decode_1line(const unsigned char * resp, int offset, int desc,
+decode_1line(const unsigned char * rp, int len, int desc,
              int z_enabled, int has_t2t, struct opts_t * op)
 {
-    const unsigned char *rp;
     unsigned long long ull, adn;
     int phy_id, j, off, plus, negot, adt, route_attr, vp, asa_off;
     int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
@@ -900,7 +919,6 @@ decode_1line(const unsigned char * resp, int offset, int desc,
     char b[256];
     const char * cp;
 
-    rp = resp + offset;
     switch (desc) {
     case 0:     /* longer descriptor */
         phy_id = rp[9];
@@ -931,12 +949,12 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         iz_mask = rp[9];
         break;
     default:
-        fprintf(stderr, "  Unknown descriptor type %d\n", desc);
+        pr2serr("  Unknown descriptor type %d\n", desc);
         return -1;
     }
     if (op->zpi_fn) {
         if (func_res && (SMP_FRES_PHY_VACANT != func_res)) {
-            fprintf(stderr, "  >>> function result: %s\n",
+            pr2serr("  >>> function result: %s\n",
                     smp_get_func_res_str(func_res, sizeof(b), b));
             return -1;
         }
@@ -971,21 +989,28 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         cp = "R";
         break;
     }
-    if (1 == negot) {
+    switch (negot) {
+    case 1:
         printf("  phy %3d:%s:disabled\n", phy_id, cp);
         return 0;
-    } else if (2 == negot) {
+    case 2:
         printf("  phy %3d:%s:reset problem\n", phy_id, cp);
         return 0;
-    } else if (3 == negot) {
+    case 3:
         printf("  phy %3d:%s:spinup hold\n", phy_id, cp);
         return 0;
-    } else if (4 == negot) {
+    case 4:
         printf("  phy %3d:%s:port selector\n", phy_id, cp);
         return 0;
-    } else if (5 == negot) {
+    case 5:
         printf("  phy %3d:%s:reset in progress\n", phy_id, cp);
         return 0;
+    case 6:
+        printf("  phy %3d:%s:unsupported phy attached\n", phy_id, cp);
+        return 0;
+    default:
+        /* keep going */
+        break;
     }
     if ((0 == op->verbose) && (0 == adt) && op->do_brief)
         return 0;
@@ -1003,9 +1028,11 @@ decode_1line(const unsigned char * resp, int offset, int desc,
         }
         if (z_enabled && (1 != z_group)) {
             ++zg_not1;
-            printf("  ZG:%d\n", z_group);
-        } else
-            printf("\n");
+            printf("  ZG:%d", z_group);
+        }
+        if (op->do_dsn && (0 == desc) && (len > 108) && (0xff != rp[108]))
+             printf("  dsn=%d", rp[108]);
+        printf("\n");
         return !! zg_not1;
     }
     if ((0 == desc) && op->do_adn) {
@@ -1101,6 +1128,8 @@ decode_1line(const unsigned char * resp, int offset, int desc,
             ++zg_not1;
             printf("  ZG:%d", z_group);
         }
+        if (op->do_dsn && (0 == desc) && (len > 108) && (0xff != rp[108]))
+            printf("  dsn=%d", rp[108]);
     }
     printf("\n");
     return !! zg_not1;
@@ -1174,39 +1203,44 @@ main(int argc, char * argv[])
     int has_t2t = 0;
     int ret = 0;
     struct opts_t opts;
+    struct opts_t * op;
 
-    memset(&opts, 0, sizeof(opts));
+    op = &opts;
+    memset(op, 0, sizeof(opts));
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "Abcd:f:hHiI:ln:op:rs:SvVZ:",
+        c = getopt_long(argc, argv, "Abcd:Df:hHiI:ln:op:rs:SvVZ:",
                         long_options, &option_index);
         if (c == -1)
             break;
 
         switch (c) {
         case 'A':
-            ++opts.do_adn;
+            ++op->do_adn;
             break;
         case 'b':
-            ++opts.do_brief;
+            ++op->do_brief;
             break;
         case 'c':
-            ++opts.do_cap_phy;
+            ++op->do_cap_phy;
             break;
         case 'd':
-           opts.desc_type = smp_get_num(optarg);
-           if ((opts.desc_type < 0) || (opts.desc_type > 15)) {
-                fprintf(stderr, "bad argument to '--desc'\n");
+           op->desc_type = smp_get_num(optarg);
+           if ((op->desc_type < 0) || (op->desc_type > 15)) {
+                pr2serr("bad argument to '--desc'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++opts.desc_type_given;
+            ++op->desc_type_given;
+            break;
+        case 'D':
+            ++op->do_dsn;
             break;
         case 'f':
-           opts.filter = smp_get_num(optarg);
-           if ((opts.filter < 0) || (opts.filter > 15)) {
-                fprintf(stderr, "bad argument to '--filter'\n");
+           op->filter = smp_get_num(optarg);
+           if ((op->filter < 0) || (op->filter > 15)) {
+                pr2serr("bad argument to '--filter'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -1215,10 +1249,10 @@ main(int argc, char * argv[])
             usage();
             return 0;
         case 'H':
-            ++opts.do_hex;
+            ++op->do_hex;
             break;
         case 'i':
-            ++opts.ign_zp;
+            ++op->ign_zp;
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
@@ -1228,53 +1262,53 @@ main(int argc, char * argv[])
             /* just ignore, placeholder */
             break;
         case 'n':
-           opts.do_num = smp_get_num(optarg);
-           if ((opts.do_num < 0) || (opts.do_num > 254)) {
-                fprintf(stderr, "bad argument to '--num', expect value "
-                        "from 0 to 254\n");
+           op->do_num = smp_get_num(optarg);
+           if ((op->do_num < 0) || (op->do_num > 254)) {
+                pr2serr("bad argument to '--num', expect value from 0 to "
+                        "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++opts.num_given;
+            ++op->num_given;
             break;
         case 'o':
-            ++opts.do_1line;
+            ++op->do_1line;
             break;
         case 'p':
-           opts.phy_id = smp_get_num(optarg);
-           if ((opts.phy_id < 0) || (opts.phy_id > 254)) {
-                fprintf(stderr, "bad argument to '--phy', expect "
-                        "value from 0 to 254\n");
+           op->phy_id = smp_get_num(optarg);
+           if ((op->phy_id < 0) || (op->phy_id > 254)) {
+                pr2serr("bad argument to '--phy', expect value from 0 to "
+                        "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++opts.phy_id_given;
+            ++op->phy_id_given;
             break;
         case 'r':
-            ++opts.do_raw;
+            ++op->do_raw;
             break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            opts.sa = (unsigned long long)sa_ll;
-            if (opts.sa > 0)
-                ++opts.sa_given;
+            op->sa = (unsigned long long)sa_ll;
+            if (op->sa > 0)
+                ++op->sa_given;
             break;
         case 'S':
-            ++opts.do_summary;
+            ++op->do_summary;
             break;
         case 'v':
-            ++opts.verbose;
+            ++op->verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         case 'Z':
-            opts.zpi_fn = optarg;
+            op->zpi_fn = optarg;
             break;
         default:
-            fprintf(stderr, "unrecognised switch code %c [0x%x] ??\n", c, c);
+            pr2serr("unrecognised switch code %c [0x%x] ??\n", c, c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -1287,8 +1321,7 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -1298,8 +1331,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use "
+                    "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -1307,84 +1340,95 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after separator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
-    if (0 == opts.sa) {
+    if (0 == op->sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
+                pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("    use 0\n");
                 sa_ll = 0;
             }
-            opts.sa = (unsigned long long)sa_ll;
+            op->sa = (unsigned long long)sa_ll;
         }
     }
-    if (opts.sa > 0) {
-        if (! smp_is_naa5(opts.sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+    if (op->sa > 0) {
+        if (! smp_is_naa5(op->sa)) {
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
-    if ((0 == opts.do_summary) && (0 == opts.do_1line) &&
-        (! opts.num_given) && (0 == opts.phy_id_given) &&
-        (NULL == opts.zpi_fn))
-        ++opts.do_summary;
-    if (opts.zpi_fn) {
-        if (opts.do_summary || opts.desc_type_given || opts.filter ||
-            opts.do_adn) {
-            fprintf(stderr, "--zpi=FN clashes with --summary, --adn, "
-                    "--filter and --descriptor=TY options\n");
+    if (op->desc_type_given && op->desc_type) { /* asked for short format */
+        if (op->do_dsn) {
+            pr2serr("warning: --dsn option ignored when --desc_type=1\n");
+            op->do_dsn = 0;
+        }
+    }
+    if (0 == op->do_dsn) {
+        cp = getenv("SMP_UTILS_DSN");
+        if (cp)
+            ++op->do_dsn;
+    }
+    if ((0 == op->do_summary) && (0 == op->do_1line) &&
+        (! op->num_given) && (0 == op->phy_id_given) &&
+        (NULL == op->zpi_fn))
+        ++op->do_summary;
+    if (op->zpi_fn) {
+        if (op->do_summary || op->desc_type_given || op->filter ||
+            op->do_adn) {
+            pr2serr("--zpi=FN clashes with --summary, --adn, --filter and "
+                    "--descriptor=TY options\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
-        if (! opts.num_given)
-            opts.do_num = 254;
-        opts.do_1line = 1;
-        opts.desc_type = 1;
-        opts.ign_zp = 1;        /* set --ignore */
+        if (! op->num_given)
+            op->do_num = 254;
+        op->do_1line = 1;
+        op->desc_type = 1;
+        op->ign_zp = 1;        /* set --ignore */
     }
-    if (0 == opts.desc_type_given) {
-        opts.desc_type = opts.do_brief ? 1 : 0;
-        if (opts.do_adn)
-            opts.desc_type = 0;
+    if (0 == op->desc_type_given) {
+        op->desc_type = op->do_brief ? 1 : 0;
+        if (op->do_adn || op->do_dsn)
+            op->desc_type = 0;
     }
-    if (opts.do_summary) {
-        ++opts.do_brief;
-        if ((0 == opts.desc_type_given) && (0 == opts.do_adn))
-            opts.desc_type = 1;
-        opts.do_1line = 1;
-        opts.do_num = 254;
-    } else if (! (opts.num_given || opts.zpi_fn))
-        opts.do_num = 1;
-    if (opts.do_adn && (1 == opts.desc_type)) {
-        fprintf(stderr, "--adn and --descriptor=1 options clash since "
-                "there is no 'attached\ndevice name' field in the short "
-                "format. Ignoring --adn .\n");
-        opts.do_adn = 0;
+    if (op->do_summary) {
+        ++op->do_brief;
+        if ((0 == op->desc_type_given) && (0 == op->do_adn) &&
+            (0 == op->do_dsn))
+            op->desc_type = 1;
+        op->do_1line = 1;
+        op->do_num = 254;
+    } else if (! (op->num_given || op->zpi_fn))
+        op->do_num = 1;
+    if (op->do_adn && (1 == op->desc_type)) {
+        pr2serr("--adn and --descriptor=1 options clash since there is no "
+                "'attached\ndevice name' field in the short format. "
+                "Ignoring --adn .\n");
+        op->do_adn = 0;
     }
 
-    res = smp_initiator_open(device_name, subvalue, i_params, opts.sa,
-                             &tobj, opts.verbose);
+    res = smp_initiator_open(device_name, subvalue, i_params, op->sa,
+                             &tobj, op->verbose);
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    if (opts.zpi_fn) {
-        if ((1 == strlen(opts.zpi_fn)) && (0 == strcmp("-", opts.zpi_fn)))
-            opts.zpi_filep = stdout;
+    if (op->zpi_fn) {
+        if ((1 == strlen(op->zpi_fn)) && (0 == strcmp("-", op->zpi_fn)))
+            op->zpi_filep = stdout;
         else {
-            opts.zpi_filep  = fopen(opts.zpi_fn, "w");
-            if (NULL == opts.zpi_filep) {
-                fprintf(stderr, "unable to open %s, error: %s\n",
-                        opts.zpi_fn, safe_strerror(errno));
+            op->zpi_filep  = fopen(op->zpi_fn, "w");
+            if (NULL == op->zpi_filep) {
+                pr2serr("unable to open %s, error: %s\n", op->zpi_fn,
+                        safe_strerror(errno));
                 ret = SMP_LIB_FILE_ERROR;
                 goto err_out;
             }
@@ -1392,42 +1436,41 @@ main(int argc, char * argv[])
     }
 
     no_more = 0;
-    for (j = 0; (j < opts.do_num) && (! no_more); j += num_desc) {
+    for (j = 0; (j < op->do_num) && (! no_more); j += num_desc) {
         memset(resp, 0, sizeof(resp));
-        if ((opts.phy_id + j) > 254) {
+        if ((op->phy_id + j) > 254) {
             ret = 0;    /* off the end so not error */
             break;
         }
-        ret = do_discover_list(&tobj, opts.phy_id + j, resp, sizeof(resp),
-                               &opts);
+        ret = do_discover_list(&tobj, op->phy_id + j, resp, sizeof(resp), op);
         if (ret) {
             if (SMP_FRES_NO_PHY == ret)
                 ret = 0;    /* off the end so not error */
             break;
         }
         num_desc = resp[9];
-        if ((0 == opts.desc_type) && (num_desc < MAX_DLIST_LONG_DESCS))
+        if ((0 == op->desc_type) && (num_desc < MAX_DLIST_LONG_DESCS))
             no_more = 1;
-        if ((1 == opts.desc_type) && (num_desc < MAX_DLIST_SHORT_DESCS))
+        if ((1 == op->desc_type) && (num_desc < MAX_DLIST_SHORT_DESCS))
             no_more = 1;
-        if (opts.do_hex || opts.do_raw)
+        if (op->do_hex || op->do_raw)
             continue;
         len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
-        if ((0 == j) && ((! opts.do_1line) || opts.zpi_fn))
-            output_header_info(resp, &opts);
+        if ((0 == j) && ((! op->do_1line) || op->zpi_fn))
+            output_header_info(resp, op);
         hdr_ecc = (resp[4] << 8) + resp[5];
         z_enabled = !!(resp[16] & 0x40);
         resp_filter = resp[10] & 0xf;
-        if (opts.filter != resp_filter)
-            fprintf(stderr, ">>> Requested phy filter was %d, got %d\n",
-                    opts.filter, resp_filter);
+        if (op->filter != resp_filter)
+            pr2serr(">>> Requested phy filter was %d, got %d\n", op->filter,
+                    resp_filter);
         resp_desc_type = resp[11] & 0xf;
-        if (opts.desc_type != resp_desc_type)
-            fprintf(stderr, ">>> Requested descriptor type was %d, got %d\n",
-                    opts.desc_type, resp_desc_type);
+        if (op->desc_type != resp_desc_type)
+            pr2serr(">>> Requested descriptor type was %d, got %d\n",
+                    op->desc_type, resp_desc_type);
         desc_len = resp[12] * 4;
         if (len != (48 + (num_desc * desc_len))) {
-            fprintf(stderr, ">>> Response length of %d bytes doesn't match "
+            pr2serr(">>> Response length of %d bytes doesn't match "
                     "%d descriptors, each\n  of %d bytes plus a 48 byte "
                     "header and 4 byte CRC\n", len + 4, num_desc, desc_len);
             if (len < (48 + (num_desc * desc_len))) {
@@ -1437,13 +1480,13 @@ main(int argc, char * argv[])
         }
         for (k = 0, err = 0; k < num_desc; ++k) {
             off = 48 + (k * desc_len);
-            if (opts.do_1line) {
+            if (op->do_1line) {
                 if (! checked_rg) {
                     ++checked_rg;
-                    has_t2t = has_table2table_routing(&tobj, &opts);
+                    has_t2t = has_table2table_routing(&tobj, op);
                 }
-                res = decode_1line(resp, off, resp_desc_type, z_enabled,
-                                   has_t2t, &opts);
+                res = decode_1line(resp + off, desc_len, resp_desc_type,
+                                   z_enabled, has_t2t, op);
                 if (res < 0)
                     ++err;
                 else if (res > 0)
@@ -1452,17 +1495,16 @@ main(int argc, char * argv[])
                 fresult = resp[off + 2];    /* function result, 0 -> ok */
                 if (0 == resp_desc_type) {
                     adt = (resp[off + 12] >> 4) & 7;
-                    if ((0 == opts.do_brief) || adt || fresult) {
+                    if ((0 == op->do_brief) || adt || fresult) {
                         printf("descriptor %d:\n", j + k);
-                        if (decode_desc0_multiline(resp, off, hdr_ecc, &opts))
+                        if (decode_desc0_multiline(resp + off, hdr_ecc, op))
                             ++err;
                     }
                 } else if (1 == resp_desc_type) {
                     adt = (resp[off + 2] >> 4) & 7;
-                    if ((0 == opts.do_brief) || adt || fresult) {
+                    if ((0 == op->do_brief) || adt || fresult) {
                         printf("descriptor %d:\n", j + k);
-                        if (decode_desc1_multiline(resp, off, z_enabled,
-                                                   &opts))
+                        if (decode_desc1_multiline(resp + off, z_enabled, op))
                             ++err;
                     }
                 } else
@@ -1470,19 +1512,19 @@ main(int argc, char * argv[])
             }
         }
         if (err) {
-            if (opts.verbose)
-               fprintf(stderr, ">>> %d error%s detected\n", err,
+            if (op->verbose)
+               pr2serr(">>> %d error%s detected\n", err,
                        ((1 == err) ? "" : "s"));
             if (0 == ret)
                 ret = SMP_LIB_CAT_OTHER;
         }
     }
-    if ((zg_not1) && (0 == opts.do_brief) && (NULL == opts.zpi_fn))
+    if ((zg_not1) && (0 == op->do_brief) && (NULL == op->zpi_fn))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
 
 err_out:
-    if (opts.zpi_filep && (stdout != opts.zpi_filep))
-        fclose(opts.zpi_filep);
+    if (op->zpi_filep && (stdout != op->zpi_filep))
+        fclose(op->zpi_filep);
     res = smp_initiator_close(&tobj);
     if (res < 0) {
         if (0 == ret)
@@ -1490,7 +1532,7 @@ err_out:
     }
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
-    if (opts.verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+    if (op->verbose && ret)
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }

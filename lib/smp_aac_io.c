@@ -70,7 +70,8 @@ chk_aac_device(const char * dev_name,int verbose)
 
   // aac in /proc/devices is not found
     if ( aacDevMjr < 0 ){
-        fprintf(stderr,"chk_aac_device : aac entry not found in /proc/devices \n");
+        if (verbose)
+            fprintf(stderr,"chk_aac_device : aac entry not found in /proc/devices \n");
         return 0;
     }
 
