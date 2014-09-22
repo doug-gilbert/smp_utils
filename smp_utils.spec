@@ -80,8 +80,8 @@ fi
 
 
 %changelog
-* Wed May 28 2014 - dgilbert at interlog dot com
-- xxxxxx
+* Sun Sep 21 2014 - dgilbert at interlog dot com
+- add --dsn option
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com
 - put execs back in /usr/bin, add aac interface
