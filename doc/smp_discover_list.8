@@ -35,6 +35,10 @@ to 40 descriptors when the "descriptor type" field in the request is set to
 1 (e.g. \fI\-\-descriptor=1\fR). Multiple DISCOVER LIST requests will be
 made if more descriptors are requested (e.g. \fI\-\-summary\fR requests 254)
 and the previous response indicates that more descriptors may be available.
+.PP
+Rather than supply options and \fISMP_DEVICE[,N]\fR on every invocation
+some can be supplied via environment variables. See the section on
+ENVIRONMENT VARIABLES below.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -197,6 +201,27 @@ should be its target device name (in NAA\-5 format) and for a SATA disk its
 WWN (if provided, also in NAA\-5 format). Also when the \fI\-\-adn\fR option
 is given the phy speed and zone group are not output in order to keep the
 line length reasonable.
+.PP
+If the \fI\-\-dsn\fR option is given and device slot number information is
+available for the current phy, then "dsn=<num>" is appended to the line.
+Device slot numbers range from 0 to 254 with 255 meaning there is no
+corresponding slot so it is not listed.
+.SH ENVIRONMENT VARIABLES
+If \fISMP_DEVICE[,N]\fR is not given then the SMP_UTILS_DEVICE environment
+variable is checked and if present its contents are used instead.
+.PP
+If the SAS address (of the SMP target) is not given and it is required (i.e.
+it is not implicit in \fISMP_DEVICE[,N]\fR) then the SMP_UTILS_SAS_ADDR
+environment variable is checked and if present its contents are used as the
+SAS address. SAS addresses are usually given in hex indicated by a
+leading '0x' or trailing 'h'.
+.PP
+A device slot number (dsn) is important for establishing the relationship
+between an expander phy and a SES array element. Newer expanders (e.g. SAS\-3)
+support dsn_s in the DISCOVER (and DISCOVER LIST) functions. These can be
+shown, if available, with the \-\-dsn option to smp_discover and
+smp_discover_list utilities.. To ease typing that option often, the
+SMP_UTILS_DSN environment variableriable, if present, has the same effect.
 .SH NOTES
 In SAS\-2 and later both the DISCOVER and DISCOVER LIST functions are
 available. The DISCOVER LIST function should be favoured for several

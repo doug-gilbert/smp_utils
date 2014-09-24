@@ -112,8 +112,15 @@ environment variable is checked and if present its contents are used as the
 SAS address. SAS addresses are usually given in hex indicated by a
 leading '0x' or trailing 'h'.
 .PP
-If either or both environment variables and the corresponding command line
-options are given, then the command line options take precedence.
+A device slot number (dsn) is important for establishing the relationship
+between an expander phy and a SES array element. Newer expanders (e.g. SAS\-3)
+support dsn_s in the DISCOVER (and DISCOVER LIST) functions. These can be
+shown, if available, with the \-\-dsn option to smp_discover and
+smp_discover_list utilities.. To ease typing that option often, the
+SMP_UTILS_DSN environment variableriable, if present, has the same effect.
+.PP
+If both an environment variable and the corresponding command line option is
+given and contradict, then the command line options take precedence.
 .SH COMMON OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 If an option takes a numeric argument then that argument is assumed to
