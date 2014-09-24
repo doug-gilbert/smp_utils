@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20140921] [svn:r140]
+Changelog for smp_utils-0.99 [20140922] [svn:r141]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
 
