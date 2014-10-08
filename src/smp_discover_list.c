@@ -53,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.35 20140919";    /* spl3r07 */
+static const char * version_str = "1.35 20141007";    /* spl4r01 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -289,6 +289,7 @@ has_table2table_routing(struct smp_target_obj * top,
 }
 
 
+/* Since spl4r01 these are 'attached SAS device type's */
 static const char * smp_attached_device_type[] = {
     "no device attached",
     "SAS or SATA device",         /* used to be called "end device" */
@@ -648,7 +649,8 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         "%d\n", hdr_ecc, ecc);
     adt = ((0x70 & rp[12]) >> 4);
     if (adt < 8)
-        printf("  attached device type: %s\n", smp_attached_device_type[adt]);
+        printf("  attached SAS device type: %s\n",
+               smp_attached_device_type[adt]);
     if ((op->do_brief > 1) && (0 == adt))
         return 0;
     if (0 == op->do_brief)
@@ -851,7 +853,8 @@ decode_desc1_multiline(const unsigned char * rp, int z_enabled,
     }
     adt = ((0x70 & rp[2]) >> 4);
     if (adt < 8)
-        printf("  attached device type: %s\n", smp_attached_device_type[adt]);
+        printf("  attached SAS device type: %s\n",
+               smp_attached_device_type[adt]);
     if ((op->do_brief > 1) && (0 == adt))
         return 0;
     if (0 == op->do_brief)
