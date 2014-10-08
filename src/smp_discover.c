@@ -53,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.47 20140919";    /* spl3r07 */
+static const char * version_str = "1.47 20141007";    /* spl4r01 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -278,6 +278,7 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
     return (len > 10) ? !!(0x80 & rp[10]) : 0;
 }
 
+/* Since spl4r01 these are 'attached SAS device type's */
 static const char * smp_attached_device_type[] = {
     "no device attached",
     "SAS or SATA device",         /* was 'end device' */
@@ -760,7 +761,8 @@ print_single(const unsigned char * rp, int len, int just1,
         printf("  phy identifier: %d\n", rp[9]);
     res = ((0x70 & rp[12]) >> 4);
     if (res < 8)
-        printf("  attached device type: %s\n", smp_attached_device_type[res]);
+        printf("  attached SAS device type: %s\n",
+               smp_attached_device_type[res]);
     if ((op->do_brief > 1) && (0 == res))
         return 0;
     if (sas2 || (op->verbose > 3))
@@ -1059,7 +1061,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             continue;
         }
         adt = ((0x70 & rp[12]) >> 4);
-        /* attached device type: 0-> none, 1-> device, 2-> expander,
+        /* attached SAS device type: 0-> none, 1-> device, 2-> expander,
          * 3-> fanout expnader (obsolete), rest-> reserved */
         if ((op->do_brief > 1) && (0 == adt))
             continue;
