@@ -62,7 +62,7 @@ smp_initiator_open(const char * device_name, int subvalue,
 {
     int res, j;
 
-    i_params = i_params;       /* suppress warning */
+    if (i_params) { ; }       /* unused, suppress warning */
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
     memset(tobj, 0, sizeof(struct smp_target_obj));
