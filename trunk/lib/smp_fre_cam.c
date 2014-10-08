@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 Douglas Gilbert.
+ * Copyright (c) 2011-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ smp_initiator_open(const char * device_name, int subvalue,
     struct cam_device* cam_dev;
     struct tobj_cam_t * tcp;
 
-    i_params = i_params;
+    if (i_params) { ; }     /* unused, suppress warning */
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
     memset(tobj, 0, sizeof(struct smp_target_obj));
