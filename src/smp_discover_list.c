@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.35 20141007";    /* spl4r01 */
+static const char * version_str = "1.36 20150227";    /* spl4r01 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -154,9 +154,8 @@ usage(void)
           "short (24 byte)\n"
           "                         default is 1 if --brief given, "
           "else default is 0\n"
-          "    --dsn|-D             show device slot number in 1 line "
-          "per phy\n"
-          "                         output, if available\n"
+          "    --dsn|-D             show device slot number in 1 line\n"
+          "                         per phy output, if available\n"
           "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
           "expander\n"
           "                         attached; 2 -> expander "
@@ -920,6 +919,7 @@ decode_1line(const unsigned char * rp, int len, int desc,
     int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
     int zg_not1 = 0;
     char b[256];
+    char dsn[7] = "";
     const char * cp;
 
     switch (desc) {
@@ -992,24 +992,28 @@ decode_1line(const unsigned char * rp, int len, int desc,
         cp = "R";
         break;
     }
+
+    if (op->do_dsn && (0 == desc) && (len > 108) && (0xff != rp[108]))
+        sprintf(dsn, "  dsn=%d", rp[108]);
+
     switch (negot) {
     case 1:
-        printf("  phy %3d:%s:disabled\n", phy_id, cp);
+        printf("  phy %3d:%s:disabled%s\n", phy_id, cp, dsn);
         return 0;
     case 2:
-        printf("  phy %3d:%s:reset problem\n", phy_id, cp);
+        printf("  phy %3d:%s:reset problem%s\n", phy_id, cp, dsn);
         return 0;
     case 3:
-        printf("  phy %3d:%s:spinup hold\n", phy_id, cp);
+        printf("  phy %3d:%s:spinup hold%s\n", phy_id, cp, dsn);
         return 0;
     case 4:
-        printf("  phy %3d:%s:port selector\n", phy_id, cp);
+        printf("  phy %3d:%s:port selector%s\n", phy_id, cp, dsn);
         return 0;
     case 5:
-        printf("  phy %3d:%s:reset in progress\n", phy_id, cp);
+        printf("  phy %3d:%s:reset in progress%s\n", phy_id, cp, dsn);
         return 0;
     case 6:
-        printf("  phy %3d:%s:unsupported phy attached\n", phy_id, cp);
+        printf("  phy %3d:%s:unsupported phy attached%s\n", phy_id, cp, dsn);
         return 0;
     default:
         /* keep going */
@@ -1033,8 +1037,8 @@ decode_1line(const unsigned char * rp, int len, int desc,
             ++zg_not1;
             printf("  ZG:%d", z_group);
         }
-        if (op->do_dsn && (0 == desc) && (len > 108) && (0xff != rp[108]))
-             printf("  dsn=%d", rp[108]);
+        if ('\0' != dsn[0])
+             printf("%s", dsn);
         printf("\n");
         return !! zg_not1;
     }
@@ -1131,8 +1135,8 @@ decode_1line(const unsigned char * rp, int len, int desc,
             ++zg_not1;
             printf("  ZG:%d", z_group);
         }
-        if (op->do_dsn && (0 == desc) && (len > 108) && (0xff != rp[108]))
-            printf("  dsn=%d", rp[108]);
+        if ('\0' != dsn[0])
+            printf("%s", dsn);
     }
     printf("\n");
     return !! zg_not1;

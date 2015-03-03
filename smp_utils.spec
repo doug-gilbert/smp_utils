@@ -80,7 +80,7 @@ fi
 
 
 %changelog
-* Sun Sep 21 2014 - dgilbert at interlog dot com
+* Mon Mar 02 2015 - dgilbert at interlog dot com
 - add --dsn option
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com

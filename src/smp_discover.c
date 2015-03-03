@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.47 20141007";    /* spl4r01 */
+static const char * version_str = "1.48 20150220";    /* spl4r01 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -144,9 +144,8 @@ usage(void)
           "    --brief|-b           less output, can be used multiple "
           "times\n"
           "    --cap|-c             decode phy capabilities bits\n"
-          "    --dsn|-D             show device slot number in 1 line "
-          "per phy\n"
-          "                         output, if available\n"
+          "    --dsn|-D             show device slot number in 1 line\n"
+          "                         per phy output, if available\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --ignore|-i          sets the Ignore Zone Group bit; "
@@ -998,6 +997,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
     unsigned long long expander_sa;
     int ret, len, k, j, num, off, plus, negot, adt, zg;
     char b[256];
+    char dsn[7] = "";
     int first = 1;
     int checked_rg = 0;
     int has_t2t = 0;
@@ -1086,25 +1086,29 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             cp = "R";
             break;
         }
+
+        if (op->do_dsn && (len > 108) && (0xff != rp[108]))
+            sprintf(dsn, "  dsn=%d", rp[108]);
+
         switch (negot) {
         case 1:
-            printf("  phy %3d:%s:disabled\n", rp[9], cp);
+            printf("  phy %3d:%s:disabled%s\n", rp[9], cp, dsn);
             continue;   /* N.B. not break; finished with this line/phy */
         case 2:
-            printf("  phy %3d:%s:reset problem\n", rp[9], cp);
+            printf("  phy %3d:%s:reset problem%s\n", rp[9], cp, dsn);
             continue;
         case 3:
-            printf("  phy %3d:%s:spinup hold\n", rp[9], cp);
+            printf("  phy %3d:%s:spinup hold%s\n", rp[9], cp, dsn);
             continue;
         case 4:
-            printf("  phy %3d:%s:port selector\n", rp[9], cp);
+            printf("  phy %3d:%s:port selector%s\n", rp[9], cp, dsn);
             continue;
         case 5:
-            printf("  phy %3d:%s:reset in progress\n", rp[9], cp);
+            printf("  phy %3d:%s:reset in progress%s\n", rp[9], cp, dsn);
             continue;
         case 6:
-            printf("  phy %3d:%s:unsupported phy attached\n", rp[9],
-                   cp);
+            printf("  phy %3d:%s:unsupported phy attached%s\n", rp[9], cp,
+                   dsn);
             continue;
         default:
             /* keep going in this loop, probably attached to something */
@@ -1131,8 +1135,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             /* zoning_enabled and a zone_group other than 1 */
             if ((rp[60] & 0x1) && (1 != zg))
                 printf("  ZG:%d", zg);
-            if (op->do_dsn && (len > 108) && (0xff != rp[108]))
-                 printf("  dsn=%d", rp[108]);
+            if ('\0' != dsn[0])
+                printf("%s", dsn);
             printf("\n");
             continue;
         }
@@ -1207,8 +1211,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
         }
         if ((op->do_brief > 1) || op->do_adn) {
             printf("]");
-            if (op->do_dsn && (len > 108) && (0xff != rp[108]))
-                 printf("  dsn=%d", rp[108]);
+            if ('\0' != dsn[0])
+                printf("%s", dsn);
             printf("\n");
             continue;
         } else
@@ -1236,8 +1240,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             if ((rp[60] & 0x1) && (1 != zg))
                 printf("  ZG:%d", zg);
         }
-        if (op->do_dsn && (len > 108) && (0xff != rp[108]))
-            printf("  dsn=%d", rp[108]);
+        if ('\0' != dsn[0])
+            printf("%s", dsn);
         printf("\n");
     }
     return 0;
