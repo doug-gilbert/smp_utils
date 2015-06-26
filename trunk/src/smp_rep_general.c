@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.25 20140526";    /* spl3r04 */
+static const char * version_str = "1.26 20150304";    /* spl3r04 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -434,8 +434,15 @@ main(int argc, char * argv[])
             if (len < 48)
                 goto err_out;
             printf("  active zone manager SAS address (hex): ");
-            for (k = 0; k < 8; ++k)
-                printf("%02x", smp_resp[40 + k]);
+            for (k = 0; k < 8; ++k) {
+                if (smp_resp[40 + k])
+                    break;
+            }
+            if (k < 8) {
+                for (k = 0; k < 8; ++k)
+                    printf("%02x", smp_resp[40 + k]);
+            } else
+                printf("%s", "0");
             printf("\n");
         }
     }

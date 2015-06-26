@@ -53,7 +53,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.48 20150220";    /* spl4r01 */
+static const char * version_str = "1.50 20150626";    /* spl4r02 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -388,6 +388,26 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
         snprintf(buff, buff_len, "Mini SAS 4x receptacle (SFF-8088) "
                  "[max 4 phys]");
         break;
+    case 0x3:
+        snprintf(buff, buff_len, "QSFP+ receptacle (SFF-8436) "
+                "[max 4 phys]");
+        break;
+    case 0x4:
+        snprintf(buff, buff_len, "Mini SAS 4x active receptacle (SFF-8088) "
+                "[max 4 phys]");
+        break;
+    case 0x5:
+        snprintf(buff, buff_len, "Mini SAS HD 4x receptacle (SFF-8644) "
+                "[max 4 phys]");
+        break;
+    case 0x6:
+        snprintf(buff, buff_len, "Mini SAS HD 8x receptacle (SFF-8644) "
+                "[max 8 phys]");
+        break;
+    case 0x7:
+        snprintf(buff, buff_len, "Mini SAS HD 16x receptacle (SFF-8644) "
+                "[max 16 phys]");
+        break;
     case 0xf:
         snprintf(buff, buff_len, "Vendor specific external connector");
         break;
@@ -397,6 +417,14 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
     case 0x11:
         snprintf(buff, buff_len, "Mini SAS 4i receptacle (SFF-8087) "
                  "[max 4 phys]");
+        break;
+    case 0x12:
+        snprintf(buff, buff_len, "Mini SAS HD 4i receptacle (SFF-8643) "
+                "[max 4 phys]");
+        break;
+    case 0x13:
+        snprintf(buff, buff_len, "Mini SAS HD 8i receptacle (SFF-8643) "
+                "[max 8 phys]");
         break;
     case 0x20:
         snprintf(buff, buff_len, "SAS Drive backplane receptacle (SFF-8482) "
@@ -410,6 +438,38 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
         break;
     case 0x23:
         snprintf(buff, buff_len, "SATA device plug [max 1 phy]");
+        break;
+    case 0x24:
+        snprintf(buff, buff_len, "Micro SAS receptacle "
+                "[max 2 phys]");
+        break;
+    case 0x25:
+        snprintf(buff, buff_len, "Micro SATA device plug "
+                "[max 1 phy]");
+        break;
+    case 0x26:
+        snprintf(buff, buff_len, "Micro SAS plug "
+                "[max 2 phys]");
+        break;
+    case 0x27:
+        snprintf(buff, buff_len, "Micro SAS/SATA plug "
+                "[max 2 phys]");
+        break;
+    case 0x28:
+        snprintf(buff, buff_len, "12 Gb/s SAS Drive backplane receptacle "
+                "(SFF-8680) [max 2 phys]");
+        break;
+    case 0x29:
+        snprintf(buff, buff_len, "12Gb/s SAS Drive Plug (SFF-8680) "
+                "[max 2 phys]");
+        break;
+    case 0x2a:
+        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded "
+                "receptacle (SFF-8639) [max 6 phys]");
+        break;
+    case 0x2b:
+        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded plug "
+                "(SFF-8639) [max 6 phys]");
         break;
     case 0x2f:
         snprintf(buff, buff_len, "SAS virtual connector [max 1 phy]");
@@ -427,6 +487,9 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
         else if (conn_type < 0x30)
             snprintf(buff, buff_len, "unknown internal connector to end "
                      "device, type: 0x%x", conn_type);
+        else if (conn_type < 0x3f)
+            snprintf(buff, buff_len, "unknown internal connector"
+                     ", type: 0x%x", conn_type);
         else if (conn_type < 0x70)
             snprintf(buff, buff_len, "reserved connector type: 0x%x",
                      conn_type);
@@ -997,7 +1060,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
     unsigned long long expander_sa;
     int ret, len, k, j, num, off, plus, negot, adt, zg;
     char b[256];
-    char dsn[7] = "";
+    char dsn[10] = "";
     int first = 1;
     int checked_rg = 0;
     int has_t2t = 0;
