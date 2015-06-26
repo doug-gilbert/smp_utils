@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,8 @@
 /* This header file contains defines and function declarations that may
  * be useful to Linux applications that communicate with devices that
  * use the Serial Attached SCSI (SAS) Management Protocol (SMP).
- * Reference: SCSI: http://www.t10.org and the most recent SAS draft
- * SAS-2 (revision 9).
- * This header is organised into two parts: part 1 is operating system
- * independent (i.e. may be useful to other OSes) and part 2 is Linux
- * specific (or at least closely related).
+ * Reference: SCSI: http://www.t10.org and the most recent SAS Protocol
+ * Layer draft SPL-4 (revision 2).
  */
 
 #ifdef __cplusplus
