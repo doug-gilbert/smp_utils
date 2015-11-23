@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "February 2015" "smp_utils\-0.99" SMP_UTILS
+.TH SMP_UTILS "8" "November 2015" "smp_utils\-0.99" SMP_UTILS
 .SH NAME
 smp_* \- invoke a SAS Serial Management Protocol (SMP) function
 .SH SYNOPSIS
@@ -269,15 +269,16 @@ INCITS 457\-2010) . SAS\-2.1 work was split into an electrical and physical
 layers document (standardized as SAS\-2.1 ANSI INCITS 478\-2011) with the
 upper level layers placed in a document called the SAS Protocol Layer and
 it was standardized as SPL ANSI INCITS 476\-2011. Next came SPL\-2 which
-was standardized as SPL\-2 ANSI INCITS 505\-2013. SPL\-3 is near
-standardization and its most recent draft is spl3r07.pdf. To avoid
+was standardized as SPL\-2 ANSI INCITS 505\-2013. Then came SPL\-3 which
+was standardized as SPL\-3 ANSI INCITS 492\-2015. SPL\-4 is near
+standardization and its most recent draft is spl3r05.pdf. To avoid
 confusion, the multiple generations of SAS will be referred to in these man
 pages as SAS 1, 1.1, 2, 2.1 (SPL) and 3 (SPL\-2 and SPL\-3). Roughly
-speaking SAS\-1 runs at 3 Gbps, SAS\-2 at 6 Gbps and SAS\-3 at 12 Gbps.
-Drafts, including those just prior to standardization can be found at the
-http://www.t10.org site (e.g. spl\-r07.pdf and spl2r04c.pdf). INCITS policy
-now requires a registration to view these drafts, a break from t10.org
-tradition.
+speaking SAS\-1 runs at 3 Gbps, SAS\-2 at 6 Gbps, SAS\-3 at 12 Gbps and
+SAS\-4 at 22.5 Gbps. Drafts, including those just prior to standardization
+can be found at the http://www.t10.org site (e.g. spl\-r07.pdf and
+spl2r04c.pdf). INCITS policy now requires a registration to view these
+drafts, a break from t10.org tradition.
 .PP
 The two utilities for reading and writing to GPIO registers, smp_read_gpio
 and smp_write_gpio, are defined in the Small Form Factor document SFF\-8485
