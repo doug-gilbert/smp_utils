@@ -1,4 +1,4 @@
-.TH SMP_CONF_GENERAL "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_CONF_GENERAL "8" "November 2015" "smp_utils\-0.99" SMP_UTILS
 .SH NAME
 smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 .SH SYNOPSIS
@@ -6,8 +6,8 @@ smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 [\fI\-\-connect=CO\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-inactivity=IN\fR] [\fI\-\-interface=PARAMS\fR]
 [\fI\-\-nexus=NE\fR] [\fI\-\-open=OP\fR] [\fI\-\-power=PD\fR] [\fI\-\-raw\fR]
-[\fI\-\-reduced=RE\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-verbose\fR]
-[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-reduced=RE\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-ssp=CTL\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -88,6 +88,11 @@ target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most SAS
 addresses are shown in hexadecimal. To give a number in hexadecimal either
 prefix it with '0x' or put a trailing 'h' on it.
 .TP
+\fB\-S\fR, \fB\-\-ssp\fR=\fICTL\fR
+sets the "update SSP time limit" flag and the corresponding "SSP maximum
+connect time limit" field to \fICTL\fR. Unit of \fICTL\fR is 100 microseconds.
+A \fICTL\fR of zero is taken to meanthat there is no SSP connect time limit.
+.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times
 .TP
@@ -100,7 +105,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2015 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

@@ -38,11 +38,14 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -53,7 +56,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.50 20150626";    /* spl4r02 */
+static const char * version_str = "1.51 20151122";    /* spl4r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -319,6 +322,9 @@ smp_get_plink_rate(int val, int prog, int b_len, char * b)
     case 0xb:
         snprintf(b, b_len, "12 Gbps");
         break;
+    case 0xc:
+        snprintf(b, b_len, "22.5 Gbps");
+        break;
     default:
         if (prog && (0 == val))
             snprintf(b, b_len, "not programmable");
@@ -368,6 +374,7 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 9: snprintf(b, b_len, "phy enabled, 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled, 6 Gbps"); break;
     case 0xb: snprintf(b, b_len, "phy enabled, 12 Gbps"); break;
+    case 0xc: snprintf(b, b_len, "phy enabled, 22.5 Gbps"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
@@ -615,26 +622,19 @@ static int
 print_single_list(const unsigned char * rp, int len, int show_exp_cc,
                   int do_brief)
 {
-    int res, j, sas2;
-    unsigned long long ull;
+    int sas2;
 
     sas2 = !! (rp[3]);
     if (sas2 && show_exp_cc && (! do_brief)) {
-        res = (rp[4] << 8) + rp[5];
-        printf("expander_cc=%d\n", res);
+        printf("expander_cc=%u\n", sg_get_unaligned_be16(rp + 4));
     }
     printf("phy_id=%d\n", rp[9]);
     if (! do_brief) {
         if (sas2)
             printf("  att_br_cap=%d\n", !!(0x1 & rp[33]));
-        if (len > 59) {
-            for (ull = 0, j = 0; j < 8; ++j) {
-                if (j > 0)
-                    ull <<= 8;
-                ull |= rp[52 + j];
-            }
-            printf("  att_dev_name=0x%llx\n", ull);
-        }
+        if (len > 59)
+            printf("  att_dev_name=0x%" PRIx64 "\n",
+                   sg_get_unaligned_be64(rp + 52));
     }
     printf("  att_dev_type=%d\n", (0x70 & rp[12]) >> 4);
     if (sas2 && (! do_brief)) {
@@ -648,18 +648,15 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
         printf("  att_reason=%d\n", (0xf & rp[12]));
         printf("  att_req_iz=%d\n", !!(0x2 & rp[33]));
     }
-    for (ull = 0, j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[24 + j];
-    }
-    printf("  att_sas_addr=0x%llx\n", ull);
+    printf("  att_sas_addr=0x%" PRIx64 "\n", sg_get_unaligned_be64(rp + 24));
     printf("  att_sata_dev=%d\n", !! (0x1 & rp[15]));
     printf("  att_sata_host=%d\n", !! (0x1 & rp[14]));
     printf("  att_sata_ps=%d\n", !! (0x80 & rp[15]));
     if (sas2 && (! do_brief))
         printf("  att_sl_cap=%d\n", !!(0x10 & rp[33]));
     printf("  att_smp_init=%d\n", !! (0x2 & rp[14]));
+    if (sas2 && (! do_brief))
+        printf("  att_smp_prior_cap=%d\n", !!(0x2 & rp[34]));
     printf("  att_smp_targ=%d\n", !! (0x2 & rp[15]));
     printf("  att_ssp_init=%d\n", !! (0x8 & rp[14]));
     printf("  att_ssp_targ=%d\n", !! (0x8 & rp[15]));
@@ -711,12 +708,7 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
     }
     printf("  routing_attr=%d\n", rp[44] & 0xf);
 
-    for (ull = 0, j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[16 + j];
-    }
-    printf("  sas_addr=0x%llx\n", ull);
+    printf("  sas_addr=0x%" PRIx64 "\n", sg_get_unaligned_be64(rp + 16));
     if (! do_brief) {
         printf("  sas_pa_cap=%d\n", !!(0x4 & rp[48]));
         printf("  sas_pa_en=%d\n", !!(0x4 & rp[49]));
@@ -739,23 +731,25 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
     return 0;
 }
 
-static const char * g_name[] = {"G1", "G2", "G3", "G4"};
+static const char * g_name[] = {"G1", "G2", "G3", "G4", "G5"};
 static const char * g_name_long[] =
-        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)"};
+        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)",
+         "G5 (22.5 Gbps)"};
 
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
-    int g14_byte, k, skip, g, prev_nl;
+    int k, skip, prev_nl;
+    unsigned int g15_val, g;
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
            ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
     prev_nl = 1;
-    g14_byte = (p_cap >> 16) & 0xff;
-    for (skip = 0, k = 3; k >= 0; --k) {
-        cp = op->verbose ? g_name_long[3 - k] : g_name[3 - k];
-        g = (g14_byte >> (k * 2)) & 0x3;
+    g15_val = (p_cap >> 14) & 0x3ff;
+    for (skip = 0, k = 4; k >= 0; --k) {
+        cp = op->verbose ? g_name_long[4 - k] : g_name[4 - k];
+        g = (g15_val >> (k * 2)) & 0x3;
         switch (g) {
         case 0:
             ++skip;
@@ -773,11 +767,11 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             prev_nl = 0;
             break;
         default:
-            printf("    %s: g14_byte=0x%x, k=%d", cp, g14_byte, k);
+            printf("    %s: g15_val=0x%x, k=%d", cp, g15_val, k);
             prev_nl = 0;
             break;
         }
-        if ((2 == k) && (0 == skip)) {
+        if ((3 == k) && (0 == skip)) {
             printf("\n");
             skip = 2;
             prev_nl = 1;
@@ -795,26 +789,19 @@ static int
 print_single(const unsigned char * rp, int len, int just1,
              const struct opts_t * op)
 {
-    int j, sas2, res;
+    int sas2, res;
     unsigned int ui;
-    unsigned long long ull;
+    uint64_t ull = 0;
     char b[256];
 
-    ull = 0;
-    if (len > 23) {
-        /* fetch my (expander's) SAS addrss */
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[16 + j];
-        }
-    }
+    if (len > 23) /* fetch my (expander's) SAS addrss */
+        ull = sg_get_unaligned_be64(rp + 16);
     if (just1)
         printf("Discover response%s:\n", (op->do_brief ? " (brief)" : ""));
     else
         printf("phy identifier: %d\n", rp[9]);
     sas2 = !! (rp[3]);
-    res = (rp[4] << 8) + rp[5];
+    res = sg_get_unaligned_be16(rp + 4);
     if ((sas2 && (! op->do_brief)) || (op->verbose > 3)) {
         if (op->verbose || (res > 0))
             printf("  expander change count: %d\n", res);
@@ -844,14 +831,9 @@ print_single(const unsigned char * rp, int len, int just1,
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[15] & 8), !!(rp[15] & 4), !!(rp[15] & 2), (rp[15] & 1));
 
-    printf("  SAS address: 0x%llx\n", ull);
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[24 + j];
-    }
-    printf("  attached SAS address: 0x%llx\n", ull);
+    printf("  SAS address: 0x%" PRIx64 "\n", ull);
+    printf("  attached SAS address: 0x%" PRIx64 "\n",
+           sg_get_unaligned_be64(rp + 24));
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == op->do_brief) {
         if (sas2 || (op->verbose > 3)) {
@@ -863,6 +845,7 @@ print_single(const unsigned char * rp, int len, int just1,
                    !!(rp[33] & 4));
             printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
             printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+            printf("  attached smp priority capable: %d\n", !!(rp[34] & 2));
             printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         }
         printf("  programmed minimum physical link rate: %s\n",
@@ -909,13 +892,8 @@ print_single(const unsigned char * rp, int len, int just1,
         printf("  sata partial enabled: %d\n", !!(rp[49] & 0x1));
     }
     if (len > 59) {
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[52 + j];
-        }
-        printf("  attached device name: 0x%llx\n", ull);
+        printf("  attached device name: 0x%" PRIx64 "\n",
+               sg_get_unaligned_be64(rp + 52));
         printf("  requested inside ZPSDS changed by expander: %d\n",
                !!(rp[60] & 0x40));
         printf("  inside ZPSDS persistent: %d\n", !!(rp[60] & 0x20));
@@ -929,37 +907,17 @@ print_single(const unsigned char * rp, int len, int just1,
             return 0;
         printf("  self-configuration status: %d\n", rp[64]);
         printf("  self-configuration levels completed: %d\n", rp[65]);
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[68 + j];
-        }
-        printf("  self-configuration sas address: 0x%llx\n", ull);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[76 + j];
-        }
+        printf("  self-configuration sas address: 0x%" PRIx64 "\n",
+               sg_get_unaligned_be64(rp + 68));
+        ui = sg_get_unaligned_be32(rp + 76);
         printf("  programmed phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[80 + j];
-        }
+        ui = sg_get_unaligned_be32(rp + 80);
         printf("  current phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[84 + j];
-        }
+        ui = sg_get_unaligned_be32(rp + 84);
         printf("  attached phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
@@ -998,7 +956,7 @@ print_single(const unsigned char * rp, int len, int just1,
     if (len > 115)
         printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117)
-        printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
+        printf("  STP buffer size: %u\n", sg_get_unaligned_be16(rp + 116));
     return 0;
 }
 
@@ -1009,8 +967,8 @@ static int
 do_single(struct smp_target_obj * top, const struct opts_t * op)
 {
     unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
-    unsigned long long ull;
-    int j, len, ret;
+    uint64_t ull = 0;
+    int len, ret;
 
     /* If do_discover() works, returns response length (less CRC bytes) */
     len = do_discover(top, op->phy_id, rp, sizeof(rp), 0, op);
@@ -1021,16 +979,10 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
     if (op->do_hex || op->do_raw)
         return ret;
     ull = 0;
-    if (len > 23) {
-        /* fetch my (expander's) SAS addrss */
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[16 + j];
-        }
-    }
+    if (len > 23)   /* fetch my (expander's) SAS addrss */
+        ull = sg_get_unaligned_be64(rp + 16);
     if (op->do_my) {
-        printf("0x%llx\n", ull);
+        printf("0x%" PRIx64 "\n", ull);
         if ((ull > 0) && (SMP_FRES_PHY_VACANT == ret))
             return 0;
         else
@@ -1056,9 +1008,8 @@ static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * op)
 {
     unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
-    unsigned long long ull, adn;
-    unsigned long long expander_sa;
-    int ret, len, k, j, num, off, plus, negot, adt, zg;
+    uint64_t ull, adn, expander_sa;
+    int ret, len, k, num, off, plus, negot, adt, zg;
     char b[256];
     char dsn[10] = "";
     int first = 1;
@@ -1081,20 +1032,15 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             continue;
         } else if (ret)
             return ret;
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[16 + j];
-        }
+        ull = sg_get_unaligned_be64(rp + 16);
         if (0 == expander_sa)
             expander_sa = ull;
         else {
             if (ull != expander_sa) {
                 if (ull > 0) {
                     pr2serr(">> expander's SAS address is changing?? "
-                            "phy_id=%d, was=%llxh, now=%llxh\n", rp[9],
-                            expander_sa, ull);
+                            "phy_id=%d, was=0x%" PRIx64 ", now=0x%" PRIx64
+                    "\n", rp[9], expander_sa, ull);
                     expander_sa = ull;
                 } else if (op->verbose)
                     pr2serr(">> expander's SAS address shown as 0 at "
@@ -1182,12 +1128,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
         if (k != rp[9])
             pr2serr(">> requested phy_id=%d differs from response phy=%d\n",
                     k, rp[9]);
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[24 + j];
-        }
+        ull = sg_get_unaligned_be64(rp + 24);
         if ((0 == adt) || (adt > 3)) {
             printf("  phy %3d:%s:attached:[0000000000000000:00]", k, cp);
             if ((op->do_brief > 1) || op->do_adn || (len < 64)) {
@@ -1204,18 +1145,14 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             continue;
         }
         if (op->do_adn && (len > 59)) {
-            adn = 0;
-            for (j = 0; j < 8; ++j) {
-                if (j > 0)
-                    adn <<= 8;
-                adn |= rp[52 + j];
-            }
-            printf("  phy %3d:%s:attached:[%016llx:%02d %016llx %s%s", k, cp,
-                   ull, rp[32], adn, smp_short_attached_device_type[adt],
+            adn = sg_get_unaligned_be64(rp + 52);
+            printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %016" PRIx64
+                   " %s%s", k, cp, ull, rp[32], adn,
+                   smp_short_attached_device_type[adt],
                    ((rp[43] & 0x80) ? " V" : ""));
         } else
-            printf("  phy %3d:%s:attached:[%016llx:%02d %s%s", k, cp, ull,
-                   rp[32], smp_short_attached_device_type[adt],
+            printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %s%s", k, cp,
+                   ull, rp[32], smp_short_attached_device_type[adt],
                    ((rp[43] & 0x80) ? " V" : ""));
         if (rp[14] & 0xf) {
             off = 0;
@@ -1292,6 +1229,9 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             break;
         case 0xb:
             cp = "  12 Gbps";
+            break;
+        case 0xc:
+            cp = "  22.5 Gbps";
             break;
         default:
             cp = "";
