@@ -38,11 +38,14 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -53,7 +56,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.37 20150625";    /* spl4r02 */
+static const char * version_str = "1.38 20151122";    /* spl4r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -330,6 +333,9 @@ smp_get_plink_rate(int val, int prog, int b_len, char * b)
     case 0xb:
         snprintf(b, b_len, "12 Gbps");
         break;
+    case 0xc:
+        snprintf(b, b_len, "22.5 Gbps");
+        break;
     default:
         if (prog && (0 == val))
             snprintf(b, b_len, "not programmable");
@@ -379,6 +385,7 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     case 9: snprintf(b, b_len, "phy enabled, 3 Gbps"); break;
     case 0xa: snprintf(b, b_len, "phy enabled, 6 Gbps"); break;
     case 0xb: snprintf(b, b_len, "phy enabled, 12 Gbps"); break;
+    case 0xc: snprintf(b, b_len, "phy enabled, 22.5 Gbps"); break;
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
@@ -630,23 +637,25 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     return 0;
 }
 
-static const char * g_name[] = {"G1", "G2", "G3", "G4"};
+static const char * g_name[] = {"G1", "G2", "G3", "G4", "G5"};
 static const char * g_name_long[] =
-        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)"};
+        {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)",
+         "G5 (22.5 Gbps)"};
 
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
-    int g14_byte, k, skip, g, prev_nl;
+    int k, skip, prev_nl;
+    unsigned int g15_val, g;
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
            ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
     prev_nl = 1;
-    g14_byte = (p_cap >> 16) & 0xff;
-    for (skip = 0, k = 3; k >= 0; --k) {
-        cp = op->verbose ? g_name_long[3 - k] : g_name[3 - k];
-        g = (g14_byte >> (k * 2)) & 0x3;
+    g15_val = (p_cap >> 14) & 0x3ff;
+    for (skip = 0, k = 4; k >= 0; --k) {
+        cp = op->verbose ? g_name_long[4 - k] : g_name[4 - k];
+        g = (g15_val >> (k * 2)) & 0x3;
         switch (g) {
         case 0:
             ++skip;
@@ -664,11 +673,11 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             prev_nl = 0;
             break;
         default:
-            printf("    %s: g14_byte=0x%x, k=%d", cp, g14_byte, k);
+            printf("    %s: g15_val=0x%x, k=%d", cp, g15_val, k);
             prev_nl = 0;
             break;
         }
-        if ((2 == k) && (0 == skip)) {
+        if ((3 == k) && (0 == skip)) {
             printf("\n");
             skip = 2;
             prev_nl = 1;
@@ -688,9 +697,8 @@ static int
 decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
                        struct opts_t * op)
 {
-    unsigned long long ull;
     unsigned int ui;
-    int func_res, phy_id, ecc, adt, route_attr, len, j;
+    int func_res, phy_id, ecc, adt, route_attr, len;
     char b[256];
 
     phy_id = rp[9];
@@ -705,7 +713,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
                smp_get_func_res_str(func_res, sizeof(b), b));
         return -1;
     }
-    ecc = (rp[4] << 8) + rp[5];
+    ecc = sg_get_unaligned_be16(rp + 4);
     if ((0 != ecc) && (hdr_ecc != ecc))
         printf("  >>> expander change counts differ, header: %d, this phy: "
         "%d\n", hdr_ecc, ecc);
@@ -730,20 +738,9 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
     printf("  attached target: ssp=%d stp=%d smp=%d sata_device=%d\n",
            !!(rp[15] & 8), !!(rp[15] & 4), !!(rp[15] & 2), (rp[15] & 1));
 
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[16 + j];
-    }
-    printf("  SAS address: 0x%llx\n", ull);
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[24 + j];
-    }
-    printf("  attached SAS address: 0x%llx\n", ull);
+    printf("  SAS address: 0x%" PRIx64 "\n", sg_get_unaligned_be64(rp + 16));
+    printf("  attached SAS address: 0x%" PRIx64 "\n",
+           sg_get_unaligned_be64(rp + 24));
     printf("  attached phy identifier: %d\n", rp[32]);
     if (0 == op->do_brief) {
         printf("  attached persistent capable: %d\n", !!(rp[33] & 0x80));
@@ -753,6 +750,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));
         printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
         printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+        printf("  attached smp priority capable: %d\n", !!(rp[34] & 2));
         printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         printf("  programmed minimum physical link rate: %s\n",
                smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1,
@@ -799,13 +797,8 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
     printf("  sata slumber enabled: %d\n", !!(rp[49] & 0x2));
     printf("  sata partial enabled: %d\n", !!(rp[49] & 0x1));
     if (len > 59) {
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[52 + j];
-        }
-        printf("  attached device name: 0x%llx\n", ull);
+        printf("  attached device name: 0x%" PRIx64 "\n",
+               sg_get_unaligned_be64(rp + 52));
         printf("  requested inside ZPSDS changed by expander: %d\n",
                !!(rp[60] & 0x40));
         printf("  inside ZPSDS persistent: %d\n", !!(rp[60] & 0x20));
@@ -819,37 +812,17 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
             return 0;
         printf("  self-configuration status: %d\n", rp[64]);
         printf("  self-configuration levels completed: %d\n", rp[65]);
-        ull = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                ull <<= 8;
-            ull |= rp[68 + j];
-        }
-        printf("  self-configuration sas address: 0x%llx\n", ull);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[76 + j];
-        }
+        printf("  self-configuration sas address: 0x%" PRIx64 "\n",
+               sg_get_unaligned_be64(rp + 68));
+        ui = sg_get_unaligned_be32(rp + 76);
         printf("  programmed phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[80 + j];
-        }
+        ui = sg_get_unaligned_be32(rp + 80);
         printf("  current phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
-        ui = 0;
-        for (j = 0; j < 4; ++j) {
-            if (j > 0)
-                ui <<= 8;
-            ui |= rp[84 + j];
-        }
+        ui = sg_get_unaligned_be32(rp + 84);
         printf("  attached phy capabilities: 0x%x\n", ui);
         if (op->do_cap_phy)
             decode_phy_cap(ui, op);
@@ -888,7 +861,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
     if (len > 115)
         printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117)
-        printf("  STP buffer size: %d\n", (rp[116] << 8) + rp[117]);
+        printf("  STP buffer size: %u\n", sg_get_unaligned_be16(rp + 116));
     return 0;
 }
 
@@ -898,8 +871,7 @@ static int
 decode_desc1_multiline(const unsigned char * rp, int z_enabled,
                        struct opts_t * op)
 {
-    unsigned long long ull;
-    int func_res, phy_id, adt, route_attr, j;
+    int func_res, phy_id, adt, route_attr;
     char b[256];
 
     phy_id = rp[0];
@@ -934,13 +906,8 @@ decode_desc1_multiline(const unsigned char * rp, int z_enabled,
 
     if (0 == op->do_brief)
         printf("  virtual phy: %d\n", !!(rp[6] & 0x80));
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[12 + j];
-    }
-    printf("  attached SAS address: 0x%llx\n", ull);
+    printf("  attached SAS address: 0x%" PRIx64 "\n",
+           sg_get_unaligned_be64(rp + 12));
     printf("  attached phy identifier: %d\n", rp[10]);
     if (0 == op->do_brief)
         printf("  phy change count: %d\n", rp[11]);
@@ -977,8 +944,8 @@ static int
 decode_1line(const unsigned char * rp, int len, int desc,
              int z_enabled, int has_t2t, struct opts_t * op)
 {
-    unsigned long long ull, adn;
-    int phy_id, j, off, plus, negot, adt, route_attr, vp, asa_off;
+    uint64_t ull, adn;
+    int phy_id, off, plus, negot, adt, route_attr, vp, asa_off;
     int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
     int zg_not1 = 0;
     char b[256];
@@ -1084,12 +1051,7 @@ decode_1line(const unsigned char * rp, int len, int desc,
     }
     if ((0 == op->verbose) && (0 == adt) && op->do_brief)
         return 0;
-    ull = 0;
-    for (j = 0; j < 8; ++j) {
-        if (j > 0)
-            ull <<= 8;
-        ull |= rp[asa_off + j];
-    }
+    ull = sg_get_unaligned_be64(rp + asa_off);
     if ((0 == adt) || (adt > 3)) {
         printf("  phy %3d:%s:attached:[0000000000000000:00]", phy_id, cp);
         if ((op->do_brief > 1) || op->do_adn) {
@@ -1106,18 +1068,13 @@ decode_1line(const unsigned char * rp, int len, int desc,
         return !! zg_not1;
     }
     if ((0 == desc) && op->do_adn) {
-        adn = 0;
-        for (j = 0; j < 8; ++j) {
-            if (j > 0)
-                adn <<= 8;
-            adn |= rp[52 + j];
-        }
-        printf("  phy %3d:%s:attached:[%016llx:%02d %016llx %s%s", phy_id,
-               cp, ull, aphy_id, adn, smp_short_attached_device_type[adt],
-               (vp ? " V" : ""));
+        adn = sg_get_unaligned_be64(rp + 52);
+        printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %016" PRIx64
+               " %s%s", phy_id, cp, ull, aphy_id, adn,
+               smp_short_attached_device_type[adt], (vp ? " V" : ""));
     } else
-        printf("  phy %3d:%s:attached:[%016llx:%02d %s%s", phy_id, cp, ull,
-               aphy_id, smp_short_attached_device_type[adt],
+        printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %s%s", phy_id, cp,
+               ull, aphy_id, smp_short_attached_device_type[adt],
                (vp ? " V" : ""));
     if (a_init & 0xf) {
         off = 0;
@@ -1189,6 +1146,9 @@ decode_1line(const unsigned char * rp, int len, int desc,
         case 0xb:
             cp = "  12 Gbps";
             break;
+        case 0xc:
+            cp = "  22.5 Gbps";
+            break;
         default:
             cp = "";
             break;
@@ -1206,13 +1166,13 @@ decode_1line(const unsigned char * rp, int len, int desc,
 }
 
 static void
-output_header_info(const unsigned char * resp, struct opts_t * op)
+output_header_info(const unsigned char * rp, struct opts_t * op)
 {
     int hdr_ecc, sphy_id, z_enabled ;
 
-    hdr_ecc = (resp[4] << 8) + resp[5];
-    sphy_id = resp[8];
-    z_enabled = !!(resp[16] & 0x40);
+    hdr_ecc = sg_get_unaligned_be16(rp + 4);
+    sphy_id = rp[8];
+    z_enabled = !!(rp[16] & 0x40);
 
     if (op->zpi_fn) {
         if (0 == op->do_brief) {
@@ -1231,25 +1191,25 @@ output_header_info(const unsigned char * resp, struct opts_t * op)
         if (! op->do_1line) {
             printf("Discover list response header:\n");
             printf("  starting phy id: %d\n", sphy_id);
-            printf("  number of discover list descriptors: %d\n", resp[9]);
+            printf("  number of discover list descriptors: %d\n", rp[9]);
         }
         if ((! op->do_1line) && (0 == op->do_brief)) {
             printf("  expander change count: %d\n", hdr_ecc);
-            printf("  filter: %d\n", resp[10] & 0xf);
-            printf("  descriptor type: %d\n", resp[11] & 0xf);
+            printf("  filter: %d\n", rp[10] & 0xf);
+            printf("  descriptor type: %d\n", rp[11] & 0xf);
             printf("  discover list descriptor length: %d bytes\n",
-                   resp[12] * 4);
-            printf("  zoning supported: %d\n", !!(resp[16] & 0x80));
+                   rp[12] * 4);
+            printf("  zoning supported: %d\n", !!(rp[16] & 0x80));
             printf("  zoning enabled: %d\n", z_enabled);
-            printf("  self configuring: %d\n", !!(resp[16] & 0x8));
-            printf("  zone configuring: %d\n", !!(resp[16] & 0x4));
-            printf("  configuring: %d\n", !!(resp[16] & 0x2));
+            printf("  self configuring: %d\n", !!(rp[16] & 0x8));
+            printf("  zone configuring: %d\n", !!(rp[16] & 0x4));
+            printf("  configuring: %d\n", !!(rp[16] & 0x2));
             printf("  externally configurable route table: %d\n",
-                   !!(resp[16] & 0x1));
-            printf("  last self-configuration status descriptor index: %d\n",
-                   (resp[18] << 8) + resp[19]);    /* sas2r12 */
-            printf("  last phy event list descriptor index: %d\n",
-                   (resp[20] << 8) + resp[21]);
+                   !!(rp[16] & 0x1));
+            printf("  last self-configuration status descriptor index: %u\n",
+                   sg_get_unaligned_be16(rp + 18));    /* sas2r12 */
+            printf("  last phy event list descriptor index: %u\n",
+                   sg_get_unaligned_be16(rp + 20));
         }
     }
 }
@@ -1528,7 +1488,7 @@ main(int argc, char * argv[])
         len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
         if ((0 == j) && ((! op->do_1line) || op->zpi_fn))
             output_header_info(resp, op);
-        hdr_ecc = (resp[4] << 8) + resp[5];
+        hdr_ecc = sg_get_unaligned_be16(resp + 4);
         z_enabled = !!(resp[16] & 0x40);
         resp_filter = resp[10] & 0xf;
         if (op->filter != resp_filter)

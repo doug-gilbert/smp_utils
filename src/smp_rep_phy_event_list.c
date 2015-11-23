@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 Douglas Gilbert.
+ * Copyright (c) 2011-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * response.
  */
 
-static const char * version_str = "1.08 20130604";
+static const char * version_str = "1.09 20151122";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
@@ -87,6 +87,8 @@ static struct pes_name_t pes_name_arr[] = {
     {0x4, "Phy reset problem count"},
     {0x5, "Elasticity buffer overflow count"},
     {0x6, "Received ERROR count"},
+    {0x7, "Invalid SPL packet count"},
+    {0x8, "Loss of SPL packet synchronization count"},
     /* SAS arbitration-based phy events (0x20 to 0x3F) */
     {0x20, "Received address frame error count"},
     {0x21, "Transmitted abandon-class OPEN_REJECT count"},
@@ -103,6 +105,7 @@ static struct pes_name_t pes_name_arr[] = {
     {0x2c, "Peak transmitted arbitration wait time"},   /*PVD */
     {0x2d, "Peak arbitration time"},                    /*PVD */
     {0x2e, "Peak connection time"},                     /*PVD */
+    {0x2f, "Persistent connection count"},
     /* SSP related phy events (0x40 to 0x4F) */
     {0x40, "Transmitted SSP frame count"},
     {0x41, "Received SSP frame count"},

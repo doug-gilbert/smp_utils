@@ -2,7 +2,7 @@ smp-utils (0.99-0.1) unstable; urgency=low
 
   * add --dsn option to smp_discover[_list]
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 02 Mar 2015 23:00:00 -0500
+ -- Douglas Gilbert <dgilbert@interlog.com>  Sun, 22 Nov 2015 19:00:00 -0500
 
 smp-utils (0.98-0.1) unstable; urgency=low
 

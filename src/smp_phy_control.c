@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static const char * version_str = "1.18 20140526";
+static const char * version_str = "1.19 20151118";
 
 static struct option long_options[] = {
     {"attached", required_argument, 0, 'a'},
@@ -107,7 +107,7 @@ usage(void)
           "speed\n"
           "                             (8->1.5 Gbps, 9->3 Gbps, "
           "10->6 Gbps,\n"
-          "                             11->12 Gbps)\n"
+          "                             11->12 Gbps, 12->22.5 Gbps)\n"
           "    --min=MI|-m MI           programmable minimum physical link "
           "speed\n"
           "    --op=OP|-o OP            OP (operation) is a number or "
@@ -263,10 +263,11 @@ main(int argc, char * argv[])
             case 9:
             case 10:
             case 11:
+            case 12:
                 break;
             default:
                 fprintf(stderr, "bad argument to '--min', want 0, 8, 9, "
-                        "10 or 11\n");
+                        "10, 11 or 12\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -278,10 +279,11 @@ main(int argc, char * argv[])
             case 9:
             case 10:
             case 11:
+            case 12:
                 break;
             default:
                 fprintf(stderr, "bad argument to '--max', want 0, 8, 9, "
-                        "10 or 11\n");
+                        "10, 11 or 12\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;

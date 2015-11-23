@@ -42,6 +42,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -49,7 +50,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.26 20150304";    /* spl3r04 */
+static const char * version_str = "1.27 20151122";    /* spl4r05 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -124,6 +125,7 @@ main(int argc, char * argv[])
     int do_zero = 0;
     long long sa_ll;
     unsigned long long sa = 0;
+    unsigned int u;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -343,16 +345,16 @@ main(int argc, char * argv[])
     }
 
     if (do_ccount) {
-        printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
+        printf("%u\n", sg_get_unaligned_be16(smp_resp + 4));
         goto err_out;
     }
     sas2 = !! (smp_resp[3]);
     if (do_full) {
         printf("Report general response:\n");
-        printf("  expander change count: %d\n",
-               (smp_resp[4] << 8) + smp_resp[5]);
-        printf("  expander route indexes: %d\n",
-               (smp_resp[6] << 8) + smp_resp[7]);
+        printf("  expander change count: %u\n",
+               sg_get_unaligned_be16(smp_resp + 4));
+        printf("  expander route indexes: %u\n",
+               sg_get_unaligned_be16(smp_resp + 6));
     } else
         printf("Report general, brief response:\n");
     printf("  long response: %d\n", !!(smp_resp[8] & 0x80));
@@ -383,21 +385,21 @@ main(int argc, char * argv[])
         }
         if ((0 == smp_resp[12]) && verbose)
             printf("  enclosure logical identifier <empty>\n");
-        k = (smp_resp[28] << 8) + smp_resp[29];
-        if (0 == k) {
+        u = sg_get_unaligned_be16(smp_resp + 28);
+        if (0 == u) {
             if (verbose)
                 printf("  SSP maximum connect time unlimited\n");
         } else
-            printf("  SSP maximum connect time limit: %d (100 usec units)\n",
-                   k);
+            printf("  SSP maximum connect time limit: %u (100 usec units)\n",
+                   u);
         if (len < 36)
             goto err_out;
-        printf("  STP bus inactivity timer: %d (unit: 100ms)\n",
-               (smp_resp[30] << 8) + smp_resp[31]);
-        printf("  STP maximum connect time: %d (unit: 100ms)\n",
-               (smp_resp[32] << 8) + smp_resp[33]);
-        printf("  STP SMP I_T nexus loss time: %d (unit: ms)\n",
-               (smp_resp[34] << 8) + smp_resp[35]);
+        printf("  STP bus inactivity timer: %u (unit: 100ms)\n",
+               sg_get_unaligned_be16(smp_resp + 30));
+        printf("  STP maximum connect time: %u (unit: 100ms)\n",
+               sg_get_unaligned_be16(smp_resp + 32));
+        printf("  STP SMP I_T nexus loss time: %u (unit: ms)\n",
+               sg_get_unaligned_be16(smp_resp + 34));
         if (len < 40)
             goto err_out;
     } else {
@@ -429,8 +431,8 @@ main(int argc, char * argv[])
                    !!(smp_resp[37] & 0x2));
             printf("  saving zoning enabled supported: %d\n",
                    !!(smp_resp[37] & 0x1));
-            printf("  maximum number of routed SAS addresses: %d\n",
-                   (smp_resp[38]  << 8) + smp_resp[39]);
+            printf("  maximum number of routed SAS addresses: %u\n",
+                   sg_get_unaligned_be16(smp_resp + 38));
             if (len < 48)
                 goto err_out;
             printf("  active zone manager SAS address (hex): ");
@@ -449,8 +451,8 @@ main(int argc, char * argv[])
     if (len < 50)
         goto err_out;
     if (do_full) {
-        printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
-               (smp_resp[48]  << 8) + smp_resp[49]);
+        printf("  zone lock inactivity time limit: %u (unit: 100ms)\n",
+               sg_get_unaligned_be16(smp_resp + 48));
         printf("  power done timeout: %d (unit: second)\n", smp_resp[52]);
     }
     if (len < 56)
@@ -475,16 +477,16 @@ main(int argc, char * argv[])
            smp_resp[59]);
     if (len < 68)
         goto err_out;
-    printf("  last self-configuration status descriptor index: %d\n",
-           (smp_resp[60] << 8) + smp_resp[61]);
+    printf("  last self-configuration status descriptor index: %u\n",
+           sg_get_unaligned_be16(smp_resp + 60));
     printf("  maximum number of stored self-configuration status "
-           "descriptors: %d\n", (smp_resp[62] << 8) + smp_resp[63]);
-    printf("  last phy event list descriptor index: %d\n",
-           (smp_resp[64] << 8) + smp_resp[65]);
+           "descriptors: %u\n", sg_get_unaligned_be16(smp_resp + 62));
+    printf("  last phy event list descriptor index: %u\n",
+           sg_get_unaligned_be16(smp_resp + 64));
     printf("  maximum number of stored phy event list "
-           "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
-    printf("  STP reject to open limit: %d (unit: 10us)\n",
-           (smp_resp[68] << 8) + smp_resp[69]);
+           "descriptors: %u\n", sg_get_unaligned_be16(smp_resp + 66));
+    printf("  STP reject to open limit: %u (unit: 10us)\n",
+           sg_get_unaligned_be16(smp_resp + 68));
 
 err_out:
     res = smp_initiator_close(&tobj);

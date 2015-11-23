@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014 Douglas Gilbert.
+ * Copyright (c) 2006-2015 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.09 20140526";    /* spl2r01 */
+static const char * version_str = "1.10 20151122";    /* spl4r05 */
 
 static struct option long_options[] = {
     {"connect", 1, 0, 'c'},
@@ -64,6 +64,7 @@ static struct option long_options[] = {
     {"raw", 0, 0, 'r'},
     {"reduced", 1, 0, 'R'},
     {"sa", 1, 0, 's'},
+    {"ssp", 1, 0, 'S'},
     {"verbose", 0, 0, 'v'},
     {"version", 0, 0, 'V'},
     {0, 0, 0, 0},
@@ -81,8 +82,8 @@ usage(void)
           "                        [--nexus=NE] [--open=OP] [--power=PD] "
           "[--raw]\n"
           "                        [--reduced=RE] [--sa=SAS_ADDR] "
-          "[--verbose]\n"
-          "                        [--version] SMP_DEVICE[,N]\n"
+          "[--ssp=CTL]\n"
+          "                        [--verbose] [--version] SMP_DEVICE[,N]\n"
           "  where:\n"
           "    --connect=CO|-c CO     STP maximum connect time limit "
           "(100 us)\n"
@@ -108,6 +109,8 @@ usage(void)
           "on\n"
           "                                 the interface, may not be "
           "needed\n"
+          "    --ssp=CTL|-S CTL       SSP maximum connect time limit "
+          "(100 us)\n"
           "    --verbose|-v           increase verbosity\n"
           "    --version|-V           print version string and exit\n\n"
           "Performs a SMP CONFIGURE GENERAL function\n"
@@ -135,12 +138,14 @@ main(int argc, char * argv[])
     int do_open = 0;
     int do_pdt = 0;
     int do_reduced = 0;
+    int do_ssp = 0;
     int connect_val = 0;
     int inactivity_val = 0;
     int nexus_val = 0;
     int open_val = 0;
     int power_val = 0;
     int reduced_val = 0;
+    int ssp_ctl = 0;
     int do_raw = 0;
     int verbose = 0;
     long long sa_ll;
@@ -162,7 +167,7 @@ main(int argc, char * argv[])
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:p:rR:s:vV", long_options,
+        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:p:rR:s:S:vV", long_options,
                         &option_index);
         if (c == -1)
             break;
@@ -249,6 +254,15 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             sa = (unsigned long long)sa_ll;
+            break;
+        case 'S':
+            ssp_ctl = smp_get_num(optarg);
+            if ((ssp_ctl < 0) || (ssp_ctl > 65535)) {
+                fprintf(stderr, "bad argument to '--ssp', expect "
+                        "value from 0 to 65535\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            ++do_ssp;
             break;
         case 'v':
             ++verbose;
@@ -353,6 +367,11 @@ main(int argc, char * argv[])
     if (do_reduced) {
         smp_req[8] |= 0x8;
         smp_req[16] = reduced_val & 0xff;
+    }
+    if (do_ssp) {
+        smp_req[8] |= 0x40;
+        smp_req[6] = (ssp_ctl >> 8) & 0xff;
+        smp_req[7] = ssp_ctl & 0xff;
     }
     if (verbose) {
         fprintf(stderr, "    Configure general request: ");
