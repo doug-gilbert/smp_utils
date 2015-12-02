@@ -43,6 +43,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -51,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.01 20151122";
+static const char * version_str = "1.02 20151201";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -662,18 +663,14 @@ main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     smp_req[3] = (num_desc * 2) + 2;
-    smp_req[4] = (expected_cc >> 8) & 0xff;
-    smp_req[5] = expected_cc & 0xff;
+    sg_put_unaligned_be16((uint16_t)expected_cc, smp_req + 4);
     smp_req[6] = do_clear ? 1 : 0;
     smp_req[9] = phy_id;
     smp_req[10] = 2;    /* descriptor 2 dwords long */
     smp_req[11] = num_desc;
     for (k = 0, j = 12; k < num_desc; ++k, j += 8) {
         smp_req[j + 3] = pes_arr[k];
-        smp_req[j + 4] = (thres_arr[k] >> 24) & 0xff;
-        smp_req[j + 5] = (thres_arr[k] >> 16) & 0xff;
-        smp_req[j + 6] = (thres_arr[k] >> 8) & 0xff;
-        smp_req[j + 7] = thres_arr[k] & 0xff;
+        sg_put_unaligned_be32((uint32_t)thres_arr[k], smp_req + j + 4);
     }
     if (verbose) {
         fprintf(stderr, "    Configure phy event request:");

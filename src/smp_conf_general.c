@@ -42,6 +42,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -338,27 +339,22 @@ main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    smp_req[4] = (expected_cc >> 8) & 0xff;
-    smp_req[5] = expected_cc & 0xff;
+    sg_put_unaligned_be16((uint16_t)expected_cc, smp_req + 4);
     if (do_connect) {
         smp_req[8] |= 0x2;
-        smp_req[12] = (connect_val >> 8) & 0xff;
-        smp_req[13] = connect_val & 0xff;
+        sg_put_unaligned_be16((uint16_t)connect_val, smp_req + 12);
     }
     if (do_inactivity) {
         smp_req[8] |= 0x1;
-        smp_req[10] = (inactivity_val >> 8) & 0xff;
-        smp_req[11] = inactivity_val & 0xff;
+        sg_put_unaligned_be16((uint16_t)inactivity_val, smp_req + 10);
     }
     if (do_nexus) {
         smp_req[8] |= 0x4;
-        smp_req[14] = (nexus_val >> 8) & 0xff;
-        smp_req[15] = nexus_val & 0xff;
+        sg_put_unaligned_be16((uint16_t)nexus_val, smp_req + 14);
     }
     if (do_open) {
         smp_req[8] |= 0x10;
-        smp_req[18] = (open_val >> 8) & 0xff;
-        smp_req[19] = open_val & 0xff;
+        sg_put_unaligned_be16((uint16_t)open_val, smp_req + 18);
     }
     if (do_pdt) {
         smp_req[8] |= 0x20;
@@ -370,8 +366,7 @@ main(int argc, char * argv[])
     }
     if (do_ssp) {
         smp_req[8] |= 0x40;
-        smp_req[6] = (ssp_ctl >> 8) & 0xff;
-        smp_req[7] = ssp_ctl & 0xff;
+        sg_put_unaligned_be16((uint16_t)ssp_ctl, smp_req + 6);
     }
     if (verbose) {
         fprintf(stderr, "    Configure general request: ");
