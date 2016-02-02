@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2015 Douglas Gilbert.
+ * Copyright (c) 2006-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
  * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
  */
 
-static const char * version_str = "1.38 20151122";    /* spl4r05 */
+static const char * version_str = "1.39 20160201";    /* spl4r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -105,7 +105,7 @@ struct opts_t {
     int do_summary;
     int verbose;
     int sa_given;
-    unsigned long long sa;
+    uint64_t sa;
     const char * zpi_fn;
     FILE * zpi_filep;
 };
@@ -1220,7 +1220,7 @@ main(int argc, char * argv[])
 {
     int res, c, len, hdr_ecc, num_desc, resp_filter, resp_desc_type;
     int desc_len, k, j, no_more, err, off, adt, fresult;
-    long long sa_ll;
+    int64_t sa_ll;
     char i_params[256];
     char device_name[512];
     unsigned char resp[1020 + 8];
@@ -1321,7 +1321,7 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            op->sa = (unsigned long long)sa_ll;
+            op->sa = (uint64_t)sa_ll;
             if (op->sa > 0)
                 ++op->sa_given;
             break;
@@ -1384,7 +1384,7 @@ main(int argc, char * argv[])
                 pr2serr("    use 0\n");
                 sa_ll = 0;
             }
-            op->sa = (unsigned long long)sa_ll;
+            op->sa = (uint64_t)sa_ll;
         }
     }
     if (op->sa > 0) {

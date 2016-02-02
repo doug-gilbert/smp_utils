@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 Douglas Gilbert.
+ * Copyright (c) 2011-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -42,6 +43,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -50,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.06 20130604";
+static const char * version_str = "1.07 20160201";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -96,57 +98,77 @@ static struct option long_options[] = {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
-          "smp_rep_zone_perm_tbl [--append] [--bits=COL] [--help] [--hex]\n"
-          "                             [--interface=PARAMS] [--multiple] "
-          "[--nocomma]\n"
-          "                             [--num=MD] [--permf=FN] [--raw] "
-          "[--report=RT]\n"
-          "                             [--sa=SAS_ADDR] [--start=SS] "
-          "[--verbose]\n"
-          "                             [--version] SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --append|-a          append to FN with '--permf' option\n"
-          "    --bits=COL|-B COL    output table as bit array with COL "
-          "columns\n"
-          "                         and ZP[0,0] top left (def: output byte "
-          "array)\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --multiple|-m        issue multiple function requests until "
-          "all\n"
-          "                         available descriptors (from SS) are "
-          "read\n"
-          "    --nocomma|-N         output descriptors as long string of "
-          "hex\n"
-          "                         (default: bytes comma separated)\n"
-          "    --num=MD|-n MD       maximum number of descriptors in one "
-          "response\n"
-          "                         (default: 63)\n"
-          "    --permf=FN|-P FN     write descriptors to file FN (default: "
-          "write\n"
-          "                         to stdout)\n"
-          "    --raw|-r             output response in binary\n"
-          "    --report=RT|-R RT    report type (default: 0). 0 -> current;"
-          "\n"
-          "                         1 -> shadow; 2 -> saved; 3 -> default\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). Depending "
-          "on\n"
-          "                                 the interface, may not be "
-          "needed\n"
-          "    --start=SS|-f SS     starting (first) source zone group "
-          "(default: 0)\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
-          "Perform one or more SMP REPORT ZONE PERMISSION TABLE functions\n"
-          );
+    pr2serr("Usage: smp_rep_zone_perm_tbl [--append] [--bits=COL] [--help] "
+            "[--hex]\n"
+            "                             [--interface=PARAMS] [--multiple] "
+            "[--nocomma]\n"
+            "                             [--num=MD] [--permf=FN] [--raw] "
+            "[--report=RT]\n"
+            "                             [--sa=SAS_ADDR] [--start=SS] "
+            "[--verbose]\n"
+            "                             [--version] SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --append|-a          append to FN with '--permf' option\n"
+            "    --bits=COL|-B COL    output table as bit array with COL "
+            "columns\n"
+            "                         and ZP[0,0] top left (def: output byte "
+            "array)\n"
+            "    --help|-h            print out usage message\n"
+            "    --hex|-H             print response in hexadecimal\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --multiple|-m        issue multiple function requests until "
+            "all\n"
+            "                         available descriptors (from SS) are "
+            "read\n"
+            "    --nocomma|-N         output descriptors as long string of "
+            "hex\n"
+            "                         (default: bytes comma separated)\n"
+            "    --num=MD|-n MD       maximum number of descriptors in one "
+            "response\n"
+            "                         (default: 63)\n"
+            "    --permf=FN|-P FN     write descriptors to file FN (default: "
+            "write\n"
+            "                         to stdout)\n"
+            "    --raw|-r             output response in binary\n"
+            "    --report=RT|-R RT    report type (default: 0). 0 -> current;"
+            "\n"
+            "                         1 -> shadow; 2 -> saved; 3 -> default\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n"
+            "    --start=SS|-f SS     starting (first) source zone group "
+            "(default: 0)\n"
+            "    --verbose|-v         increase verbosity\n"
+            "    --version|-V         print version string and exit\n\n"
+            "Perform one or more SMP REPORT ZONE PERMISSION TABLE functions\n"
+           );
 }
 
 static void
@@ -176,8 +198,8 @@ main(int argc, char * argv[])
     int sszg = 0;
     int bits_col = 0;
     int verbose = 0;
-    long long sa_ll;
-    unsigned long long sa = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -208,16 +230,14 @@ main(int argc, char * argv[])
         case 'B':
            bits_col = smp_get_num(optarg);
            if ((bits_col < 1) || (bits_col > 256)) {
-                fprintf(stderr, "bad argument to '--bits=', expect 1 to "
-                        "256\n");
+                pr2serr("bad argument to '--bits=', expect 1 to 256\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'f':       /* note: maps to '--start=SS' option */
            sszg = smp_get_num(optarg);
            if ((sszg < 0) || (sszg > 255)) {
-                fprintf(stderr, "bad argument to '--start=', expect 0 to "
-                        "255\n");
+                pr2serr("bad argument to '--start=', expect 0 to 255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -235,8 +255,7 @@ main(int argc, char * argv[])
         case 'n':
            mndesc = smp_get_num(optarg);
            if ((mndesc < 0) || (mndesc > 63)) {
-                fprintf(stderr, "bad argument to '--num=', expect 0 to "
-                        "63\n");
+                pr2serr("bad argument to '--num=', expect 0 to 63\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             if (0 == mndesc)
@@ -259,27 +278,26 @@ main(int argc, char * argv[])
         case 'R':
            report_type = smp_get_num(optarg);
            if ((report_type < 0) || (report_type > 3)) {
-                fprintf(stderr, "bad argument to '--report=', expect 0 to "
-                        "3\n");
+                pr2serr("bad argument to '--report=', expect 0 to 3\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
             break;
         case 'v':
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         default:
-            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
+            pr2serr("unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -292,8 +310,7 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -303,8 +320,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use "
+                    "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -312,8 +329,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after separator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -322,27 +338,25 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
     if (multiple && mndesc_given) {
-        fprintf(stderr, "--multiple and --num clash, give one or the "
-                "other\n");
+        pr2serr("--multiple and --num clash, give one or the other\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
 
@@ -356,7 +370,7 @@ main(int argc, char * argv[])
         else {
             foutp = fopen(permf, (do_append ? "a" : "w"));
             if (NULL == foutp) {
-                fprintf(stderr, "unable to open %s, error: %s\n", permf,
+                pr2serr("unable to open %s, error: %s\n", permf,
                         safe_strerror(errno));
                 ret = SMP_LIB_FILE_ERROR;
                 goto err_out;
@@ -382,10 +396,10 @@ main(int argc, char * argv[])
             numzg = mndesc;
         smp_req[7] = numzg & 0xff;
         if (verbose) {
-            fprintf(stderr, "    Report zone permission table request: ");
+            pr2serr("    Report zone permission table request: ");
             for (k = 0; k < (int)sizeof(smp_req); ++k)
-                fprintf(stderr, "%02x ", smp_req[k]);
-            fprintf(stderr, "\n");
+                pr2serr("%02x ", smp_req[k]);
+            pr2serr("\n");
         }
         memset(&smp_rr, 0, sizeof(smp_rr));
         smp_rr.request_len = sizeof(smp_req);
@@ -395,21 +409,20 @@ main(int argc, char * argv[])
         res = smp_send_req(&tobj, &smp_rr, verbose);
 
         if (res) {
-            fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+            pr2serr("smp_send_req failed, res=%d\n", res);
             if (0 == verbose)
-                fprintf(stderr, "    try adding '-v' option for more debug\n");
+                pr2serr("    try adding '-v' option for more debug\n");
             ret = -1;
             goto err_out;
         }
         if (smp_rr.transport_err) {
-            fprintf(stderr, "smp_send_req transport_error=%d\n",
-                    smp_rr.transport_err);
+            pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
             ret = -1;
             goto err_out;
         }
         act_resplen = smp_rr.act_response_len;
         if ((act_resplen >= 0) && (act_resplen < 4)) {
-            fprintf(stderr, "response too short, len=%d\n", act_resplen);
+            pr2serr("response too short, len=%d\n", act_resplen);
             ret = SMP_LIB_CAT_MALFORMED;
             goto err_out;
         }
@@ -419,14 +432,14 @@ main(int argc, char * argv[])
             if (len < 0) {
                 len = 0;
                 if (verbose > 0)
-                    fprintf(stderr, "unable to determine response length\n");
+                    pr2serr("unable to determine response length\n");
             }
         }
         len = 4 + (len * 4);    /* length in bytes, excluding 4 byte CRC */
         if ((act_resplen >= 0) && (len > act_resplen)) {
             if (verbose)
-                fprintf(stderr, "actual response length [%d] less than "
-                        "deduced length [%d]\n", act_resplen, len);
+                pr2serr("actual response length [%d] less than deduced "
+                        "length [%d]\n", act_resplen, len);
             len = act_resplen;
         }
         if (do_hex || do_raw) {
@@ -441,26 +454,26 @@ main(int argc, char * argv[])
             if (smp_resp[2]) {
                 ret = smp_resp[2];
                 if (verbose)
-                    fprintf(stderr, "Report zone permission table result: "
-                            "%s\n", smp_get_func_res_str(ret, sizeof(b), b));
+                    pr2serr("Report zone permission table result: %s\n",
+                            smp_get_func_res_str(ret, sizeof(b), b));
             }
             goto err_out;
         }
         if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-            fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+            pr2serr("expected SMP frame response type, got=0x%x\n",
                     smp_resp[0]);
             ret = SMP_LIB_CAT_MALFORMED;
             goto err_out;
         }
         if (smp_resp[1] != smp_req[1]) {
-            fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                    smp_req[1], smp_resp[1]);
+            pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                    smp_resp[1]);
             ret = SMP_LIB_CAT_MALFORMED;
             goto err_out;
         }
         if (smp_resp[2]) {
             cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-            fprintf(stderr, "Report zone permission table result: %s\n", cp);
+            pr2serr("Report zone permission table result: %s\n", cp);
             ret = smp_resp[2];
             goto err_out;
         }
@@ -478,7 +491,7 @@ main(int argc, char * argv[])
                 desc_per_resp = 31;
             }
             fprintf(foutp, "# Report zone permission table response:\n");
-            res = (smp_resp[4] << 8) + smp_resp[5];
+            res = sg_get_unaligned_be16(smp_resp + 4);
             if (verbose || res)
                 fprintf(foutp, "#  Expander change count: %d\n", res);
             fprintf(foutp, "#  zone locked: %d\n", !! (0x80 & smp_resp[6]));
@@ -508,8 +521,7 @@ main(int argc, char * argv[])
                 fprintf(foutp, "\n\n");
             }
             if (0 == numzg_blen[numzg]) {
-                fprintf(stderr, "unexpected number of zone groups: %d\n",
-                        numzg);
+                pr2serr("unexpected number of zone groups: %d\n", numzg);
                 goto err_out;
             }
         }
@@ -551,13 +563,13 @@ err_out:
     }
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
+        pr2serr("close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
