@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 Douglas Gilbert.
+ * Copyright (c) 2011-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
@@ -52,7 +53,7 @@
  * its response.
  */
 
-static const char * version_str = "1.02 20151201";
+static const char * version_str = "1.03 20160117";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -129,52 +130,71 @@ static struct pes_name_t pes_name_arr[] = {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
-          "smp_conf_phy_event [--clear] [--enumerate] [--expected=EX]\n"
-          "                          [--file=FILE] [--help] [--hex]\n"
-          "                          [--interface=PARAMS] "
-          "[--pes=PES,PES...]\n"
-          "                          [--phy=ID] [--raw] [--sa=SAS_ADDR]\n"
-          "                          [--thres=THR,THR...] [--verbose] "
-          "[--version]\n"
-          "                          SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --clear|-C             clear all peak value detectors for "
-          "this phy\n"
-          "    --enumerate|-e         enumerate phy event source names, "
-          "ignore\n"
-          "                           SMP_DEVICE if given\n"
-          "    --expected=EX|-E EX    set expected expander change "
-          "count to EX\n"
-          "    --file=FILE|-f FILE    read PES, THR pairs from FILE\n"
-          "    --help|-h              print out usage message\n"
-          "    --hex|-H               print response in hexadecimal\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --pes=PES,PES...|-P PES,PES...    comma separated list "
-          "of Phy\n"
-          "                                      Event Sources\n"
-          "    --phy=ID|-p ID         phy identifier (def: 0)\n"
-          "    --raw|-r               output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                                 the interface, may not be "
-          "needed\n"
-          "    --thres=THR,THR...|-T THR,THR...    comma separated list "
-          "of peak\n"
-          "                                        value detector "
-          "thresholds\n"
-          "    --verbose|-v           increase verbosity\n"
-          "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP CONFIGURE PHY EVENT function\n"
-          );
+    pr2serr("Usage: smp_conf_phy_event [--clear] [--enumerate] "
+            "[--expected=EX]\n"
+            "                          [--file=FILE] [--help] [--hex]\n"
+            "                          [--interface=PARAMS] "
+            "[--pes=PES,PES...]\n"
+            "                          [--phy=ID] [--raw] [--sa=SAS_ADDR]\n"
+            "                          [--thres=THR,THR...] [--verbose] "
+            "[--version]\n"
+            "                          SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --clear|-C             clear all peak value detectors for "
+            "this phy\n"
+            "    --enumerate|-e         enumerate phy event source names, "
+            "ignore\n"
+            "                           SMP_DEVICE if given\n"
+            "    --expected=EX|-E EX    set expected expander change "
+            "count to EX\n"
+            "    --file=FILE|-f FILE    read PES, THR pairs from FILE\n"
+            "    --help|-h              print out usage message\n"
+            "    --hex|-H               print response in hexadecimal\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --pes=PES,PES...|-P PES,PES...    comma separated list "
+            "of Phy\n"
+            "                                      Event Sources\n"
+            "    --phy=ID|-p ID         phy identifier (def: 0)\n"
+            "    --raw|-r               output response in binary\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n"
+            "    --thres=THR,THR...|-T THR,THR...    comma separated list "
+            "of peak\n"
+            "                                        value detector "
+            "thresholds\n"
+            "    --verbose|-v           increase verbosity\n"
+            "    --version|-V           print version string and exit\n\n"
+            "Performs a SMP CONFIGURE PHY EVENT function\n"
+           );
 }
-
 /* Fetches unsigned int and returns it if found, with *err set to 0 if
  * err is non-NULL. If unable to decode returns 0, with *err set to 1 if
  * err is non-NULL. Assumes number is decimal unless prefixed by '0x' (or
@@ -235,12 +255,12 @@ build_pes_arr(const char * inp, unsigned char * pes_arr,
     if (0 == in_len)
         *pes_arr_len = 0;
     if ('-' == inp[0]) {        /* read from stdin */
-        fprintf(stderr, "'--pes' cannot be read from stdin\n");
+        pr2serr("'--pes' cannot be read from stdin\n");
         return 1;
     } else {        /* list of numbers (default decimal) on command line */
         k = strspn(inp, "0123456789aAbBcCdDeEfFhHxX, ");
         if (in_len != k) {
-            fprintf(stderr, "build_pes_arr: error at pos %d\n", k + 1);
+            pr2serr("%s: error at pos %d\n", __func__, k + 1);
             return 1;
         }
         for (k = 0; k < max_arr_len; ++k) {
@@ -257,14 +277,14 @@ build_pes_arr(const char * inp, unsigned char * pes_arr,
                     cp = c2p;
                 lcp = cp + 1;
             } else {
-                fprintf(stderr, "build_pes_arr: error at pos %d\n",
+                pr2serr("%s: error at pos %d\n", __func__,
                         (int)(lcp - inp + 1));
                 return 1;
             }
         }
         *pes_arr_len = k + 1;
         if (k == max_arr_len) {
-            fprintf(stderr, "build_pes_arr: array length exceeded\n");
+            pr2serr("%s: array length exceeded\n", __func__);
             return 1;
         }
     }
@@ -292,12 +312,12 @@ build_thres_arr(const char * inp, unsigned int * thres_arr,
     if (0 == in_len)
         *thres_arr_len = 0;
     if ('-' == inp[0]) {        /* read from stdin */
-        fprintf(stderr, "'--thres' cannot be read from stdin\n");
+        pr2serr("'--thres' cannot be read from stdin\n");
         return 1;
     } else {        /* list of numbers (default decimal) on command line */
         k = strspn(inp, "0123456789aAbBcCdDeEfFhHxX, ");
         if (in_len != k) {
-            fprintf(stderr, "build_thres_arr: error at pos %d\n", k + 1);
+            pr2serr("%s: error at pos %d\n", __func__, k + 1);
             return 1;
         }
         for (k = 0; k < max_arr_len; ++k) {
@@ -314,14 +334,14 @@ build_thres_arr(const char * inp, unsigned int * thres_arr,
                     cp = c2p;
                 lcp = cp + 1;
             } else {
-                fprintf(stderr, "build_thres_arr: error at pos %d\n",
+                pr2serr("%s: error at pos %d\n", __func__,
                         (int)(lcp - inp + 1));
                 return 1;
             }
         }
         *thres_arr_len = k + 1;
         if (k == max_arr_len) {
-            fprintf(stderr, "build_num_arr: array length exceeded\n");
+            pr2serr("%s: array length exceeded\n", __func__);
             return 1;
         }
     }
@@ -350,8 +370,7 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
     else {
         fp = fopen(file_name, "r");
         if (NULL == fp) {
-            fprintf(stderr, "build_joint_arr: unable to open %s\n",
-                    file_name);
+            pr2serr("%s: unable to open %s\n", __func__, file_name);
             return 1;
         }
     }
@@ -378,8 +397,8 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
             continue;
         k = strspn(lcp, "0123456789aAbBcCdDeEfFhHxX ,\t");
         if ((k < in_len) && ('#' != lcp[k])) {
-            fprintf(stderr, "build_joint_arr: syntax error at "
-                    "line %d, pos %d\n", j + 1, m + k + 1);
+            pr2serr("%s: syntax error at line %d, pos %d\n", __func__, j + 1,
+                    m + k + 1);
             return 1;
         }
         for (k = 0; k < 1024; ++k) {
@@ -388,16 +407,14 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
                 ind = ((off + k) >> 1);
                 bit0 = 0x1 & (off + k);
                 if (ind >= max_arr_len) {
-                    fprintf(stderr, "build_joint_arr: array length "
-                            "exceeded\n");
+                    pr2serr("%s: array length exceeded\n", __func__);
                     return 1;
                 }
                 if (bit0)
                     thres_arr[ind] = unum;
                 else {
                     if (unum > 255) {
-                        fprintf(stderr, "build_joint_arr: pes (%u) too "
-                                "large\n", unum);
+                        pr2serr("%s: pes (%u) too large\n", __func__, unum);
                         return 1;
                     }
                     pes_arr[ind] = (unsigned char)unum;
@@ -413,8 +430,7 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
                     --k;
                     break;
                 }
-                fprintf(stderr, "build_joint_arr: error in "
-                        "line %d, at pos %d\n", j + 1,
+                pr2serr("%s: error in line %d, at pos %d\n", __func__, j + 1,
                         (int)(lcp - line + 1));
                 return 1;
             }
@@ -422,8 +438,8 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
         off += (k + 1);
     }
     if (0x1 & off) {
-        fprintf(stderr, "build_joint_arr: expect LBA,NUM pairs but decoded "
-                "odd number\n  from %s\n", have_stdin ? "stdin" : file_name);
+        pr2serr("%s: expect LBA,NUM pairs but decoded odd number\n"
+                "  from %s\n", __func__, have_stdin ? "stdin" : file_name);
         return 1;
     }
     *arr_len = off >> 1;
@@ -454,8 +470,8 @@ main(int argc, char * argv[])
     const char * file_op = NULL;
     const char * pes_op = NULL;
     const char * thres_op = NULL;
-    long long sa_ll;
-    unsigned long long sa = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -494,13 +510,13 @@ main(int argc, char * argv[])
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
-                fprintf(stderr, "bad argument to '--expected'\n");
+                pr2serr("bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'f':
             if (file_op) {
-                fprintf(stderr, "only expected one '--file=' option\n");
+                pr2serr("only expected one '--file=' option\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             file_op = optarg;
@@ -519,13 +535,13 @@ main(int argc, char * argv[])
         case 'p':
             phy_id = smp_get_num(optarg);
             if ((phy_id < 0) || (phy_id > 254)) {
-                fprintf(stderr, "bad argument to '--phy'\n");
+                pr2serr("bad argument to '--phy'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'P':
             if (pes_op) {
-                fprintf(stderr, "only expected one '--pes=' option\n");
+                pr2serr("only expected one '--pes=' option\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             pes_op = optarg;
@@ -536,14 +552,14 @@ main(int argc, char * argv[])
         case 's':
             sa_ll = smp_get_llnum(optarg);
             if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
             break;
         case 'T':
             if (thres_op) {
-                fprintf(stderr, "only expected one '--thres=' option\n");
+                pr2serr("only expected one '--thres=' option\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             thres_op = optarg;
@@ -552,10 +568,10 @@ main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         default:
-            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
+            pr2serr("unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -568,8 +584,7 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -586,8 +601,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use "
+                    "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -595,8 +610,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after seperator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after seperator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -605,35 +619,34 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
     }
 
     if ((0 == do_clear) && (! file_op) && (! pes_op))
-        fprintf(stderr, "warning: without --clear, --file and --pes not "
-                "much will happen\n");
+        pr2serr("warning: without --clear, --file and --pes not much will "
+                "happen\n");
     if (file_op && pes_op) {
-        fprintf(stderr, "can use either --file= or --pes= but not both\n");
+        pr2serr("can use either --file= or --pes= but not both\n");
         return SMP_LIB_SYNTAX_ERROR;
     }
     if (file_op && thres_op)
-        fprintf(stderr, "warning: ignoring --thres= and taking threshold "
-                "values from --file= argument\n");
+        pr2serr("warning: ignoring --thres= and taking threshold values from "
+                "--file= argument\n");
 
     pes_elem = 0;
     thres_elem = 0;
@@ -646,8 +659,8 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
         }
         if (thres_elem > pes_elem)
-            fprintf(stderr, "warning: more threshold elements (%d) than "
-                    "phy event source elements (%d)\n", thres_elem, pes_elem);
+            pr2serr("warning: more threshold elements (%d) than phy event "
+                    "source elements (%d)\n", thres_elem, pes_elem);
     }
     if (file_op) {
         if (build_joint_arr(file_op, pes_arr, thres_arr, &pes_elem,
@@ -673,15 +686,15 @@ main(int argc, char * argv[])
         sg_put_unaligned_be32((uint32_t)thres_arr[k], smp_req + j + 4);
     }
     if (verbose) {
-        fprintf(stderr, "    Configure phy event request:");
+        pr2serr("    Configure phy event request:");
         for (k = 0; k < (16 + (num_desc * 8)); ++k) {
             if (0 == (k % 16))
-                fprintf(stderr, "\n      ");
+                pr2serr("\n      ");
             else if (0 == (k % 8))
-                fprintf(stderr, " ");
-            fprintf(stderr, "%02x ", smp_req[k]);
+                pr2serr(" ");
+            pr2serr("%02x ", smp_req[k]);
         }
-        fprintf(stderr, "\n");
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = 16 + (num_desc * 8);
@@ -691,21 +704,20 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        pr2serr("smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
+        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", act_resplen);
+        pr2serr("response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -715,14 +727,14 @@ main(int argc, char * argv[])
         if (len < 0) {
             len = 0;
             if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+                pr2serr("unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            fprintf(stderr, "actual response length [%d] less than deduced "
-                    "length [%d]\n", act_resplen, len);
+            pr2serr("actual response length [%d] less than deduced length "
+                    "[%d]\n", act_resplen, len);
         len = act_resplen;
     }
     if (do_hex || do_raw) {
@@ -736,40 +748,39 @@ main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                fprintf(stderr, "Configure zone phy information result: %s\n",
+                pr2serr("Configure zone phy information result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
         }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
+        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
+        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Configure zone phy information result: %s\n", cp);
+        pr2serr("Configure zone phy information result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
+        pr2serr("close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
         if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }

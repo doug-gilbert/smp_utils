@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013 Douglas Gilbert.
+ * Copyright (c) 2006-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -57,7 +58,7 @@
  * The remaining write data (first..last register) is not moved.
  */
 
-static const char * version_str = "1.10 20130604";
+static const char * version_str = "1.11 20160201";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
@@ -79,43 +80,62 @@ static struct option long_options[] = {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
-          "smp_write_gpio [--count=CO] [--data=H,H...] [--enhanced] "
-          "[--help]\n"
-          "                      [--hex] [--index=IN] [--interface=PARAMS] "
-          "[--raw]\n"
-          "                      [--sa=SAS_ADDR] [type=TY] [--verbose] "
-          "[--version]\n"
-          "                      SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --count=CO|-c CO     register count (dwords to write) "
-          "(def: 1)\n"
-          "    --data=H,H...|-d H,H...    comma separated list of hex "
-          "bytes to write\n"
-          "    --data=-|-d -        read stdin for hex bytes to write\n"
-          "    --enhanced|-E        use WRITE GPIO REGISTER ENHANCED "
-          "function\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
-          "    --index=IN|-i IN     register index (def: 0)\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --raw|-r             output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                                 the interface, may not be "
-          "needed\n"
-          "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n\n"
-          "Performs a SMP WRITE GPIO REGISTER (default) or SMP WRITE GPIO "
-          "REGISTER\nENHANCED function\n"
-          );
+    pr2serr("Usage: smp_write_gpio [--count=CO] [--data=H,H...] [--enhanced] "
+            "[--help]\n"
+            "                      [--hex] [--index=IN] [--interface=PARAMS] "
+            "[--raw]\n"
+            "                      [--sa=SAS_ADDR] [type=TY] [--verbose] "
+            "[--version]\n"
+            "                      SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --count=CO|-c CO     register count (dwords to write) "
+            "(def: 1)\n"
+            "    --data=H,H...|-d H,H...    comma separated list of hex "
+            "bytes to write\n"
+            "    --data=-|-d -        read stdin for hex bytes to write\n"
+            "    --enhanced|-E        use WRITE GPIO REGISTER ENHANCED "
+            "function\n"
+            "    --help|-h            print out usage message\n"
+            "    --hex|-H             print response in hexadecimal\n"
+            "    --index=IN|-i IN     register index (def: 0)\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --raw|-r             output response in binary\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n"
+            "    --type=TY|-t TY      register type (def: 0 (GPIO_CFG))\n"
+            "    --verbose|-v         increase verbosity\n"
+            "    --version|-V         print version string and exit\n\n"
+            "Performs a SMP WRITE GPIO REGISTER (default) or SMP WRITE GPIO "
+            "REGISTER\nENHANCED function\n"
+           );
 }
 
 static void
@@ -166,16 +186,16 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
                 continue;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
             if (in_len != k) {
-                fprintf(stderr, "read_hex: syntax error at "
-                        "line %d, pos %d\n", j + 1, m + k + 1);
+                pr2serr("%s: syntax error at line %d, pos %d\n", __func__,
+                        j + 1, m + k + 1);
                 return 1;
             }
             for (k = 0; k < 1024; ++k) {
                 if (1 == sscanf(lcp, "%x", &h)) {
                     if (h > 0xff) {
-                        fprintf(stderr, "read_hex: hex number "
-                                "larger than 0xff in line %d, pos %d\n",
-                                j + 1, (int)(lcp - line + 1));
+                        pr2serr("%s: hex number larger than 0xff in line %d, "
+                                "pos %d\n", __func__, j + 1,
+                                (int)(lcp - line + 1));
                         return 1;
                     }
                     arr[off + k] = h;
@@ -186,9 +206,8 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
                     if ('\0' == *lcp)
                         break;
                 } else {
-                    fprintf(stderr, "read_hex: error in "
-                            "line %d, at pos %d\n", j + 1,
-                            (int)(lcp - line + 1));
+                    pr2serr("%s: error in line %d, at pos %d\n", __func__,
+                            j + 1, (int)(lcp - line + 1));
                     return 1;
                 }
             }
@@ -198,15 +217,14 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
     } else {        /* hex string on command line */
         k = strspn(inp, "0123456789aAbBcCdDeEfF,");
         if (in_len != k) {
-            fprintf(stderr, "read_hex: error at pos %d\n",
-                    k + 1);
+            pr2serr("%s: error at pos %d\n", __func__, k + 1);
             return 1;
         }
         for (k = 0; k < 1024; ++k) {
             if (1 == sscanf(lcp, "%x", &h)) {
                 if (h > 0xff) {
-                    fprintf(stderr, "read_hex: hex number larger "
-                            "than 0xff at pos %d\n", (int)(lcp - inp + 1));
+                    pr2serr("%s: hex number larger than 0xff at pos %d\n",
+                            __func__, (int)(lcp - inp + 1));
                     return 1;
                 }
                 arr[k] = h;
@@ -215,7 +233,7 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
                     break;
                 lcp = cp + 1;
             } else {
-                fprintf(stderr, "read_hex: error at pos %d\n",
+                pr2serr("%s: error at pos %d\n", __func__,
                         (int)(lcp - inp + 1));
                 return 1;
             }
@@ -239,8 +257,8 @@ main(int argc, char * argv[])
     int do_raw = 0;
     int rtype = 0;
     int verbose = 0;
-    long long sa_ll;
-    unsigned long long sa = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
     char i_params[256];
     char device_name[512];
     unsigned char smp_req[SMP_MAX_REQ_LEN];
@@ -271,14 +289,14 @@ main(int argc, char * argv[])
         case 'c':
             rcount = smp_get_num(optarg);
             if ((rcount < 1) || (rcount > 255)) {
-                fprintf(stderr, "bad argument to '--count'\n");
+                pr2serr("bad argument to '--count'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
         case 'd':
             memset(data_arr, 0, sizeof(data_arr));
             if (read_hex(optarg, data_arr, &arr_len)) {
-                fprintf(stderr, "bad argument to '--data'\n");
+                pr2serr("bad argument to '--data'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             do_data = 1;
@@ -296,7 +314,7 @@ main(int argc, char * argv[])
         case 'i':
             rindex = smp_get_num(optarg);
             if ((rindex < 0) || (rindex > 255)) {
-                fprintf(stderr, "bad argument to '--index'\n");
+                pr2serr("bad argument to '--index'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -307,13 +325,12 @@ main(int argc, char * argv[])
         case 'p':
            phy_id = smp_get_num(optarg);
            if ((phy_id < 0) || (phy_id > 254)) {
-                fprintf(stderr, "bad argument to '--phy', expect "
-                        "value from 0 to 254\n");
+                pr2serr("bad argument to '--phy', expect value from 0 to "
+                        "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             if (verbose)
-                fprintf(stderr, "'--phy=<n>' option not needed so "
-                        "ignored\n");
+                pr2serr("'--phy=<n>' option not needed so ignored\n");
             break;
         case 'r':
             ++do_raw;
@@ -321,15 +338,15 @@ main(int argc, char * argv[])
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
             break;
         case 't':
             rtype = smp_get_num(optarg);
             if ((rtype < 0) || (rtype > 255)) {
-                fprintf(stderr, "bad argument to '--type'\n");
+                pr2serr("bad argument to '--type'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -337,10 +354,10 @@ main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         default:
-            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
+            pr2serr("unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -353,21 +370,19 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
     if ((0 == do_data) || (arr_len < 1)) {
-        fprintf(stderr, "need to supply data to write, see "
-                "'--data=' option\n");
+        pr2serr("need to supply data to write, see '--data=' option\n");
         usage();
         return SMP_LIB_SYNTAX_ERROR;
     }
     if ((rcount * 4) != arr_len) {
-        fprintf(stderr, "number of data bytes given (%d) needs "
-                "to be 4 times count (%d)\n", arr_len, rcount);
+        pr2serr("number of data bytes given (%d) needs to be 4 times count "
+                "(%d)\n", arr_len, rcount);
         return SMP_LIB_SYNTAX_ERROR;
     }
     if (0 == device_name[0]) {
@@ -375,8 +390,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use"
+                    " environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -384,8 +399,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after separator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -394,20 +408,19 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -430,11 +443,11 @@ main(int argc, char * argv[])
     for (k = 0; k < arr_len; ++k)
         smp_req[8 + k] = data_arr[k];
     if (verbose) {
-        fprintf(stderr, "    Write GPIO register%s request: ",
+        pr2serr("    Write GPIO register%s request: ",
                 (enhanced ? " enhanced" : ""));
         for (k = 0; k < (12 + arr_len); ++k)
-            fprintf(stderr, "%02x ", smp_req[k]);
-        fprintf(stderr, "\n");
+            pr2serr("%02x ", smp_req[k]);
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = 12 + arr_len;
@@ -444,29 +457,28 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        pr2serr("smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
+        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", act_resplen);
+        pr2serr("response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     len = 4 + (rcount * 4);      /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            fprintf(stderr, "actual response length [%d] less than deduced "
-                    "length [%d]\n", act_resplen, len);
+            pr2serr("actual response length [%d] less than deduced length "
+                    "[%d]\n", act_resplen, len);
         len = act_resplen;
     }
     if (do_hex || do_raw) {
@@ -483,21 +495,20 @@ main(int argc, char * argv[])
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
+        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
+        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         ret = smp_resp[2];
         cp = smp_get_func_res_str(ret, sizeof(b), b);
-        fprintf(stderr, "Write gpio register%s result: %s\n",
+        pr2serr("Write gpio register%s result: %s\n",
                 (enhanced ? " enhanced" : ""), cp);
         goto err_out;
     }
@@ -511,6 +522,6 @@ err_out:
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }

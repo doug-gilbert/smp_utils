@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2015 Douglas Gilbert.
+ * Copyright (c) 2006-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ struct opts_t {
     int verbose;
     int do_zero;
     int sa_given;
-    unsigned long long sa;
+    uint64_t sa;
 };
 
 static struct option long_options[] = {
@@ -967,7 +967,7 @@ static int
 do_single(struct smp_target_obj * top, const struct opts_t * op)
 {
     unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
-    uint64_t ull = 0;
+    uint64_t ull;
     int len, ret;
 
     /* If do_discover() works, returns response length (less CRC bytes) */
@@ -1255,7 +1255,7 @@ int
 main(int argc, char * argv[])
 {
     int res, c;
-    long long sa_ll;
+    int64_t sa_ll;
     char i_params[256];
     char device_name[512];
     struct smp_target_obj tobj;
@@ -1337,7 +1337,7 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            op->sa = (unsigned long long)sa_ll;
+            op->sa = (uint64_t)sa_ll;
             if (op->sa > 0)
                 ++op->sa_given;
             break;
@@ -1401,7 +1401,7 @@ main(int argc, char * argv[])
                 pr2serr("    use 0\n");
                 sa_ll = 0;
             }
-            op->sa = (unsigned long long)sa_ll;
+            op->sa = (uint64_t)sa_ll;
         }
     }
     if (op->sa > 0) {

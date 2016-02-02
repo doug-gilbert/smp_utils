@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2015 Douglas Gilbert.
+ * Copyright (c) 2006-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -50,7 +51,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.10 20151122";    /* spl4r05 */
+static const char * version_str = "1.11 20160117";    /* spl4r05 */
 
 static struct option long_options[] = {
     {"connect", 1, 0, 'c'},
@@ -72,50 +73,69 @@ static struct option long_options[] = {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
-          "smp_conf_general [--connect=CO] [--expected=EX] [--help] "
-          "[--hex]\n"
-          "                        [--inactivity=IN] "
-          "[--interface=PARAMS]\n"
-          "                        [--nexus=NE] [--open=OP] [--power=PD] "
-          "[--raw]\n"
-          "                        [--reduced=RE] [--sa=SAS_ADDR] "
-          "[--ssp=CTL]\n"
-          "                        [--verbose] [--version] SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --connect=CO|-c CO     STP maximum connect time limit "
-          "(100 us)\n"
-          "    --expected=EX|-E EX    set expected expander change "
-          "count to EX\n"
-          "    --help|-h              print out usage message then exit\n"
-          "    --hex|-H               print response in hexadecimal\n"
-          "    --inactivity=IN|-i IN    STP bus inactivity time "
-          "limit (100 us)\n"
-          "    --interface=PARAMS|-I PARAMS   specify or override "
-          "interface\n"
-          "    --nexus=NE|-n NE       STP SMP I_T nexus loss time "
-          "(ms)\n"
-          "    --open=OP|-o OP        STP reject to open limit "
-          "(10 us)\n"
-          "    --power=PD|-p PD       power done timeout (unit: second)\n"
-          "    --raw|-r               output response in binary\n"
-          "    --reduced=RE|-R RE     initial time to reduced functionality "
-          "(100 ms)\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). Depending "
-          "on\n"
-          "                                 the interface, may not be "
-          "needed\n"
-          "    --ssp=CTL|-S CTL       SSP maximum connect time limit "
-          "(100 us)\n"
-          "    --verbose|-v           increase verbosity\n"
-          "    --version|-V           print version string and exit\n\n"
-          "Performs a SMP CONFIGURE GENERAL function\n"
-          );
+    pr2serr("Usage: smp_conf_general [--connect=CO] [--expected=EX] [--help] "
+            "[--hex]\n"
+            "                        [--inactivity=IN] "
+            "[--interface=PARAMS]\n"
+            "                        [--nexus=NE] [--open=OP] [--power=PD] "
+            "[--raw]\n"
+            "                        [--reduced=RE] [--sa=SAS_ADDR] "
+            "[--ssp=CTL]\n"
+            "                        [--verbose] [--version] SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --connect=CO|-c CO     STP maximum connect time limit "
+            "(100 us)\n"
+            "    --expected=EX|-E EX    set expected expander change "
+            "count to EX\n"
+            "    --help|-h              print out usage message then exit\n"
+            "    --hex|-H               print response in hexadecimal\n"
+            "    --inactivity=IN|-i IN    STP bus inactivity time "
+            "limit (100 us)\n"
+            "    --interface=PARAMS|-I PARAMS   specify or override "
+            "interface\n"
+            "    --nexus=NE|-n NE       STP SMP I_T nexus loss time "
+            "(ms)\n"
+            "    --open=OP|-o OP        STP reject to open limit "
+            "(10 us)\n"
+            "    --power=PD|-p PD       power done timeout (unit: second)\n"
+            "    --raw|-r               output response in binary\n"
+            "    --reduced=RE|-R RE     initial time to reduced "
+            "functionality (100 ms)\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n"
+            "    --ssp=CTL|-S CTL       SSP maximum connect time limit "
+            "(100 us)\n"
+            "    --verbose|-v           increase verbosity\n"
+            "    --version|-V           print version string and exit\n\n"
+            "Performs a SMP CONFIGURE GENERAL function\n"
+           );
 }
 
 static void
@@ -149,8 +169,8 @@ main(int argc, char * argv[])
     int ssp_ctl = 0;
     int do_raw = 0;
     int verbose = 0;
-    long long sa_ll;
-    unsigned long long sa = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -177,7 +197,7 @@ main(int argc, char * argv[])
         case 'c':
             connect_val = smp_get_num(optarg);
             if ((connect_val < 0) || (connect_val > 65535)) {
-                fprintf(stderr, "bad argument to '--connect'\n");
+                pr2serr("bad argument to '--connect'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_connect;
@@ -185,7 +205,7 @@ main(int argc, char * argv[])
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
-                fprintf(stderr, "bad argument to '--expected'\n");
+                pr2serr("bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -203,8 +223,8 @@ main(int argc, char * argv[])
         case 'i':
             inactivity_val = smp_get_num(optarg);
             if ((inactivity_val < 0) || (inactivity_val > 65535)) {
-                fprintf(stderr, "bad argument to '--inactivity', expect "
-                        "value from 0 to 65535\n");
+                pr2serr("bad argument to '--inactivity', expect value from 0 "
+                        "to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_inactivity;
@@ -212,8 +232,8 @@ main(int argc, char * argv[])
         case 'n':
             nexus_val = smp_get_num(optarg);
             if ((nexus_val < 0) || (nexus_val > 65535)) {
-                fprintf(stderr, "bad argument to '--nexus', expect "
-                        "value from 0 to 65535\n");
+                pr2serr("bad argument to '--nexus', expect value from 0 to "
+                        "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_nexus;
@@ -221,8 +241,8 @@ main(int argc, char * argv[])
         case 'o':
             open_val = smp_get_num(optarg);
             if ((open_val < 0) || (open_val > 65535)) {
-                fprintf(stderr, "bad argument to '--open', expect "
-                        "value from 0 to 65535\n");
+                pr2serr("bad argument to '--open', expect value from 0 to "
+                        "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_open;
@@ -230,8 +250,8 @@ main(int argc, char * argv[])
         case 'p':
             power_val = smp_get_num(optarg);
             if ((power_val < 0) || (power_val > 255)) {
-                fprintf(stderr, "bad argument to '--power', expect "
-                        "value from 0 to 255\n");
+                pr2serr("bad argument to '--power', expect value from 0 to "
+                        "255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_pdt;
@@ -242,8 +262,8 @@ main(int argc, char * argv[])
         case 'R':
             reduced_val = smp_get_num(optarg);
             if ((reduced_val < 0) || (reduced_val > 255)) {
-                fprintf(stderr, "bad argument to '--reduced', expect "
-                        "value from 0 to 255\n");
+                pr2serr("bad argument to '--reduced', expect value from 0 to "
+                        "255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_reduced;
@@ -251,16 +271,16 @@ main(int argc, char * argv[])
         case 's':
             sa_ll = smp_get_llnum(optarg);
             if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
             break;
         case 'S':
             ssp_ctl = smp_get_num(optarg);
             if ((ssp_ctl < 0) || (ssp_ctl > 65535)) {
-                fprintf(stderr, "bad argument to '--ssp', expect "
-                        "value from 0 to 65535\n");
+                pr2serr("bad argument to '--ssp', expect value from 0 to "
+                        "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             ++do_ssp;
@@ -269,10 +289,10 @@ main(int argc, char * argv[])
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         default:
-            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
+            pr2serr("unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -285,8 +305,7 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -296,8 +315,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use "
+                    "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -305,8 +324,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after separator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -315,20 +333,19 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -369,15 +386,15 @@ main(int argc, char * argv[])
         sg_put_unaligned_be16((uint16_t)ssp_ctl, smp_req + 6);
     }
     if (verbose) {
-        fprintf(stderr, "    Configure general request: ");
+        pr2serr("    Configure general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k) {
             if (0 == (k % 16))
-                fprintf(stderr, "\n      ");
+                pr2serr("\n      ");
             else if (0 == (k % 8))
-                fprintf(stderr, " ");
-            fprintf(stderr, "%02x ", smp_req[k]);
+                pr2serr(" ");
+            pr2serr("%02x ", smp_req[k]);
         }
-        fprintf(stderr, "\n");
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
@@ -387,21 +404,20 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        pr2serr("smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
+        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", act_resplen);
+        pr2serr("response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -411,14 +427,14 @@ main(int argc, char * argv[])
         if (len < 0) {
             len = 0;
             if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+                pr2serr("unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            fprintf(stderr, "actual response length [%d] less than deduced "
-                    "length [%d]\n", act_resplen, len);
+            pr2serr("actual response length [%d] less than deduced length "
+                    "[%d]\n", act_resplen, len);
         len = act_resplen;
     }
     if (do_hex || do_raw) {
@@ -433,39 +449,38 @@ main(int argc, char * argv[])
         else if (smp_resp[2]) {
             ret = smp_resp[2];
             if (verbose)
-                fprintf(stderr, "Configure general result: %s\n",
+                pr2serr("Configure general result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
         }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
+        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
+        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Configure general result: %s\n", cp);
+        pr2serr("Configure general result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
+        pr2serr("close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }

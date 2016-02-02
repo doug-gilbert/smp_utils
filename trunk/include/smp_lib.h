@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2015 Douglas Gilbert.
+ * Copyright (c) 2006-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,11 @@
  * Reference: SCSI: http://www.t10.org and the most recent SAS Protocol
  * Layer draft SPL-4 (revision 2).
  */
+
+#include <stdbool.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,45 +167,45 @@ struct smp_req_resp {
 /* Open device_name (perhaps using associated subvalue, i_params, and sa
  * fields) and if successful places context information in the object pointed
  * to by tobj . Returns 0 on success, else -1 . */
-extern int smp_initiator_open(const char * device_name, int subvalue,
-                              const char * i_params, unsigned long long sa,
-                              struct smp_target_obj * tobj, int verbose);
+int smp_initiator_open(const char * device_name, int subvalue,
+                       const char * i_params, uint64_t sa,
+                       struct smp_target_obj * tobj, int verbose);
 
 /* Send a SMP request to the SMP target referred to by tobj. The request
  * and space for the response (including the CRC even if it is not sent
  * or returned) are in the object pointed to by rresp. Returns 0 on
  * success. */
-extern int smp_send_req(const struct smp_target_obj * tobj,
-                        struct smp_req_resp * rresp, int verbose);
+int smp_send_req(const struct smp_target_obj * tobj,
+                 struct smp_req_resp * rresp, int verbose);
 
 /* Closes the context to the SMP target referred to by tobj. Returns 0
  * on success, else -1 . */
-extern int smp_initiator_close(struct smp_target_obj * tobj);
+int smp_initiator_close(struct smp_target_obj * tobj);
 
 /* Given an SMP function response code in func_res, places the associated
  * string (most likely an error if func_res > 0) in the area pointed to
  * by buffer. That string will not exceed buff_len bytes. Returns buff
  * as its result. */
-extern char * smp_get_func_res_str(int func_res, int buff_len, char * buff);
+char * smp_get_func_res_str(int func_res, int buff_len, char * buff);
 
 /* Returns the request length in dwords associated with func_code in SAS-1.
  * The dword count excludes the 4 byte header and the 4 byte CRC (i.e.
  * eight bytes or two dwords). Returns -2 for no default (e.g. functions
  * found in SAS-2 or later) and -3 for a different format (e.g. READ GPIO
  * REGISTER). */
-extern int smp_get_func_def_req_len(int func_code);
+int smp_get_func_def_req_len(int func_code);
 
 /* Returns the expected response length in dwords associated with func_code
  * in SAS-1. The dword count excludes the 4 byte header and the 4 byte CRC.
  * Returns -2 for no default and -3 for a different format (e.g. READ GPIO
  * REGISTER). */
-extern int smp_get_func_def_resp_len(int func_code);
+int smp_get_func_def_resp_len(int func_code);
 
 /* SAS addresses are NAA-5 and should have 5 in their most significant
  * nibbe. Returns 1 if NAA-5 format, else 0. */
-extern int smp_is_naa5(unsigned long long addr);
+bool smp_is_naa5(uint64_t addr);
 
-extern const char * smp_lib_version();
+const char * smp_lib_version();
 
 struct smp_val_name {
     int value;
@@ -211,7 +216,7 @@ struct smp_val_name {
 
 /* Always returns valid string even if errnum is wild (or library problem).
    If errnum is negative, flip its sign. */
-extern char * safe_strerror(int errnum);
+char * safe_strerror(int errnum);
 
 
 /* Print (to stdout) 'str' of bytes in hex, 16 bytes per line optionally
@@ -222,7 +227,7 @@ extern char * safe_strerror(int errnum);
        = 0     in addition, the bytes are listed in ASCII to the right
        < 0     only the ASCII-hex bytes are listed (i.e. without address)
 */
-extern void dStrHex(const char* str, int len, int no_ascii);
+void dStrHex(const char* str, int len, int no_ascii);
 
 /* If the number in 'buf' can not be decoded or the multiplier is unknown
    then -1 is returned. Accepts a hex prefix (0x or 0X) or a 'h' (or 'H')
@@ -230,14 +235,14 @@ extern void dStrHex(const char* str, int len, int no_ascii);
    multipliers: c C  *1;  w W  *2; b  B *512;  k K KiB  *1,024;
    KB  *1,000;  m M MiB  *1,048,576; MB *1,000,000; g G GiB *1,073,741,824;
    GB *1,000,000,000 and <n>x<m> which multiplies <n> by <m> . */
-extern int smp_get_num(const char * buf);
+int smp_get_num(const char * buf);
 
 /* If the number in 'buf' can not be decoded or the multiplier is unknown
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a 'h' (or 'H')
    suffix. Otherwise a decimal multiplier suffix may be given. In addition
    to supporting the multipliers of smp_get_num(), this function supports:
    t T TiB  *(2**40); TB *(10**12); p P PiB  *(2**50); PB  *(10**15) . */
-extern long long smp_get_llnum(const char * buf);
+int64_t smp_get_llnum(const char * buf);
 
 /* If the non-negative number in 'buf' can be decoded in decimal (default)
  * or hex then it is returned, else -1 is returned. Skips leading and

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 Douglas Gilbert.
+ * Copyright (c) 2011-2016 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -42,6 +43,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -49,7 +51,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.04 20130604";
+static const char * version_str = "1.05 20160201";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
@@ -78,34 +80,53 @@ static struct option long_options[] = {
 };
 
 
+#ifdef __GNUC__
+static int pr2serr(const char * fmt, ...)
+        __attribute__ ((format (printf, 1, 2)));
+#else
+static int pr2serr(const char * fmt, ...);
+#endif
+
+
+static int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: "
-          "smp_rep_broadcast [--broadcast=BT] [--help] [--hex]\n"
-          "                         [--interface=PARAMS] [raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                         [--verbose] [--version] "
-          "SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --broadcast=RT|-b RT    RT is report type (def: 0 "
-          "which is\n"
-          "                            Broadcast(Change))\n"
-          "    --help|-h               print out usage message\n"
-          "    --hex|-H                print response in hexadecimal\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --raw|-r                output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). "
-          "Depending\n"
-          "                                 on the interface, may not be "
-          "needed\n"
-          "    --verbose|-v            increase verbosity\n"
-          "    --version|-V            print version string and exit\n\n"
-          "Performs a SMP REPORT BROADCAST function\n"
-          );
+    pr2serr("Usage: smp_rep_broadcast [--broadcast=BT] [--help] [--hex]\n"
+            "                         [--interface=PARAMS] [raw] "
+            "[--sa=SAS_ADDR]\n"
+            "                         [--verbose] [--version] "
+            "SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --broadcast=RT|-b RT    RT is report type (def: 0 "
+            "which is\n"
+            "                            Broadcast(Change))\n"
+            "    --help|-h               print out usage message\n"
+            "    --hex|-H                print response in hexadecimal\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --raw|-r                output response in binary\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending\n"
+            "                                 on the interface, may not be "
+            "needed\n"
+            "    --verbose|-v            increase verbosity\n"
+            "    --version|-V            print version string and exit\n\n"
+            "Performs a SMP REPORT BROADCAST function\n"
+           );
 }
 
 static void
@@ -138,8 +159,8 @@ main(int argc, char * argv[])
     int btype = 0;
     int do_raw = 0;
     int verbose = 0;
-    long long sa_ll;
-    unsigned long long sa = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -166,8 +187,8 @@ main(int argc, char * argv[])
         case 'b':
             btype = smp_get_dhnum(optarg);
             if ((btype < 0) || (btype > 15)) {
-                fprintf(stderr, "bad argument to '--broadcast', expect "
-                        "value from 0 to 15\n");
+                pr2serr("bad argument to '--broadcast', expect value from 0 "
+                        "to 15\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -188,19 +209,19 @@ main(int argc, char * argv[])
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad argument to '--sa'\n");
+                pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
             break;
         case 'v':
             ++verbose;
             break;
         case 'V':
-            fprintf(stderr, "version: %s\n", version_str);
+            pr2serr("version: %s\n", version_str);
             return 0;
         default:
-            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
+            pr2serr("unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -213,8 +234,7 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                fprintf(stderr, "Unexpected extra argument: %s\n",
-                        argv[optind]);
+                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -224,8 +244,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            fprintf(stderr, "missing device name on command line\n    [Could "
-                    "use environment variable SMP_UTILS_DEVICE instead]\n");
+            pr2serr("missing device name on command line\n    [Could use "
+                    "environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -233,8 +253,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            fprintf(stderr, "expected number after separator in SMP_DEVICE "
-                    "name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -243,20 +262,20 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                fprintf(stderr, "bad value in environment variable "
+                pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
-                fprintf(stderr, "    use 0\n");
+                pr2serr("    use 0\n");
                 sa_ll = 0;
             }
-            sa = (unsigned long long)sa_ll;
+            sa = (uint64_t)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            fprintf(stderr, "SAS (target) address not in naa-5 format "
-                    "(may need leading '0x')\n");
+            pr2serr("SAS (target) address not in naa-5 format (may need "
+                    "leading '0x')\n");
             if ('\0' == i_params[0]) {
-                fprintf(stderr, "    use '--interface=' to override\n");
+                pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -271,10 +290,10 @@ main(int argc, char * argv[])
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
     smp_req[4] = btype & 0xf;
     if (verbose) {
-        fprintf(stderr, "    Report broadcast request: ");
+        pr2serr("    Report broadcast request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
-            fprintf(stderr, "%02x ", smp_req[k]);
-        fprintf(stderr, "\n");
+            pr2serr("%02x ", smp_req[k]);
+        pr2serr("\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
@@ -284,21 +303,20 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
+        pr2serr("smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            fprintf(stderr, "    try adding '-v' option for more debug\n");
+            pr2serr("    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        fprintf(stderr, "smp_send_req transport_error=%d\n",
-                smp_rr.transport_err);
+        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        fprintf(stderr, "response too short, len=%d\n", act_resplen);
+        pr2serr("response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -308,14 +326,14 @@ main(int argc, char * argv[])
         if (len < 0) {
             len = 0;
             if (verbose > 0)
-                fprintf(stderr, "unable to determine response length\n");
+                pr2serr("unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            fprintf(stderr, "actual response length [%d] less than deduced "
-                    "length [%d]\n", act_resplen, len);
+            pr2serr("actual response length [%d] less than deduced length "
+                    "[%d]\n", act_resplen, len);
         len = act_resplen;
     }
     if (do_hex || do_raw) {
@@ -330,31 +348,30 @@ main(int argc, char * argv[])
         if (smp_resp[2]) {
             ret = smp_resp[2];
             if (verbose)
-                fprintf(stderr, "Report broadcast result: %s\n",
+                pr2serr("Report broadcast result: %s\n",
                         smp_get_func_res_str(ret, sizeof(b), b));
         }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
-                smp_resp[0]);
+        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
-                smp_req[1], smp_resp[1]);
+        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
+                smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        fprintf(stderr, "Report broadcast result: %s\n", cp);
+        pr2serr("Report broadcast result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
     printf("Report broadcast response:\n");
-    res = (smp_resp[4] << 8) + smp_resp[5];
+    res = sg_get_unaligned_be16(smp_resp + 4);
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
     bt_hdr = smp_resp[6] & 0xf;
@@ -365,8 +382,7 @@ main(int argc, char * argv[])
     num_bd = smp_resp[11];
     printf("  number of broadcast descriptors: %d\n", num_bd);
     if (bd_len < 8) {
-        fprintf(stderr, "Unexpectedly low descriptor length: %d bytes\n",
-                bd_len);
+        pr2serr("Unexpectedly low descriptor length: %d bytes\n", bd_len);
         ret = -1;
         goto err_out;
     }
@@ -382,7 +398,7 @@ main(int argc, char * argv[])
         else
             printf("     phy id: %d\n", bdp[1]);
         printf("     broadcast reason: %d\n", bdp[2] & 0xf);
-        printf("     broadcast count: %d\n", (bdp[4] << 8) + bdp[5]);
+        printf("     broadcast count: %d\n", sg_get_unaligned_be16(bdp + 4));
         if (verbose > 1) {
             printf("     ");
             for (j = 0; j < bd_len; ++j)
@@ -394,13 +410,13 @@ main(int argc, char * argv[])
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
+        pr2serr("close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
+        pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
