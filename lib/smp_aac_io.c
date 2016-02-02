@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -100,7 +100,7 @@ chk_aac_device(const char * dev_name,int verbose)
     }
 
     if ((S_ISCHR(st.st_mode)) && (aacDevMjr ==(int) major(st.st_rdev))) {
-        if ((aacDevMnr == (int) minor(st.st_rdev)))
+        if (aacDevMnr == (int) minor(st.st_rdev))
            return 1;
     }
 

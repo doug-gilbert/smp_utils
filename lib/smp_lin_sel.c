@@ -74,7 +74,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             force = 1;
         else if (verbose > 3)
             fprintf(stderr, "smp_initiator_open: interface not recognized\n");
-        cp = strchr(i_params, ',');
+        cp = (char *)strchr(i_params, ','); /* cast to stop C++ error */
         if (cp) {
             if ((tobj->interface_selector > 0) &&
                 (0 == strncmp("for", cp + 1, 3)))
