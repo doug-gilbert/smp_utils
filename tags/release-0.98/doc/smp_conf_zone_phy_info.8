@@ -1,0 +1,100 @@
+.TH SMP_CONF_ZONE_PHY_INFO "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.SH NAME
+smp_conf_zone_phy_info \- invoke CONFIGURE ZONE PHY INFORMATION function
+.SH SYNOPSIS
+.B smp_conf_zone_phy_info
+[\fI\-\-expected=EX\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] \fI\-\-pconf=FN\fR [\fI\-\-raw\fR]
+[\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-save=SAV\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Serial Management Protocol (SMP) CONFIGURE ZONE PHY INFORMATION
+function request to an SMP target. The SMP target is identified by the
+\fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface,
+the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt
+interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and
+needs the additional \fI,N\fR to differentiate between HBAs if there are
+multiple present.
+.PP
+Each zone phy configuration descriptor is 4 bytes long. The first byte
+is a (expander) phy identifier. The second byte has 3 modifiable bits: bit 5
+is "inside ZPSDS persistent"; bit 4 is "requested inside ZPSDS"; and bit 2
+is "zone group persistent". The other bits in the second byte are reserved
+and should be 0. The third byte is reserved and should be 0. The fourth byte
+is the zone group.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response (less the CRC field) in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-p\fR, \fB\-\-pconf\fR=\fIFN\fR
+\fIFN\fR is a file containing zone phy configuration descriptors in ASCII
+hexadecimal; either as bytes separated by space, tab, comma or newline,
+or as longer strings of hexadecimal bytes in which every 2 digits
+represents a byte. Empty lines and those starting with "#" are ignored.
+Since each zone phy configuration descriptor is 4 bytes long, the number
+of bytes in \fIFN\fR is expected to be a multiple of 4.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. The mpt interface needs
+this option and it will typically be an expander's SAS address. The
+\fISAS_ADDR\fR is in decimal but most SAS addresses are shown in hexadecimal.
+To give a number in hexadecimal either prefix it with '0x' or put a
+trailing 'h' on it.
+.TP
+\fB\-S\fR, \fB\-\-save\fR=\fISAV\fR
+set the 'save' field in the SMP request. \fISAV\fR may take these values:
+0 for updating the shadow values (default), 1 for updating the saved values,
+2 for updating shadow values and if available the saved values, 3 for
+updating both saved and shadow values.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH NOTES
+The expander phys that make up a wide port (2 or more attached to phys with
+the same SAS address) must be set to the same zone phy configuration
+settings (other than the phy id).
+.PP
+Zone phy information can be read back from an expander and placed in a file
+with the smp_discover_list utility's \fI\-\-zpi=FN\fR option. The format of
+that file should be suitable for this utility's \fI\-\-pconf=FN\fR option.
+.SH CONFORMING TO
+The SMP CONFIGURE ZONE PHY INFORMATION function was introduced in SAS\-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2011 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_conf_zone_perm_tbl, smp_zone_activate,
+.B smp_discover_list(smp_utils)

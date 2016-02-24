@@ -1,0 +1,25 @@
+# Example file invoked like this:
+#   smp_conf_zone_phy_info --pconf=<this_filename> <smp_dev>
+#
+# Assume phy ids 0, 1, 2 and 3 are attached to initiator (HBA) doing
+# zoning and phy control
+# Assume phy ids 20, 21, 22 and 23 are attached to another initiator (HBA)
+# Assume phy id 5 is attached to a target (SAS or SATA disk)
+# Assume phy id 7 is attached to a target (SAS or SATA disk)
+#
+# N.B. All values are HEX. On each line first byte is phy_id, last byte is
+# zone group. All phys that make up a wide port need to be set to the same
+# zone group.
+0,0,0,8         # so phy_id 0 is set to zone group 8
+1,0,0,8
+2,0,0,8
+3,0,0,8
+14,0,0,9        # so phy_id is 20 (14h)
+15,0,0,9
+16,0,0,9
+17,0,0,9
+5,0,0,10        # so this is zone group 16 (10h)
+7,0,0,11
+
+# To make the disks connected to phy_ids 5 and 7 visible to both initiators,
+# place them in ZG 24 (18h).

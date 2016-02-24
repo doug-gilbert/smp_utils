@@ -1,0 +1,123 @@
+.TH SMP_ZONED_BROADCAST "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
+.SH NAME
+smp_zoned_broadcast \- invoke ZONED BROADCAST SMP function
+.SH SYNOPSIS
+.B smp_zoned_broadcast
+[\fI\-\-broadcast=BT\fR] [\fI\-\-expected=EX\fR] [\fI\-\-fszg=FS\fR]
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-szg=ZGL\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Serial Management Protocol (SMP) ZONED BROADCAST function request
+to an SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may
+be deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
+differentiate between HBAs if there are multiple present.
+.PP
+This function requires zoning to be enabled. To send a Broadcast (Change)
+in the absence of zoning, the least intrusive way seems to be to use
+a PHY CONTROL request to send a link reset to an expander phy.
+Broadcast (Change) should cause a management application client behind an SMP
+initiator port (e.g. a SAS HBA) to start a discover process.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-b\fR, \fB\-\-broadcast\fR=\fIBT\fR
+\fIBT\fR is the broadcast type, an integer in the range 0 (default) to 15.
+Broadcast (Change) corresponds to 0 and will cause SMP initiators that
+receive it to do their discover process. Other known broadcast types are
+listed in the NOTES section. \fIBT\fR may be decimal (default) or
+hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+In SPL\-1 this field is marked as "restricted (for expected expander
+change count)".
+.TP
+\fB\-F\fR, \fB\-\-fszg\fR=\fIFS\fR
+where \fIFS\fR is the name of a file which contains one or more source
+zone groups to send a broadcast to. The zone groups can be given in
+decimal (default) or hexadecimal prefixed by '0x' (or '0X') or
+with a 'h' (or 'H') suffix. A zone group is a number in the range 0
+to 255. Each zone group can be separated by space, tab, comma or
+newline. Empty lines and those starting with "#" are ignored.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response (less the CRC field) in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. The mpt interface needs
+this option and it will typically be an expander's SAS address. The
+\fISAS_ADDR\fR is in decimal but most SAS addresses are shown in hexadecimal.
+To give a number in hexadecimal either prefix it with '0x' or put a
+trailing 'h' on it.
+.TP
+\fB\-S\fR, \fB\-\-szg\fR=\fIZGL\fR
+one or more source zone groups for broadcast can appear as a comma separated
+list \fIZGL\fR. The may be decimal (default) or hexadecimal prefixed by '0x'
+(or '0X') or with a 'h' (or 'H') suffix. A zone group is a number in the
+range 0 to 255. Either this option or \fI\-\-fszg=FS\fR (but not both) should
+be given.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH NOTES
+The following is a list of broadcast types:
+.br
+0        Broadcast (Change)
+.br
+1        Broadcast (Reserved change 0)
+.br
+2        Broadcast (Reserved change 1)
+.br
+3        Broadcast (SES)
+.br
+4        Broadcast (Expander)
+.br
+5        Broadcast (Asynchronous event)
+.br
+6        Broadcast (Reserved 3)
+.br
+7        Broadcast (Reserved 4)
+.br
+8        Broadcast (Zone activate)
+.PP
+The remaining zone types (9 to 15) may be issued by the ZONED BROADCAST
+function.
+.SH CONFORMING TO
+The SMP ZONED BROADCAST function was introduced in SAS\-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2011 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_zone_lock, smp_zone_unlock, smp_ena_dis_zoning(smp_utils)

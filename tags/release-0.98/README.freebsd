@@ -1,0 +1,36 @@
+Build
+-----
+For general build information see the INSTALL file. Requires
+FreeBSD version 9.0 or later as earlier versions do not support the CAM
+SMP pass-through.
+
+The traditional './configure ; make ; make install' sequence from the
+top level of the unpacked tarball will work on FreeBSD. But the man pages
+will be placed under the /usr/local/share/man directory which unfortunately
+is not on the standard manpath. One solution is to add this path by
+creating a file with a name like local_share.conf in the
+/usr/local/etc/man.d/ directory and placing this line in it:
+    MANPATH /usr/local/share/man
+
+This package was too new to be included in the "ports" collection of FreeBSD
+9.0 RELEASE. This package can be found in FreeBSD 9.1 RELEASE ports
+collection in the /usr/ports/sysutils/smp_utils directory .
+
+
+Device names
+------------
+FreeBSD uses its CAM subsystem to access SAS expanders. In FreeBSD 9.0 CAM
+does not recognize SAS expanders directly. It assumes that a SAS expander
+is tightly coupled with a SES target device. This seems to be true for SAS-2
+expanders but is not necessarily the case with SAS-1 expanders.
+
+So if a SES target device is paired with a SAS expander then in FreeBSD
+that expander can be accessed like this:
+  # smp_discover /dev/ses0
+
+This also assumes that the SAS expander is connected to a SAS HBA that
+supports the CAM SAS SMP pass-through.
+
+
+Douglas Gilbert
+19th September 2013

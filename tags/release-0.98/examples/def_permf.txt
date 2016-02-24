@@ -1,0 +1,59 @@
+# Example file invoked like this:
+#   smp_conf_zone_perm_tbl --permf=<this_filename> --deduce <smp_dev>
+#
+# Assume 128 zone groups (hence 16 byte table entries); note: even
+# if expander permits 256 zone groups, it still seems to accept the
+# 16 byte table entries format.
+# Assume starting source zone group is 0, define 25 descriptors to
+# their default permission table settings.
+
+# N.B. Since SCSI is big endian, the lower bit positions are to the right.
+# Each element below is a byte, represented in ASCII hexadecimal.
+#
+# first zone permission configuration descriptor follows and
+# corresponds to source zone group 0 permissions (ZP[0,*]):
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+
+# source ZG 8
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+
+# source ZG 16
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+
+# source ZG 24
+0,0,0,0,0,0,0,0 0,0,0,0,0,0,0,2
+
+# Actually each line can be 16 zeros since the setting of ZG 1 to all
+# ones and all other zone groups to have access to ZG 1 is implicit
+# (i.e. cannot be overridden).
+
+# Note that a zoning expander can be asked for its default permission
+# table like this:
+#   smp_rep_zone_perm_tbl --multiple --report=3 <smp_dev>
+
+# The default zone permission and phy control files could be used
+# with the scripts in this directory to reset a 24 phy expander to its
+# zoning defaults (and turn off zoning) like this:
+#   ./zoning_ex.sh <smp_dev> def_permf.txt def_pconf.txt
+#   ./dis_zoning_ex.sh

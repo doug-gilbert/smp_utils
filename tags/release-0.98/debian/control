@@ -1,0 +1,37 @@
+Source: smp-utils
+Section: admin
+Priority: optional
+Maintainer: Douglas Gilbert <dgilbert@interlog.com>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: http://sg.danny.cz/sg/smp_utils.html
+
+Package: smp-utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: SAS Expander (SMP) utilities for SAS/SATA disk arrays
+ Utilities that send Serial Attached SCSI (SAS) Serial Management
+ Protocol (SMP) requests to a SMP target. If the request fails then
+ the error is decoded. If the request succeeds then the response is
+ either decoded, printed out in hexadecimal or output in binary.
+ Support for SAS-2 features including phy based zoning.
+
+Package: libsmputils1-1
+Section: libs
+Depends: ${shlibs:Depends}
+Architecture: any
+Conflicts: libsmputils1
+Replaces: libsmputils1
+Suggests: smp-utils
+Description: utilities for SAS SMP control of expanders (shared libraries)
+ Shared library used by the utilities in the smp-utils package.
+
+Package: libsmputils1-dev
+Section: libdevel
+Architecture: any
+Depends: libsmputils1-1 (= ${binary:Version}), ${shlibs:Depends}, ${kfreebsd:Depends}
+Conflicts: libsmputils1-dev
+Suggests: smp-utils
+Description: utilities for SAS SMP control of expanders (developer files)
+ Developer files (i.e. headers and a static library) which are associated with
+ the utilities in the smp-utils package.
