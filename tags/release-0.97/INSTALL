@@ -1,0 +1,36 @@
+
+To build and install using the tarball, extract the files from
+the tarball, change directory to the top level within the
+extracted tree, and then:
+  # ./configure
+  # make
+  # make install
+
+The last command will most likely require root privileges and will
+place the binaries in the /usr/local/bin directory. Since the utilities
+need root (superuser) permissions some distrubutions prefer to place the
+binaries in the /usr/sbin directory. To do that and place the man pages
+in their normal (Linux) location the ./configure line could be expanded
+to:
+  # ../configure --prefix=/usr --bindir=/usr/sbin
+
+If the configure.ac file in the main directory or any of the Makefile.am
+files are changed then this should be run prior to ./configure :
+  # ./autogen.sh
+
+Also if the ./configure script fails (or the following make) then running
+the ./autogen.sh may help.
+
+To clean up after a build use the following command:
+  # make distclean
+
+
+The build depends on libtool since a shared library is produced. A static
+library is also produced. By default the binaries (i.e. the utilities
+in this package) will depend on that shared library. The binaries can
+be linked instead with the static library with this invocation:
+  # ./configure --disable-shared
+
+
+Douglas Gilbert
+22nd August 2011

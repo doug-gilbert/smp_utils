@@ -1,0 +1,91 @@
+.TH SMP_REP_BROADCAST "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
+.SH NAME
+smp_rep_broadcast \- invoke REPORT BROADCAST SMP function
+.SH SYNOPSIS
+.B smp_rep_broadcast
+[\fI\-\-broadcast=BT\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Serial Management Protocol (SMP) REPORT BROADCAST function
+request to an SMP target. The SMP target is identified by the
+\fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface,
+the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt
+interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and
+needs the additional \fI,N\fR to differentiate between HBAs if there are
+multiple present.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-b\fR, \fB\-\-broadcast\fR=\fIBT\fR
+\fIBT\fR is the broadcast type, an integer in the range 0 (default) to 15.
+Broadcast (Change) corresponds to 0. Other known broadcast types are
+listed in the NOTES section. \fIBT\fR may be decimal (default) or
+hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response (less the CRC field) in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. The mpt interface needs
+this option and it will typically be an expander's SAS address. The
+\fISAS_ADDR\fR is in decimal but most SAS addresses are shown in hexadecimal.
+To give a number in hexadecimal either prefix it with '0x' or put a
+trailing 'h' on it.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH NOTES
+The following is a list of broadcast types:
+.br
+0        Broadcast (Change)
+.br
+1        Broadcast (Reserved change 0)
+.br
+2        Broadcast (Reserved change 1)
+.br
+3        Broadcast (SES)
+.br
+4        Broadcast (Expander)
+.br
+5        Broadcast (Asynchronous event)
+.br
+6        Broadcast (Reserved 3)
+.br
+7        Broadcast (Reserved 4)
+.br
+8        Broadcast (Zone activate)
+.PP
+The remaining zone types (9 to 15) may be issued by the ZONED BROADCAST
+function.
+.SH CONFORMING TO
+The SMP REPORT BROADCAST function was introduced in SAS\-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2011 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_zoned_broadcast(smp_utils)
