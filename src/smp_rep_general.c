@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2014 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -43,7 +42,6 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -51,7 +49,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.28 20160201";    /* spl4r05 */
+static const char * version_str = "1.25 20140526";    /* spl3r04 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -70,57 +68,37 @@ static struct option long_options[] = {
 };
 
 
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
-
 static void
 usage(void)
 {
-    pr2serr("Usage: smp_rep_general [--brief] [--changecount] [--help] "
-            "[--hex]\n"
-            "                       [--interface=PARAMS] [--raw] "
-            "[--sa=SAS_ADDR]\n"
-            "                       [--verbose] [--version] [--zero] "
-            "SMP_DEVICE[,N]\n"
-            "  where:\n"
-            "    --brief|-b           brief report, only important settings\n"
-            "    --changecount|-c     report expander change count "
-            "only\n"
-            "    --help|-h            print out usage message\n"
-            "    --hex|-H             print response in hexadecimal\n"
-            "    --interface=PARAMS|-I PARAMS    specify or override "
-            "interface\n"
-            "    --raw|-r             output response in binary\n"
-            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-            "target (use leading\n"
-            "                                 '0x' or trailing 'h'). "
-            "Depending on\n"
-            "                                 the interface, may not be "
-            "needed\n"
-            "    --verbose|-v         increase verbosity\n"
-            "    --version|-V         print version string and exit\n"
-            "    --zero|-z            zero Allocated Response Length "
-            "field,\n"
-            "                         may be required prior to SAS-2\n\n"
-            "Performs a SMP REPORT GENERAL function\n"
-           );
+    fprintf(stderr, "Usage: "
+          "smp_rep_general [--brief] [--changecount] [--help] [--hex]\n"
+          "                       [--interface=PARAMS] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                       [--verbose] [--version] [--zero] "
+          "SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --brief|-b           brief report, only important settings\n"
+          "    --changecount|-c     report expander change count "
+          "only\n"
+          "    --help|-h            print out usage message\n"
+          "    --hex|-H             print response in hexadecimal\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
+          "interface\n"
+          "    --raw|-r             output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
+          "    --verbose|-v         increase verbosity\n"
+          "    --version|-V         print version string and exit\n"
+          "    --zero|-z            zero Allocated Response Length "
+          "field,\n"
+          "                         may be required prior to SAS-2\n\n"
+          "Performs a SMP REPORT GENERAL function\n"
+          );
 }
 
 static void
@@ -144,9 +122,8 @@ main(int argc, char * argv[])
     int do_raw = 0;
     int verbose = 0;
     int do_zero = 0;
-    int64_t sa_ll;
-    uint64_t sa = 0;
-    unsigned int u;
+    long long sa_ll;
+    unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -194,22 +171,22 @@ main(int argc, char * argv[])
         case 's':
            sa_ll = smp_get_llnum(optarg);
            if (-1LL == sa_ll) {
-                pr2serr("bad argument to '--sa'\n");
+                fprintf(stderr, "bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (uint64_t)sa_ll;
+            sa = (unsigned long long)sa_ll;
             break;
         case 'v':
             ++verbose;
             break;
         case 'V':
-            pr2serr("version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         case 'z':
             ++do_zero;
             break;
         default:
-            pr2serr("unrecognised switch code 0x%x ??\n", c);
+            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -222,7 +199,8 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
+                fprintf(stderr, "Unexpected extra argument: %s\n",
+                        argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -232,8 +210,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+            fprintf(stderr, "missing device name on command line\n    [Could "
+                    "use environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -241,7 +219,8 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            pr2serr("expected number after separator in SMP_DEVICE name\n");
+            fprintf(stderr, "expected number after separator in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -250,19 +229,20 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                pr2serr("bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
+                fprintf(stderr, "bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n");
+                fprintf(stderr, "    use 0\n");
                 sa_ll = 0;
             }
-            sa = (uint64_t)sa_ll;
+            sa = (unsigned long long)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            pr2serr("SAS (target) address not in naa-5 format (may need "
-                    "leading '0x')\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                pr2serr("    use '--interface=' to override\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -278,10 +258,10 @@ main(int argc, char * argv[])
         smp_req[2] = (len < 0x100) ? len : 0xff;
     }
     if (verbose) {
-        pr2serr("    Report general request: ");
+        fprintf(stderr, "    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
-            pr2serr("%02x ", smp_req[k]);
-        pr2serr("\n");
+            fprintf(stderr, "%02x ", smp_req[k]);
+        fprintf(stderr, "\n");
     }
     memset(smp_resp, 0, sizeof(smp_resp));
     memset(&smp_rr, 0, sizeof(smp_rr));
@@ -292,20 +272,21 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        pr2serr("smp_send_req failed, res=%d\n", res);
+        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            pr2serr("    try adding '-v' option for more debug\n");
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
+        fprintf(stderr, "smp_send_req transport_error=%d\n",
+                smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        pr2serr("response too short, len=%d\n", act_resplen);
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -315,14 +296,14 @@ main(int argc, char * argv[])
         if (len < 0) {
             len = 0;
             if (verbose > 0)
-                pr2serr("unable to determine response length\n");
+                fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            pr2serr("actual response length [%d] less than deduced length "
-                    "[%d]\n", act_resplen, len);
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
         len = act_resplen;
     }
     if (do_hex || do_raw) {
@@ -336,41 +317,42 @@ main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                pr2serr("Report general result: %s\n",
+                fprintf(stderr, "Report general result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
         }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
+        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
-                smp_resp[1]);
+        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        pr2serr("Report general result: %s\n", cp);
+        fprintf(stderr, "Report general result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
 
     if (do_ccount) {
-        printf("%u\n", sg_get_unaligned_be16(smp_resp + 4));
+        printf("%d\n", (smp_resp[4] << 8) + smp_resp[5]);
         goto err_out;
     }
     sas2 = !! (smp_resp[3]);
     if (do_full) {
         printf("Report general response:\n");
-        printf("  expander change count: %u\n",
-               sg_get_unaligned_be16(smp_resp + 4));
-        printf("  expander route indexes: %u\n",
-               sg_get_unaligned_be16(smp_resp + 6));
+        printf("  expander change count: %d\n",
+               (smp_resp[4] << 8) + smp_resp[5]);
+        printf("  expander route indexes: %d\n",
+               (smp_resp[6] << 8) + smp_resp[7]);
     } else
         printf("Report general, brief response:\n");
     printf("  long response: %d\n", !!(smp_resp[8] & 0x80));
@@ -401,21 +383,21 @@ main(int argc, char * argv[])
         }
         if ((0 == smp_resp[12]) && verbose)
             printf("  enclosure logical identifier <empty>\n");
-        u = sg_get_unaligned_be16(smp_resp + 28);
-        if (0 == u) {
+        k = (smp_resp[28] << 8) + smp_resp[29];
+        if (0 == k) {
             if (verbose)
                 printf("  SSP maximum connect time unlimited\n");
         } else
-            printf("  SSP maximum connect time limit: %u (100 usec units)\n",
-                   u);
+            printf("  SSP maximum connect time limit: %d (100 usec units)\n",
+                   k);
         if (len < 36)
             goto err_out;
-        printf("  STP bus inactivity timer: %u (unit: 100ms)\n",
-               sg_get_unaligned_be16(smp_resp + 30));
-        printf("  STP maximum connect time: %u (unit: 100ms)\n",
-               sg_get_unaligned_be16(smp_resp + 32));
-        printf("  STP SMP I_T nexus loss time: %u (unit: ms)\n",
-               sg_get_unaligned_be16(smp_resp + 34));
+        printf("  STP bus inactivity timer: %d (unit: 100ms)\n",
+               (smp_resp[30] << 8) + smp_resp[31]);
+        printf("  STP maximum connect time: %d (unit: 100ms)\n",
+               (smp_resp[32] << 8) + smp_resp[33]);
+        printf("  STP SMP I_T nexus loss time: %d (unit: ms)\n",
+               (smp_resp[34] << 8) + smp_resp[35]);
         if (len < 40)
             goto err_out;
     } else {
@@ -447,28 +429,21 @@ main(int argc, char * argv[])
                    !!(smp_resp[37] & 0x2));
             printf("  saving zoning enabled supported: %d\n",
                    !!(smp_resp[37] & 0x1));
-            printf("  maximum number of routed SAS addresses: %u\n",
-                   sg_get_unaligned_be16(smp_resp + 38));
+            printf("  maximum number of routed SAS addresses: %d\n",
+                   (smp_resp[38]  << 8) + smp_resp[39]);
             if (len < 48)
                 goto err_out;
             printf("  active zone manager SAS address (hex): ");
-            for (k = 0; k < 8; ++k) {
-                if (smp_resp[40 + k])
-                    break;
-            }
-            if (k < 8) {
-                for (k = 0; k < 8; ++k)
-                    printf("%02x", smp_resp[40 + k]);
-            } else
-                printf("%s", "0");
+            for (k = 0; k < 8; ++k)
+                printf("%02x", smp_resp[40 + k]);
             printf("\n");
         }
     }
     if (len < 50)
         goto err_out;
     if (do_full) {
-        printf("  zone lock inactivity time limit: %u (unit: 100ms)\n",
-               sg_get_unaligned_be16(smp_resp + 48));
+        printf("  zone lock inactivity time limit: %d (unit: 100ms)\n",
+               (smp_resp[48]  << 8) + smp_resp[49]);
         printf("  power done timeout: %d (unit: second)\n", smp_resp[52]);
     }
     if (len < 56)
@@ -493,16 +468,16 @@ main(int argc, char * argv[])
            smp_resp[59]);
     if (len < 68)
         goto err_out;
-    printf("  last self-configuration status descriptor index: %u\n",
-           sg_get_unaligned_be16(smp_resp + 60));
+    printf("  last self-configuration status descriptor index: %d\n",
+           (smp_resp[60] << 8) + smp_resp[61]);
     printf("  maximum number of stored self-configuration status "
-           "descriptors: %u\n", sg_get_unaligned_be16(smp_resp + 62));
-    printf("  last phy event list descriptor index: %u\n",
-           sg_get_unaligned_be16(smp_resp + 64));
+           "descriptors: %d\n", (smp_resp[62] << 8) + smp_resp[63]);
+    printf("  last phy event list descriptor index: %d\n",
+           (smp_resp[64] << 8) + smp_resp[65]);
     printf("  maximum number of stored phy event list "
-           "descriptors: %u\n", sg_get_unaligned_be16(smp_resp + 66));
-    printf("  STP reject to open limit: %u (unit: 10us)\n",
-           sg_get_unaligned_be16(smp_resp + 68));
+           "descriptors: %d\n", (smp_resp[66] << 8) + smp_resp[67]);
+    printf("  STP reject to open limit: %d (unit: 10us)\n",
+           (smp_resp[68] << 8) + smp_resp[69]);
 
 err_out:
     res = smp_initiator_close(&tobj);
@@ -513,6 +488,6 @@ err_out:
     if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        pr2serr("Exit status %d indicates error detected\n", ret);
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
     return ret;
 }

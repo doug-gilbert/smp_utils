@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2015 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
 
 #include "smp_aac_io.h"
 #include "smp_mptctl_io.h"
@@ -49,19 +48,21 @@
 
 int
 smp_initiator_open(const char * device_name, int subvalue,
-                   const char * i_params, uint64_t sa,
+                   const char * i_params, unsigned long long sa,
                    struct smp_target_obj * tobj, int verbose)
 {
     int force = 0;
-    int res;
     char * cp;
+    int res, j;
 
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
     memset(tobj, 0, sizeof(struct smp_target_obj));
     strncpy(tobj->device_name, device_name, SMP_MAX_DEVICE_NAME);
-    if (sa)
-        sg_put_unaligned_be64(sa, tobj->sas_addr + 0);
+    if (sa) {
+        for (j = 0; j < 8; ++j, (sa >>= 8))
+            tobj->sas_addr[j] = (sa & 0xff);
+    }
     if (i_params[0]) {
         if (0 == strncmp("aac", i_params, 3))
             tobj->interface_selector = I_AAC;
@@ -74,7 +75,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             force = 1;
         else if (verbose > 3)
             fprintf(stderr, "smp_initiator_open: interface not recognized\n");
-        cp = (char *)strchr(i_params, ','); /* cast to stop C++ error */
+        cp = strchr(i_params, ',');
         if (cp) {
             if ((tobj->interface_selector > 0) &&
                 (0 == strncmp("for", cp + 1, 3)))
@@ -82,7 +83,7 @@ smp_initiator_open(const char * device_name, int subvalue,
         }
     }
     if ((I_SGV4 == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) {
+        (0 == tobj->interface_selector)) { 
         res = chk_lin_bsg_device(device_name, verbose);
         if (res || force) {
             if (0 == tobj->interface_selector)
@@ -101,7 +102,7 @@ smp_initiator_open(const char * device_name, int subvalue,
             fprintf(stderr, "chk_lin_bsg_device: failed\n");
     }
     if ((I_MPT == tobj->interface_selector) ||
-        (0 == tobj->interface_selector)) {
+        (0 == tobj->interface_selector)) { 
         res = chk_mpt_device(device_name, verbose);
         if (res || force) {
             if (0 == tobj->interface_selector)
@@ -124,7 +125,7 @@ smp_initiator_open(const char * device_name, int subvalue,
     if((I_AAC == tobj->interface_selector) ||
       (0 == tobj->interface_selector)) {
        res = chk_aac_device(device_name,verbose);
-       if(res || force) {
+       if(res || force) { 
            if (0 == tobj->interface_selector)
                tobj->interface_selector = I_AAC;
            if ((0 == res) && force)
@@ -189,7 +190,8 @@ smp_initiator_close(struct smp_target_obj * tobj)
             fprintf(stderr,"close_aac_device: failed\n");
     }
 
-
+    
     tobj->opened = 0;
     return 0;
 }
+

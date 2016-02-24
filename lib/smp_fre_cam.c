@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011-2013 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,6 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
 
 #define I_CAM 1
 
@@ -67,19 +66,22 @@ struct tobj_cam_t {
  * will be something like /dev/ses0 . */
 int
 smp_initiator_open(const char * device_name, int subvalue,
-                   const char * i_params, uint64_t sa,
+                   const char * i_params, unsigned long long sa,
                    struct smp_target_obj * tobj, int verbose)
 {
+    int j;
     struct cam_device* cam_dev;
     struct tobj_cam_t * tcp;
 
-    if (i_params) { ; }     /* unused, suppress warning */
+    i_params = i_params;
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
     memset(tobj, 0, sizeof(struct smp_target_obj));
     strncpy(tobj->device_name, device_name, SMP_MAX_DEVICE_NAME);
-    if (sa)
-        sg_put_unaligned_be64(sa, tobj->sas_addr + 0);
+    if (sa) {
+        for (j = 0; j < 8; ++j, (sa >>= 8))
+            tobj->sas_addr[j] = (sa & 0xff);
+    }
     tobj->interface_selector = I_CAM;
     tcp = (struct tobj_cam_t *)
                 calloc(1, sizeof(struct tobj_cam_t));

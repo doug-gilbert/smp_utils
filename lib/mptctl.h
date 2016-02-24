@@ -59,7 +59,7 @@
  */
 #define MPT_MISCDEV_BASENAME            "mptctl"
 #define MPT_MISCDEV_PATHNAME            "/dev/" MPT_MISCDEV_BASENAME
-#define MPT_CSMI_DESCRIPTION	        "LSI Logic Corporation: Fusion MPT Driver " MPT_LINUX_VERSION_COMMON
+#define MPT_CSMI_DESCRIPTION	        "LSI Logic Corporation: Fusion MPT Driver "MPT_LINUX_VERSION_COMMON
 
 #define MPT_PRODUCT_LENGTH              12
 

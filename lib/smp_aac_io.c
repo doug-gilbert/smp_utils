@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 1
+#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -70,8 +70,7 @@ chk_aac_device(const char * dev_name,int verbose)
 
   // aac in /proc/devices is not found
     if ( aacDevMjr < 0 ){
-        if (verbose)
-            fprintf(stderr,"chk_aac_device : aac entry not found in /proc/devices \n");
+        fprintf(stderr,"chk_aac_device : aac entry not found in /proc/devices \n");
         return 0;
     }
 
@@ -100,7 +99,7 @@ chk_aac_device(const char * dev_name,int verbose)
     }
 
     if ((S_ISCHR(st.st_mode)) && (aacDevMjr ==(int) major(st.st_rdev))) {
-        if (aacDevMnr == (int) minor(st.st_rdev))
+        if ((aacDevMnr == (int) minor(st.st_rdev)))
            return 1;
     }
 
