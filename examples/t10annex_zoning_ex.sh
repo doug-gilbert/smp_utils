@@ -64,12 +64,12 @@ echo
 # Then a SMP CONFIGURE ZONE PERMISSION TABLE function is sent.
 # Since --save=SAV is not given, only the shadow values are updated
 # (and won't be copied to the saved value during the activate step).
-# Even though the expander supports 256 zone groups, it is still possible
+# Even though the expander support 256 zone groups, it is still possible
 # to provide 128 zone group style descriptors (which is the default for
 # this utility). Note that smp_rep_zone_perm_tbl will output 256 style
 # descriptors in this case.
-echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce $SMP_DEV"
-smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce $SMP_DEV
+echo "smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV"
+smp_conf_zone_perm_tbl --permf=$PERM_FILE --deduce -v $SMP_DEV
 res=$?
 if [ $res -ne 0 ] ; then
     echo "smp_conf_zone_perm_tbl failed with exit status: $res"
@@ -158,33 +158,13 @@ fi
 
 
 echo
-echo "The zone permission table can now be viewed with:"
-echo "  smp_rep_zone_perm_tbl --bits=13 $SMP_DEV"
-echo
-echo "For comparison what follows is reproduced from spl2r04a.pdf Table H.4"
-echo "on page 750 (formatted like the output of smp_rep_zone_perm_tbl "
-echo "should be):"
-echo "    0123456789012"
-echo
-echo "0   0100000000000"
-echo "1   1111111111111"
-echo "2   0100000000100"
-echo "3   0100000000100"
-echo "4   0100000000000"
-echo "5   0100000000000"
-echo "6   0100000000000"
-echo "7   0100000000000"
-echo "8   0100000000100"
-echo "9   0100000000100"
-echo "10  0111000011101"
-echo "11  0100000000000"
-echo "12  0100000000100"
-
+echo "The zone permission table could now be viewed with:"
+echo "  smp_rep_zone_perm_tbl --bits=12 $SMP_DEV"
 #
 # Note that the t10 annex example shows the ZP array with its origin
 # (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
 # output will show the origin in the top right corner (due to SCSI's big
-# endian internal representation). To override that, the "--bits=13" option
+# endian internal representation). To override that, the "--bits=12" option
 # presents the output like the t10 annex example (i.e. bit oriented, little
 # endian).
 #

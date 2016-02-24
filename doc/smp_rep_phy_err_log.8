@@ -10,13 +10,12 @@ smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) REPORT PHY ERROR LOG function
-request to an SMP target. The SMP target is identified by the
-\fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface, the
-\fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
-uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
-additional \fI,N\fR to differentiate between HBAs if there are multiple
-present.
+Sends a SAS Management Protocol (SMP) REPORT PHY ERROR LOG function request
+to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
+differentiate between HBAs if there are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -63,7 +62,7 @@ the sg_logs utility.
 .PP
 Similar information may be obtained for SAS initiator phys (e.g. on a SAS
 HBA). As an example in Linux 2.6.28 error information can be found in this
-directory /sys/class/sas_phy/phy\-4:0 (for the phy 0 in SCSI/SAS host 4).
+directory /sys/class/sas_phy/phy-4:0 (for the phy 0 in SCSI/SAS host 4).
 .PP
 Similar information may be obtained for SATA device phys (e.g. on a SATA
 disk). If there is a SAT layer between OS and the SATA device then the

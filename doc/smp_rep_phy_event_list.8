@@ -1,45 +1,23 @@
-.TH SMP_REP_PHY_EVENT_LIST "8" "December 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_REP_PHY_EVENT_LIST "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_rep_phy_event_list \- invoke REPORT PHY EVENT LIST SMP function
 .SH SYNOPSIS
 .B smp_rep_phy_event_list
-[\fI\-\-desc\fR] [\fI\-\-enumerate\fR] [\fI\-\-force\fR] [\fI\-\-help\fR]
-[\fI\-\-hex\fR] [\fI\-\-index=IN\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-long\fR] [\fI\-\-nonz\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=IN\fR]
+[\fI\-\-interface=PARAMS\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
 [\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
 \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) REPORT PHY EVENT LIST function
-request to an SMP target. The SMP target is identified by the
-\fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface, the
-\fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
-uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
-additional \fI,N\fR to differentiate between HBAs if there are multiple
-present.
-.PP
-Reports zero or more phy event list descriptors. Each descriptor contains a
-phy identifier, a phy event source, a phy event (i.e. a count) and a peak
-value detector theshold. At least one phy event should be maintained for
-each phy.
+Sends a SAS Management Protocol (SMP) REPORT PHY EVENT LIST function request
+to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
+to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
+differentiate between HBAs if there are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
-.TP
-\fB\-d\fR, \fB\-\-desc\fR
-precede each phy event descriptor with a line announcing its descriptor index 
-number. Index numbers start at 1.
-.TP
-\fB\-e\fR, \fB\-\-enumerate\fR
-enumerate all of the known Phy Event Source names, one per line preceded by
-its value in hex. Ignores \fISMP_DEVICE\fR if it is given; most other
-options are also ignored. Exits after displaying the names.
-.TP
-\fB\-f\fR, \fB\-\-force\fR
-force the report to continue after the last descriptor index has been
-exceeded. The default action is too stop the report when the last descriptor
-index has been exceeded.
-at 1.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
@@ -48,21 +26,8 @@ output the usage message then exit.
 output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
-starting phy event list descriptor index. \fIIN\fR is a value between 0 and
-65535. The default is 1. If \fIIN\fR is 0 then the response should contain
-no phy event list descriptors but the 'last phy event list descriptor index'
-and 'phy event list descriptor length' fields in the response should be set
-appropriately. The last point was clarified in SPL\-2 revision 3.
-.TP
-\fB\-l\fR, \fB\-\-long\fR
-prefix each phy event source string with its numeric identifier in hex.
-Also place "phy_id=" in front of the phy identifier number.
-For example: "phy_id=3: [0x1]: Invalid word count: 29"; without this option
-this line would be: "3: Invalid word count: 29".
-.TP
-\fB\-n\fR, \fB\-\-nonz\fR
-only show phy events with non\-zero counts or peak values. The default is to
-show all phy events in the response.
+starting phy event list descriptor index. \fIID\fR is a value between 1 and
+65535. Default is 1.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -92,7 +57,7 @@ the sg_logs utility.
 .PP
 Similar information may be obtained for SAS initiator phys (e.g. on a SAS
 HBA). As an example in Linux 2.6.28 error information can be found in this
-directory /sys/class/sas_phy/phy\-4:0 (for the phy 0 in SCSI/SAS host 4).
+directory /sys/class/sas_phy/phy-4:0 (for the phy 0 in SCSI/SAS host 4).
 .PP
 Similar information may be obtained for SATA device phys (e.g. on a SATA
 disk). If there is a SAT layer between OS and the SATA device then the

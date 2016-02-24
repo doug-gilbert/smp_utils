@@ -10,19 +10,19 @@ smp_conf_route_info \- invoke CONFIGURE ROUTE INFORMATION SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) CONFIGURE ROUTE INFORMATION
-function request to an SMP target. The SMP target is identified by
+Sends a SAS Management Protocol (SMP) CONFIGURE ROUTE INFORMATION
+function request to a SMP target. The SMP target is identified by
 the \fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the
 interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
 The mpt interface uses \fISMP_DEVICE\fR
 to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
 differentiate between HBAs if there are multiple present.
 .PP
-There are two expander route table types: phy\-based and expander\-based.
-The expander\-based route table was introduced in SAS\-2 and supersedes the
-phy\-based route tables. The CONFIGURE ROUTE INFORMATION function is
-associated with a phy\-based route table. The REPORT ROUTE INFORMATION
-function is provided to report phy\-based route table entries.
+There are two expander route table types: phy-based and expander-based.
+The expander-based route table was introduced in SAS\-2 and supersedes the
+phy-based route tables. The CONFIGURE ROUTE INFORMATION function is
+associated with a phy-based route table. The REPORT ROUTE INFORMATION
+function is provided to report phy-based route table entries.
 .PP
 Each phy in a SAS expander that has an associated routing attribute
 of "table" has a router table. The number of rows (or entries) in
