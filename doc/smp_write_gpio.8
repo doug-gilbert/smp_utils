@@ -1,6 +1,6 @@
-.TH SMP_WRITE_GPIO "8" "August 2011" "smp_utils\-0.97" SMP_UTILS
+.TH SMP_WRITE_GPIO "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
-smp_write_gpio \- invoke WRITE GPIO REGISTER (ENHANCED) SMP function
+smp_write_gpio \- invoke WRITE GPIO REGISTER SMP function
 .SH SYNOPSIS
 .B smp_write_gpio
 [\fI\-\-count=CO\fR] [\fI\-\-data=H,H...\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR]
@@ -10,27 +10,21 @@ smp_write_gpio \- invoke WRITE GPIO REGISTER (ENHANCED) SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) WRITE GPIO REGISTER or a WRITE
-GPIO REGISTER ENHANCED function request to an SMP target. The SMP target is
-identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the
-interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The
-mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
-and needs the additional \fI,N\fR to differentiate between HBAs if there
-are multiple present.
+Sends a SAS Management Protocol (SMP) WRITE GPIO REGISTER request function
+to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. With one interface there is one
+\fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
+differentiate between HBAs if there are multiple present.
 .PP
-This function is defined in SFF\-8485 ( see www.sffcommittee.com ) together
-with its corresponding READ GPIO REGISTER (ENHANCED) SMP function.
+This function is defined in SFF\-8485 ( see www.sffcommittee.com )
+together with its corresponding READ GPIO REGISTER SMP function.
 The other SMP functions are defined in SAS documents at www.t10.org .
 SFF\-8485 defines a curious device called a "virtual SMP port"
 that lives in a host bus adapter (HBA) and allows SMP to manipulate
 the sideband signals in wide internal cables. To stop other initiators
 in a multi\-initiator domain from accessing those sideband signals,
 the virtual SMP (target) port is not indicated in a DISCOVER response.
-.PP
-For notes on the SMP WRITE GPIO REGISTER ENHANCED function see the section 
-on the ENHANCED FUNCTION below.
-.SH OPTIONS
-Mandatory arguments to long options are mandatory for short options as well.
 .TP
 \fB\-c\fR, \fB\-\-count\fR=\fICO\fR
 where \fICO\fR is the register count. This is the number of (4 byte)
@@ -46,15 +40,11 @@ The first 4 bytes will become the first register written.
 reads string of hexadecimal bytes from stdin. Spaces, tabs and line feeds
 additionally are permitted as separators.
 .TP
-\fB\-E\fR, \fB\-\-enhanced\fR
-sends a WRITE GPIO REGISTER ENHANCED function request (default: send a WRITE
-GPIO REGISTER function request).
-.TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response (less the CRC field) in hexadecimal.
+output the response in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
 where \fIIN\fR is the register index. This value is origin zero and its
@@ -67,8 +57,7 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response (less the CRC field) to stdout in binary. All error
-messages are sent to stderr.
+send the response to stdout in binary. All error messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an
@@ -82,27 +71,11 @@ where \fITY\fR is the register type. The default value is 0 (GPIO_CFG).
 The request will send \fI\-\-count=CO\fR registers starting from
 \fI\-\-index=IN\fR of the given \fI\-\-type=TY\fR.
 .TP
-\fB\-v\fR, \fB\-\-verbose\fR
+\fB\-v\fR, \fB\-\-verbose\f
 increase the verbosity of the output. Can be used multiple times.
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
-.SH ENHANCED FUNCTION
-In the technical review of SAS\-2 prior to standardization in this t10
-document: 08\-212r8.pdf (page 871 or 552) there is a comment that the
-READ GPIO REGISTER and WRITE GPIO REGISTER function headers (i.e. first
-4 bytes) do not comply with all the other SMP functions in SAS\-2.
-.PP
-There is a suggestion that enhanced variants be introduced in the next
-version of the SFF\-8485 document. If that ever happened then it has
-not been made public. In SAS\-2.1 both the READ and WRITE GPIO REGISTER
-functions have been made obsolete and the corresponding ENHANCED function
-numbers are "restricted" for SFF\-8485.
-.PP
-If the \fI\-\-enhanced\fR option is given then the ENHANCED function 
-number is sent; the register type, index and count fields (1  byte each) 
-are increased by two byte positions leaving enough space for a compliant
-SAS\-2 SMP header to be built.
 .SH CONFORMING TO
 The SMP WRITE GPIO REGISTER function is defined in SFF\-8485 (see
 www.sffcommittee.com ) together with its corresponding READ
@@ -112,7 +85,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2008 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

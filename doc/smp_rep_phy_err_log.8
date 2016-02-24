@@ -1,22 +1,20 @@
-.TH SMP_REP_PHY_ERR_LOG "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_PHY_ERR_LOG "8" "December 2008" "smp_utils\-0.94" SMP_UTILS
 .SH NAME
 smp_rep_phy_err_log \- invoke REPORT PHY ERROR LOG SMP function
 .SH SYNOPSIS
 .B smp_rep_phy_err_log
 [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR]
 [\fI\-\-phy=ID\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] [\fI\-\-zero\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) REPORT PHY ERROR LOG function
-request to an SMP target. The SMP target is identified by the
-\fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on the interface, the
-\fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
-uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator) and needs the
-additional \fI,N\fR to differentiate between HBAs if there are multiple
-present.
+Sends a SAS Management Protocol (SMP) REPORT PHY ERROR LOG request function
+to a SMP target. The SMP target is identified by the \fISMP_DEVICE\fR and
+the \fISAS_ADDR\fR. Depending on the interface, the \fISAS_ADDR\fR may be
+deduced from the \fISMP_DEVICE\fR. With one interface there is one
+\fISMP_DEVICE\fR per machine so the \fISMP_DEVICE,N\fR syntax is needed to
+differentiate between HBAs if there are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -24,7 +22,7 @@ Mandatory arguments to long options are mandatory for short options as well.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response (less the CRC field) in hexadecimal.
+output the response in hexadecimal.
 .TP
 \fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
 interface specific parameters. In this case "interface" refers to the
@@ -32,11 +30,10 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
+phy identifier. \fIID\fR is a value between 0 and 127. Default is 0.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response (less the CRC field) to stdout in binary. All error
-messages are sent to stderr.
+send the response to stdout in binary. All error messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an
@@ -50,12 +47,6 @@ increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
-.TP
-\fB\-z\fR, \fB\-\-zero\fR
-zero the Allocated Response Length field in the request. This option
-also zeros the Request Length field in the request. This is required
-for strict SAS\-1.1 compliance. However this option should not be
-given in SAS\-2 and later; if it is given an abridged response may result.
 .SH NOTES
 Similar information is maintained for SAS SSP target phys (e.g. on a SAS
 disk). It can be obtained from the Protocol Specific Port log page with
@@ -63,20 +54,20 @@ the sg_logs utility.
 .PP
 Similar information may be obtained for SAS initiator phys (e.g. on a SAS
 HBA). As an example in Linux 2.6.28 error information can be found in this
-directory /sys/class/sas_phy/phy\-4:0 (for the phy 0 in SCSI/SAS host 4).
+directory /sys/class/sas_phy/phy-4:0 (for the phy 0 in SCSI/SAS host 4).
 .PP
 Similar information may be obtained for SATA device phys (e.g. on a SATA
 disk). If there is a SAT layer between OS and the SATA device then the
 sg_sat_phy_event utility can fetch the information.
 .SH CONFORMING TO
-The SMP REPORT PHY ERROR LOG function was introduced in SAS\-1 .
-The "Expander change count" field was added in SAS\-2 .
+The SMP REPORT PHY ERROR LOG function was introduced in SAS-1 .
+The "Expander change count" field was added in SAS-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2008 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

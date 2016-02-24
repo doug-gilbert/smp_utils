@@ -2,78 +2,12 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20160202] [svn:r151]
-  - smp_discover(_list): add --dsn option to show
-    device slot number in single line per phy summary
-    - attached SAS device type, word SAS added (spl4r01)
-    - add SAS connector types, shared with NVMe (ses3r8)
- - add G5 (22.5 Gbps) settings [spl4r06]
- - sync with spl4r06
-
-Changelog for smp_utils-0.98 [20140526] [svn:r138]
-  - add Linux aacraid support, interface name : aac
-    - device name has form /dev/aac[N[,E_ID]]
-  - smp_discover, smp_discover_list: in 1 line summary use
-    routing attribute "U" instead of "T" if "table to
-    table supported" set in report general response
-    - output device slot (group) number if len > 109
-    - add 'attached persistent capable' bit (spl3r2)
-    - add pwr_dis_* fields (spl3r3)
-    - add '--cap' option to decode phy capabilities
-    - change 'end device' to 'SAS or SATA device'
-  - smp_discover: '-mm' produces full output for each phy
-  - smp_rep_broadcast: add broadcast type names
-  - smp_general: add 'initiates ssp close' and 'ssp
-    maximum connect time limit' fields (spl3r04)
-  - add support for mpt3ctl (Linux LSI 12 Gbps HBAs)
-  - change binary install from /usr/sbin to /usr/bin since
-    sbin caused problems
-  - examples folder scripts cleanup
-  - make code more C11/C++ friendly
-
-Changelog for smp_utils-0.97 [20120120] [svn:r116]
-  - smp_conf_phy_event: new utility
-  - change to ./configure style build and use smputils
-    runtime and development libraries
-  - change binary install from /usr/bin to /usr/sbin
-    in debian and rpm (.spec) scripts
-  - sync to SPL-2 (spl2r03)
-  - take resid into account when calculating the actual
-    response length
-  - smp_rep_phy_event, smp_rep_phy_event_list: add --enumerate
-    option to list Phy Event Source names
-  - smp_read_gpio, smp_write_gpio: move register type,
-    index and count fields in enhanced variants
-  - add solaris and freebsd ports
-
-Changelog for smp_utils-0.96 [20110620] [svn:r96]
-  - smp_conf_zone_perm_tbl, smp_conf_zone_man_pass
-    smp_conf_zone_phy_info, smp_ena_dis_zoning,
-    smp_rep_broadcast, smp_rep_phy_event, smp_rep_phy_event_list,
-    smp_rep_self_conf_stat, smp_rep_zone_man_pass,
-    smp_rep_zone_perm_tbl, smp_zone_activate, smp_zoned_broadcast,
-    smp_zone_lock, smp_zone_unlock:
-      add these new utilities
-  - all utilities: sync to SPL-2 (spl2r01)
-    -those with '--phy=ID' option: increase max from 128 to 254
-  - smp_discover, smp_discover_list: add --adn and --summary
-    - make --summary default if --phy=ID option not given
-    - with --summary show disabled and errored phys
-  - smp_discover: add --my and --zero option
-  - smp_discover_list: add --zpi=FN option
-  - smp_rep_general, smp_rep_manufacturer, smp_rep_phy_err_log,
-    smp_rep_phy_sata: add --zero options
-  - smp_conf_general: add --power option
-  - smp_read_gpio, smp_write_gpio: add --enhanced option
-  - add examples directory, mainly for zoning
-  - remove doc/smp_utils.html , refer readers to web page
-  - remove tpl (ai) interface
-
 Changelog for smp_utils-0.95 [20101116] [svn:r47]
   - place link to smp_utils.html examples in man pages
   - alter Makefile for non-root users
   - add spl-r04 discover changes (spl is upper layers of sas-2.1)
   - mpt: cope with mpt2 ioctl that uses a different magic number
+
 
 Changelog for smp_utils-0.94 [20081229] [svn:r40]
   - smp_discover: sync to sas2r15

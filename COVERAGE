@@ -1,6 +1,6 @@
                         Function coverage
                         =================
-The following table lists SAS Serial Management Protocol (SMP) functions
+The following table lists SAS Management Protocol (SMP) functions
 in alphabetical order in the left column. The second column is the
 standard or draft that the function first appeared in or was extended.
 The final column is the utility in the smp_utils package that invokes
@@ -10,58 +10,56 @@ introduced functions have no corresponding utility.
 SMP Function                          Standard         smp_utils utility
 ------------------------------------  ---------------  ---------------------
 CONFIGURE GENERAL                     2                smp_conf_general
-CONFIGURE PHY EVENT                   2                smp_conf_phy_event
+CONFIGURE PHY EVENT                   2    
 CONFIGURE ROUTE INFORMATION           1, 2             smp_conf_route_info
-CONFIGURE ZONE MANAGER PASSWORD       2                smp_conf_zone_man_pass
-CONFIGURE ZONE PERMISSION TABLE       2                smp_conf_zone_perm_tbl
-CONFIGURE ZONE PHY INFORMATION        2                smp_conf_zone_phy_info
+CONFIGURE ZONE MANAGER PASSWORD       2    
+CONFIGURE ZONE PERMISSION TABLE       2    
+CONFIGURE ZONE PHY INFORMATION        2    
 DISCOVER                              1, 1.1, 2        smp_discover
 DISCOVER LIST                         2                smp_discover_list
-ENABLE DISABLE ZONING                 2                smp_ena_dis_zoning
+ENABLE DISABLE ZONING                 2    
 PHY CONTROL                           1, 2             smp_phy_control
 PHY TEST FUNCTION                     1.1, 2           smp_phy_test
 READ GPIO REGISTER                    SFF-8485*        smp_read_gpio
-READ GPIO REGISTER ENHANCED           SFF-8485*        smp_read_gpio
-REPORT BROADCAST                      2                smp_rep_broadcast
+READ GPIO REGISTER ENHANCED           SFF-8485*
+REPORT BROADCAST                      2    
 REPORT EXPANDER ROUTE TABLE LIST      2                smp_rep_exp_route_tbl
 REPORT GENERAL                        1, 1.1, 2        smp_rep_general
 REPORT MANUFACTURER INFORMATION       1, 1.1, 2        smp_rep_manufacturer
 /* REPORT PHY BROADCAST COUNTS           2             removed in sas2r13 */
 REPORT PHY ERROR LOG                  1, 2             smp_rep_phy_err_log
-REPORT PHY EVENT                      2                smp_rep_phy_event
-REPORT PHY EVENT LIST                 2                smp_rep_phy_event_list
+REPORT PHY EVENT                      2    
+REPORT PHY EVENT LIST                 2    
 REPORT PHY SATA                       1, 2             smp_rep_phy_sata
 REPORT ROUTE INFORMATION              1, 2             smp_rep_route_info
-REPORT SELF-CONFIGURATION STATUS      2                smp_rep_self_conf_stat
-REPORT ZONE MANAGER PASSWORD          2                smp_rep_zone_man_pass
-REPORT ZONE PERMISSION TABLE          2                smp_rep_zone_perm_tbl
+REPORT SELF-CONFIGURATION STATUS      2    
+REPORT ZONE MANAGER PASSWORD          2    
+REPORT ZONE PERMISSION TABLE          2    
 WRITE GPIO REGISTER                   SFF-8485*        smp_write_gpio
-WRITE GPIO REGISTER ENHANCED          SFF-8485*        smp_write_gpio
-ZONE ACTIVATE                         2                smp_zone_activate
-ZONE LOCK                             2                smp_zone_lock
-ZONE UNLOCK                           2                smp_zone_unlock
-ZONED BROADCAST                       2                smp_zoned_broadcast
+WRITE GPIO REGISTER ENHANCED          SFF-8485*
+ZONE ACTIVATE                         2    
+ZONE LOCK                             2    
+ZONE UNLOCK                           2    
+ZONED BROADCAST                       2    
 
-*  in sas2r16 the non-ENHANCED versions are marked as obsolete but the
+*  in sas2r15 the non-ENHANCED versions are marked as obsolete but the
    ENHANCED version are not yet defined in the most recent SFF-8485
-   (rev 0.7). In SAS-2.1 (spl-r07) and SAS-3 (spl2r03) these 4 functions
-   are not defined (the ENHANCED function codes are "restricted for
-   SFF").
+   (rev 0.7).
+
+There are 27 SMP functions defined in sas2r15.pdf (plus 2 recently added
+replacing 2 obsoleted in SFF-8485). smp_utils currently implements 14
+functions.
 
 The sas-r05.pdf draft is taken to represent the original SAS standard
 (ANSI INCITS 376-2003). The sas1r10.pdf draft is taken to represent the
-SAS-1.1 standard (ANSI INCITS 417-2006). The sas2r16.pdf draft is taken
-to represent the SAS-2 standard (ANSI INCITS 457-2010).
+SAS-1.1 standard (ANSI INCITS 417-2006). The most recent draft of SAS-2
+is sas2r15.pdf and is being submitted for approval.
 
-Now there is a SAS-2.1 standard at the draft stage and it has been
-split into 2 documents. The document containing the SMP functions
-is called the SAS Protocol Layer (SPL). So far only a small number
-of changes have been made to the SMP functions in the SPL draft.
-Work is ongoing on a SAS-3 standard in which a phy can run up to
-12 Gbps. The document containing the SMP functions corresponding
-to SAS-3 is called SPL-2 and the first draft was recently
-placed on the t10 ftp site.
+At this time all SMP functions introduced in the original standard
+and SAS-1.1 have corresponding smp_utils utilities. Currently
+smp_discover_list and smp_rep_exp_route_tbl are the only utilities
+corresponding to a newly introduced function in SAS-2.
 
 
 Doug Gilbert
-23rd September 2011
+26th December 2008

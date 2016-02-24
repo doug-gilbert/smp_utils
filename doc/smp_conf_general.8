@@ -1,23 +1,23 @@
-.TH SMP_CONF_GENERAL "8" "November 2015" "smp_utils\-0.99" SMP_UTILS
+.TH SMP_CONF_GENERAL "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_conf_general \- invoke CONFIGURE GENERAL SMP function
 .SH SYNOPSIS
 .B smp_conf_general
 [\fI\-\-connect=CO\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-inactivity=IN\fR] [\fI\-\-interface=PARAMS\fR]
-[\fI\-\-nexus=NE\fR] [\fI\-\-open=OP\fR] [\fI\-\-power=PD\fR] [\fI\-\-raw\fR]
-[\fI\-\-reduced=RE\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-ssp=CTL\fR]
-[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+[\fI\-\-nexus=NE\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) CONFIGURE GENERAL function
-request to an SMP target. The SMP target is identified by
+Sends a SAS Management Protocol (SMP) CONFIGURE GENERAL
+request function to a SMP target. The SMP target is identified by
 the \fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the
 interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
-The mpt interface uses \fISMP_DEVICE\fR
-to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
-differentiate between HBAs if there are multiple present.
+With one interface there is one \fISMP_DEVICE\fR per machine so the
+\fISMP_DEVICE,N\fR syntax is needed to differentiate between HBAs if
+there are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -39,7 +39,7 @@ function result of "invalid expander change count" in the response.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response (less the CRC field) in hexadecimal.
+output the response in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-inactivity\fR=\fIIN\fR
 sets the "update STP bus inactivity time limit" flag and the
@@ -59,27 +59,8 @@ corresponding "STP SMP I_T nexus loss time" field to \fINE\fR. Unit of
 specific amount of time; a \fINE\fR of 65535 means the port shall never
 recognize an I_T nexus loss.
 .TP
-\fB\-o\fR, \fB\-\-open\fR=\fIOP\fR
-sets the "update STP reject to open limit" flag and the
-corresponding "STP reject to open limit" field to \fIOP\fR. Unit of
-\fIOP\fR is 10 microseconds.
-.TP
-\fB\-p\fR, \fB\-\-power\fR=\fIPD\fR
-sets the "update power done timeout" flag and the corresponding "power
-doen timeout" field to \fIPD\fR. Unit of \fIPD\fR is 1 second. A \fIPD\fR
-value of 0 is interpreted as don't change the current value. The
-maximum value of \fIPD\fR is 255 and means the time limit is vendor
-specific.
-.TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response (less the CRC field) to stdout in binary. All error
-messages are sent to stderr.
-.TP
-\fB\-R\fR, \fB\-\-reduced\fR=\fIRE\fR
-sets the "update Initial time to reduced functionality" flag and the
-corresponding "Initial time to reduced functionality" field to \fIRE\fR.
-Unit of \fIRE\fR is 100 milliseconds. The maximum permitted \fIRE\fR value
-is 255 which corresponds to 25.5 seconds.
+send the response to stdout in binary. All error messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an
@@ -88,24 +69,19 @@ target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most SAS
 addresses are shown in hexadecimal. To give a number in hexadecimal either
 prefix it with '0x' or put a trailing 'h' on it.
 .TP
-\fB\-S\fR, \fB\-\-ssp\fR=\fICTL\fR
-sets the "update SSP time limit" flag and the corresponding "SSP maximum
-connect time limit" field to \fICTL\fR. Unit of \fICTL\fR is 100 microseconds.
-A \fICTL\fR of zero is taken to meanthat there is no SSP connect time limit.
-.TP
 \fB\-v\fR, \fB\-\-verbose\fR
 increase the verbosity of the output. Can be used multiple times
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH CONFORMING TO
-The SMP CONFIGURE GENERAL function was introduced in SAS\-2 .
+The SMP CONFIGURE GENERAL function was introduced in SAS-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2015 Douglas Gilbert
+Copyright \(co 2006\-2008 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

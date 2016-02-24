@@ -1,4 +1,4 @@
-.TH SMP_REP_EXP_ROUTE_TBL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_REP_EXP_ROUTE_TBL "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
 .SH NAME
 smp_rep_exp_route_tbl \- invoke REPORT EXPANDER ROUTE TABLE LIST SMP function
 .SH SYNOPSIS
@@ -10,19 +10,13 @@ smp_rep_exp_route_tbl \- invoke REPORT EXPANDER ROUTE TABLE LIST SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) REPORT EXPANDER ROUTE TABLE LIST
-function request to an SMP target and decodes or outputs the response. The
-SMP target is identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR.
-Depending on the interface, the \fISAS_ADDR\fR may be deduced from the
-\fISMP_DEVICE\fR. The mpt interface uses \fISMP_DEVICE\fR
-to identify a HBA (an SMP initiator) and needs the additional \fI,N\fR to
-differentiate between HBAs if there are multiple present.
-.PP
-There are two expander route table types: phy\-based and expander\-based.
-The expander\-based route table was introduced in SAS\-2 and supersedes the
-phy\-based route tables. The REPORT EXPANDER ROUTE TABLE LIST function is
-associated with an expander\-based route table. There is no corresponding
-CONFIGURE function because a expander\-based route table is self\-configured.
+Sends a SAS Management Protocol (SMP) REPORT EXPANDER ROUTE TABLE LIST request
+function to a SMP target and decodes or outputs the response. The SMP target
+is identified by the \fISMP_DEVICE\fR and the \fISAS_ADDR\fR. Depending on
+the interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
+With one interface there is one \fISMP_DEVICE\fR per machine so the
+\fISMP_DEVICE[,N]\fR syntax is needed to differentiate between HBAs if there
+are multiple present.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options as well.
 .TP
@@ -33,7 +27,7 @@ reduce the decoded response output.
 output the usage message then exit.
 .TP
 \fB\-H\fR, \fB\-\-hex\fR
-output the response (less the CRC field) in hexadecimal.
+output the response in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fIIN\fR
 \fIIN\fR is the starting routed SAS address index. The default value is 0.
@@ -44,18 +38,16 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-n\fR, \fB\-\-num\fR=\fINUM\fR
-maximum number of descriptors to fetch (default is 62). Note that maximum SMP
-frame size is 1028 bytes (including a trailing 4 byte CRC) so 62 descriptors
-is the maximum number that can fit in one response.
+maximum number of descriptors fetch (default is 1). Note that maximum SMP
+frame size is 1032 bytes (including a trailing 4 byte CRC) which may limit
+the number of descriptors that can be fetched to 62.
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-starting phy identifier within bitmap. \fIID\fR should be one of 0 (the
-default), or a multiple of 48. Note there is only one expnder route
-table per expander, not one per phy.
+starting phy identifier. \fIID\fR should be one of 0 (the default), 48 or
+96.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
-send the response (less the CRC field) to stdout in binary. All error
-messages are sent to stderr.
+send the response to stdout in binary. All error messages are sent to stderr.
 .TP
 \fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
 specifies the SAS address of the SMP target device. Typically this is an
@@ -70,13 +62,13 @@ increase the verbosity of the output. Can be used multiple times
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH CONFORMING TO
-The SMP REPORT EXPANDER ROUTE TABLE LIST function was introduced in SAS\-2 .
+The SMP REPORT EXPANDER ROUTE TABLE LIST function was introduced in SAS-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2007\-2011 Douglas Gilbert
+Copyright \(co 2007\-2008 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
