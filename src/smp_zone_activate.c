@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -45,7 +44,6 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -53,7 +51,7 @@
  * This utility issues a ZONE ACTIVATE function and outputs its response.
  */
 
-static const char * version_str = "1.05 20160201";
+static char * version_str = "1.03 20111222";
 
 static struct option long_options[] = {
     {"expected", 1, 0, 'E'},
@@ -68,53 +66,33 @@ static struct option long_options[] = {
 };
 
 
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
-
 static void
 usage(void)
 {
-    pr2serr("Usage: smp_zone_activate [--expected=EX] [--help] [--hex]\n"
-            "                         [--interface=PARAMS] [--raw] "
-            "[--sa=SAS_ADDR]\n"
-            "                         [--verbose] [--version] "
-            "SMP_DEVICE[,N]\n"
-            "  where:\n"
-            "    --expected=EX|-E EX    set expected expander change "
-            "count to EX\n"
-            "                           SAS-2 marks this field 'restricted'\n"
-            "    --help|-h              print out usage message\n"
-            "    --hex|-H               print response in hexadecimal\n"
-            "    --interface=PARAMS|-I PARAMS    specify or override "
-            "interface\n"
-            "    --raw|-r               output response in binary\n"
-            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-            "target (use leading\n"
-            "                                 '0x' or trailing 'h'). "
-            "Depending on\n"
-            "                                 the interface, may not be "
-            "needed\n"
-            "    --verbose|-v           increase verbosity\n"
-            "    --version|-V           print version string and exit\n\n"
-            "Performs a SMP ZONE ACTIVATE function\n"
-           );
+    fprintf(stderr, "Usage: "
+          "smp_zone_activate [--expected=EX] [--help] [--hex]\n"
+          "                         [--interface=PARAMS] [--raw] "
+          "[--sa=SAS_ADDR]\n"
+          "                         [--verbose] [--version] SMP_DEVICE[,N]\n"
+          "  where:\n"
+          "    --expected=EX|-E EX    set expected expander change "
+          "count to EX\n"
+          "                           SAS-2 marks this field 'restricted'\n"
+          "    --help|-h              print out usage message\n"
+          "    --hex|-H               print response in hexadecimal\n"
+          "    --interface=PARAMS|-I PARAMS    specify or override "
+          "interface\n"
+          "    --raw|-r               output response in binary\n"
+          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+          "target (use leading\n"
+          "                                 '0x' or trailing 'h'). "
+          "Depending on\n"
+          "                                 the interface, may not be "
+          "needed\n"
+          "    --verbose|-v           increase verbosity\n"
+          "    --version|-V           print version string and exit\n\n"
+          "Performs a SMP ZONE ACTIVATE function\n"
+          );
 }
 
 static void
@@ -135,8 +113,8 @@ main(int argc, char * argv[])
     int do_hex = 0;
     int do_raw = 0;
     int verbose = 0;
-    int64_t sa_ll;
-    uint64_t sa = 0;
+    long long sa_ll;
+    unsigned long long sa = 0;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -162,7 +140,7 @@ main(int argc, char * argv[])
         case 'E':
             expected_cc = smp_get_num(optarg);
             if ((expected_cc < 0) || (expected_cc > 65535)) {
-                pr2serr("bad argument to '--expected'\n");
+                fprintf(stderr, "bad argument to '--expected'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
             break;
@@ -183,19 +161,19 @@ main(int argc, char * argv[])
         case 's':
             sa_ll = smp_get_llnum(optarg);
             if (-1LL == sa_ll) {
-                pr2serr("bad argument to '--sa'\n");
+                fprintf(stderr, "bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            sa = (uint64_t)sa_ll;
+            sa = (unsigned long long)sa_ll;
             break;
         case 'v':
             ++verbose;
             break;
         case 'V':
-            pr2serr("version: %s\n", version_str);
+            fprintf(stderr, "version: %s\n", version_str);
             return 0;
         default:
-            pr2serr("unrecognised switch code 0x%x ??\n", c);
+            fprintf(stderr, "unrecognised switch code 0x%x ??\n", c);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -208,7 +186,8 @@ main(int argc, char * argv[])
         }
         if (optind < argc) {
             for (; optind < argc; ++optind)
-                pr2serr("Unexpected extra argument: %s\n", argv[optind]);
+                fprintf(stderr, "Unexpected extra argument: %s\n",
+                        argv[optind]);
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -218,8 +197,8 @@ main(int argc, char * argv[])
         if (cp)
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
-            pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+            fprintf(stderr, "missing device name on command line\n    [Could "
+                    "use environment variable SMP_UTILS_DEVICE instead]\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -227,7 +206,8 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            pr2serr("expected number after separator in SMP_DEVICE name\n");
+            fprintf(stderr, "expected number after separator in SMP_DEVICE "
+                    "name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -236,19 +216,20 @@ main(int argc, char * argv[])
         if (cp) {
            sa_ll = smp_get_llnum(cp);
            if (-1LL == sa_ll) {
-                pr2serr("bad value in environment variable "
-                        "SMP_UTILS_SAS_ADDR\n    use 0\n");
+                fprintf(stderr, "bad value in environment variable "
+                        "SMP_UTILS_SAS_ADDR\n");
+                fprintf(stderr, "    use 0\n");
                 sa_ll = 0;
             }
-            sa = (uint64_t)sa_ll;
+            sa = (unsigned long long)sa_ll;
         }
     }
     if (sa > 0) {
         if (! smp_is_naa5(sa)) {
-            pr2serr("SAS (target) address not in naa-5 format (may need "
-                    "leading '0x')\n");
+            fprintf(stderr, "SAS (target) address not in naa-5 format "
+                    "(may need leading '0x')\n");
             if ('\0' == i_params[0]) {
-                pr2serr("    use '--interface=' to override\n");
+                fprintf(stderr, "    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
         }
@@ -259,12 +240,13 @@ main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    sg_put_unaligned_be16(expected_cc, smp_req + 4);
+    smp_req[4] = (expected_cc >> 8) & 0xff;
+    smp_req[5] = expected_cc & 0xff;
     if (verbose) {
-        pr2serr("    Zone activate request: ");
+        fprintf(stderr, "    Zone activate request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
-            pr2serr("%02x ", smp_req[k]);
-        pr2serr("\n");
+            fprintf(stderr, "%02x ", smp_req[k]);
+        fprintf(stderr, "\n");
     }
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
@@ -274,20 +256,21 @@ main(int argc, char * argv[])
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
     if (res) {
-        pr2serr("smp_send_req failed, res=%d\n", res);
+        fprintf(stderr, "smp_send_req failed, res=%d\n", res);
         if (0 == verbose)
-            pr2serr("    try adding '-v' option for more debug\n");
+            fprintf(stderr, "    try adding '-v' option for more debug\n");
         ret = -1;
         goto err_out;
     }
     if (smp_rr.transport_err) {
-        pr2serr("smp_send_req transport_error=%d\n", smp_rr.transport_err);
+        fprintf(stderr, "smp_send_req transport_error=%d\n",
+                smp_rr.transport_err);
         ret = -1;
         goto err_out;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
-        pr2serr("response too short, len=%d\n", act_resplen);
+        fprintf(stderr, "response too short, len=%d\n", act_resplen);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
@@ -297,15 +280,15 @@ main(int argc, char * argv[])
         if (len < 0) {
             len = 0;
             if (verbose > 0)
-                pr2serr("unable to determine response length\n");
+                fprintf(stderr, "unable to determine response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
         if (verbose)
-            pr2serr("actual response length [%d] less than deduced length "
-                    "[%d]\n", act_resplen, len);
-        len = act_resplen;
+            fprintf(stderr, "actual response length [%d] less than deduced "
+                    "length [%d]\n", act_resplen, len);
+        len = act_resplen; 
     }
     if (do_hex || do_raw) {
         if (do_hex)
@@ -318,39 +301,40 @@ main(int argc, char * argv[])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[2]) {
             if (verbose)
-                pr2serr("Zone activate result: %s\n",
+                fprintf(stderr, "Zone activate result: %s\n",
                         smp_get_func_res_str(smp_resp[2], sizeof(b), b));
             ret = smp_resp[2];
         }
         goto err_out;
     }
     if (SMP_FRAME_TYPE_RESP != smp_resp[0]) {
-        pr2serr("expected SMP frame response type, got=0x%x\n", smp_resp[0]);
+        fprintf(stderr, "expected SMP frame response type, got=0x%x\n",
+                smp_resp[0]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[1] != smp_req[1]) {
-        pr2serr("Expected function code=0x%x, got=0x%x\n", smp_req[1],
-                smp_resp[1]);
+        fprintf(stderr, "Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], smp_resp[1]);
         ret = SMP_LIB_CAT_MALFORMED;
         goto err_out;
     }
     if (smp_resp[2]) {
         cp = smp_get_func_res_str(smp_resp[2], sizeof(b), b);
-        pr2serr("Zone activate result: %s\n", cp);
+        fprintf(stderr, "Zone activate result: %s\n", cp);
         ret = smp_resp[2];
         goto err_out;
     }
 err_out:
     res = smp_initiator_close(&tobj);
     if (res < 0) {
-        pr2serr("close error: %s\n", safe_strerror(errno));
+        fprintf(stderr, "close error: %s\n", safe_strerror(errno));
         if (0 == ret)
             return SMP_LIB_FILE_ERROR;
     }
         if (ret < 0)
         ret = SMP_LIB_CAT_OTHER;
     if (verbose && ret)
-        pr2serr("Exit status %d indicates error detected\n", ret);
+        fprintf(stderr, "Exit status %d indicates error detected\n", ret);
     return ret;
 }

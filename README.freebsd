@@ -1,7 +1,7 @@
 Build
 -----
-For general build information see the INSTALL file. Requires
-FreeBSD version 9.0 or later as earlier versions do not support the CAM
+For general build information see the INSTALL file.
+Unfortunately FreeBSD versions 8.2 and earlier do not support the CAM
 SMP pass-through.
 
 The traditional './configure ; make ; make install' sequence from the
@@ -12,14 +12,14 @@ creating a file with a name like local_share.conf in the
 /usr/local/etc/man.d/ directory and placing this line in it:
     MANPATH /usr/local/share/man
 
-This package was too new to be included in the "ports" collection of FreeBSD
-9.0 RELEASE. This package can be found in FreeBSD 9.1 RELEASE ports
-collection in the /usr/ports/sysutils/smp_utils directory .
+Since this package is new in FreeBSD 9.0 there is no "ports" entry to
+build and install it. /usr/ports/sysutils/sg3_utils is a closely related
+package and could be used as a template.
 
 
 Device names
 ------------
-FreeBSD uses its CAM subsystem to access SAS expanders. In FreeBSD 9.0 CAM
+FreeBSD uses its CAM subsystem to access SAS expanders. In FreeBSD 9 CAM
 does not recognize SAS expanders directly. It assumes that a SAS expander
 is tightly coupled with a SES target device. This seems to be true for SAS-2
 expanders but is not necessarily the case with SAS-1 expanders.
@@ -33,4 +33,4 @@ supports the CAM SAS SMP pass-through.
 
 
 Douglas Gilbert
-19th September 2013
+17th January 2012

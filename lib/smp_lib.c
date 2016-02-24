@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2011 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,13 +31,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#define __STDC_FORMAT_MACROS 1
-#include <inttypes.h>
-
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.21 20160201";    /* spl-4 rev 2 */
+static char * version_str = "1.19 20110805";    /* spl-2 rev 2 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -154,8 +151,7 @@ static struct smp_val_name smp_func_results[] =
     {SMP_FRES_NO_PHYSICAL_PRESENCE, "No physical presence"},
     {SMP_FRES_SAVING_NOT_SUPPORTED, "Saving not supported"},
     {SMP_FRES_SOURCE_ZONE_GROUP, "Source zone group does not exist"},
-    {SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED, "Disabled password not supported"},
-    {SMP_FRES_INVALID_FIELD_IN_REQUEST, "Invalid field in SMP request"},
+    {SMP_FRES_DIS_PASSWORD_NOT_SUPPORTED, "Disable password not supported"},
     {0x0, NULL},
 };
 
@@ -174,7 +170,7 @@ smp_get_func_res_str(int func_res, int buff_len, char * buff)
     return buff;
 }
 
-bool smp_is_naa5(uint64_t addr)
+int smp_is_naa5(unsigned long long addr)
 {
     return (0x5 == ((addr >> 60) & 0xf));
 }
@@ -287,7 +283,7 @@ smp_get_num(const char * buf)
 {
     int res, num, n, len;
     unsigned int unum;
-    const char * cp;
+    char * cp;
     char c = 'c';
     char c2, c3;
 
@@ -364,13 +360,13 @@ smp_get_num(const char * buf)
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
    Main (SI) multipliers supported: K, M, G, T, P. */
-int64_t
+long long
 smp_get_llnum(const char * buf)
 {
     int res, len;
-    int64_t num, ll;
-    uint64_t unum;
-    const char * cp;
+    long long num, ll;
+    unsigned long long unum;
+    char * cp;
     char c = 'c';
     char c2, c3;
 
@@ -378,13 +374,13 @@ smp_get_llnum(const char * buf)
         return -1LL;
     len = strlen(buf);
     if (('0' == buf[0]) && (('x' == buf[1]) || ('X' == buf[1]))) {
-        res = sscanf(buf + 2, "%" SCNx64, &unum);
+        res = sscanf(buf + 2, "%llx", &unum);
         num = unum;
     } else if ('H' == toupper(buf[len - 1])) {
-        res = sscanf(buf, "%" SCNx64, &unum);
+        res = sscanf(buf, "%llx", &unum);
         num = unum;
     } else
-        res = sscanf(buf, "%" SCNd64 "%c%c%c", &num, &c, &c2, &c3);
+        res = sscanf(buf, "%lld%c%c%c", &num, &c, &c2, &c3);
     if (res < 1)
         return -1LL;
     else if (1 == res)

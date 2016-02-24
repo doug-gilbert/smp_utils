@@ -7,18 +7,18 @@
 # Assume phy id 5 is attached to a target (SAS or SATA disk)
 # Assume phy id 7 is attached to a target (SAS or SATA disk)
 #
-# N.B. All values are HEX. On each line first byte is phy_id, last byte is
+# N.B. All values are hex. On each line first byte is phy_id, last byte is
 # zone group. All phys that make up a wide port need to be set to the same
 # zone group.
-0,0,0,8         # so phy_id 0 is set to zone group 8
+0,0,0,8
 1,0,0,8
 2,0,0,8
 3,0,0,8
-14,0,0,9        # so phy_id is 20 (14h)
+14,0,0,9	# so phy_id is 20 (14h)
 15,0,0,9
 16,0,0,9
 17,0,0,9
-5,0,0,10        # so this is zone group 16 (10h)
+5,0,0,10
 7,0,0,11
 
 # To make the disks connected to phy_ids 5 and 7 visible to both initiators,

@@ -1,12 +1,4 @@
-/* This is a glue interface between the more generic smp_utils code
- * and LSI-specific code in Linux. The code in this file above the
- * "Copyright 2000-2002 LSI Logic" banner line can be consider to be
- * covered by the (Free)BSD license used by the rest of smp_utils.
- */
-
-#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
-#endif
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -46,10 +38,9 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT_DEV_MAJOR 10
 #define MPT_DEV_MINOR 220
 #define MPT2_DEV_MINOR 221
-#define MPT3_DEV_MINOR 222
 
-static const char null_sas_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0, };
-static int mptcommand = (int)MPTCOMMAND;
+static const char null_sas_addr[8];
+static int mptcommand = MPTCOMMAND;
 
 
 /* Part of interface to upper level. */
@@ -65,21 +56,19 @@ chk_mpt_device(const char * dev_name, int verbose)
     }
     if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev))) {
         if ((MPT_DEV_MINOR == minor(st.st_rdev)) ||
-            (MPT2_DEV_MINOR == minor(st.st_rdev)) ||
-            (MPT3_DEV_MINOR == minor(st.st_rdev)))
+            (MPT2_DEV_MINOR == minor(st.st_rdev)))
             return 1;
     }
     if (verbose) {
         if (S_ISCHR(st.st_mode))
             fprintf(stderr, "chk_mpt_device: wanted char device "
-                    "major,minor=%d,[%d,%d,%d]\n    got=%d,%d\n",
-                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR,
-                    MPT3_DEV_MINOR, major(st.st_rdev), minor(st.st_rdev));
+                    "major,minor=%d,%d-%d\n    got=%d,%d\n", MPT_DEV_MAJOR,
+                    MPT_DEV_MINOR, MPT2_DEV_MINOR, major(st.st_rdev),
+                    minor(st.st_rdev));
         else
-            fprintf(stderr, "chk_mpt_device: wanted char device major,minor"
-                    "=%d,[%d,%d,%d]\n    but didn't get char device\n",
-                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR,
-                    MPT3_DEV_MINOR);
+            fprintf(stderr, "chk_mpt_device: wanted char device "
+                    "major,minor=%d,%d-%d\n    but didn't get char device\n",
+                    MPT_DEV_MAJOR, MPT_DEV_MINOR, MPT2_DEV_MINOR);
     }
     return 0;
 }
@@ -97,11 +86,10 @@ open_mpt_device(const char * dev_name, int verbose)
             perror("open_mpt_device failed");
     } else if (fstat(res, &st) >= 0) {
         if ((S_ISCHR(st.st_mode)) && (MPT_DEV_MAJOR == major(st.st_rdev)) &&
-            ((MPT2_DEV_MINOR == minor(st.st_rdev)) ||
-             (MPT3_DEV_MINOR == minor(st.st_rdev))))
-            mptcommand = (int)MPT2COMMAND;
+            (MPT2_DEV_MINOR == minor(st.st_rdev)))
+            mptcommand = MPT2COMMAND;
         else
-            mptcommand = (int)MPTCOMMAND;
+            mptcommand = MPTCOMMAND;
     } else if (verbose)
         perror("open_mpt_device: stat failed");
     return res;
@@ -113,7 +101,7 @@ close_mpt_device(int fd)
 {
     return close(fd);
 }
-
+        
 
 /*****************************************************************
  *                                                               *
@@ -141,8 +129,7 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 #if 0
         int CmdBlkSize;
 
-        CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) +
-                     8;
+        CmdBlkSize = sizeof(mpiIoctlBlk_t) + ((mpiBlkPtr->dataSgeOffset)*4) + 8;
         ShowBuf("Command Block Before: ", mpiBlkPtr, CmdBlkSize, 0);
 #endif
 
@@ -165,11 +152,9 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
                  */
                 pReply = (MPIDefaultReply_t *) mpiBlkPtr->replyFrameBufPtr;
                 if ((pReply) && (pReply->MsgLength > 0)) {
-                        // >>>>> pReply->IOCStatus =
-                        //       le16_to_cpu(pReply->IOCStatus); <<<<
+                        // >>>>> pReply->IOCStatus = le16_to_cpu(pReply->IOCStatus); <<<<
 
-                        // ShowBuf("Reply Frame : ", pReply,
-                        //         pReply->MsgLength * 4, 0);
+                        // ShowBuf("Reply Frame : ", pReply, pReply->MsgLength * 4, 0);
 
                         status = pReply->IOCStatus & MPI_IOCSTATUS_MASK;
 
@@ -214,7 +199,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         }
         numBytes = offsetof(SmpPassthroughRequest_t, SGL) +
                    (2 * sizeof(SGESimple64_t));
-        mpiBlkPtr = (mpiIoctlBlk_t *)malloc(sizeof(mpiIoctlBlk_t) + numBytes);
+        mpiBlkPtr = malloc(sizeof(mpiIoctlBlk_t) + numBytes);
         if (mpiBlkPtr == NULL)
                 goto err_out;
         memset(mpiBlkPtr, 0, sizeof(mpiIoctlBlk_t) + numBytes);
@@ -229,7 +214,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         mpiBlkPtr->dataOutSize = rresp->request_len - 4;
         mpiBlkPtr->dataOutBufPtr = (char *)rresp->request;
         mpiBlkPtr->dataInSize = rresp->max_response_len + 4;
-        mpiBlkPtr->dataInBufPtr = (char *)malloc(mpiBlkPtr->dataInSize);
+        mpiBlkPtr->dataInBufPtr = malloc(mpiBlkPtr->dataInSize);
         if(mpiBlkPtr->dataInBufPtr == NULL)
                 goto err_out;
         memset(mpiBlkPtr->dataInBufPtr, 0, mpiBlkPtr->dataInSize);
@@ -240,10 +225,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         /* PassthroughFlags
          * Bit7: 0=two SGLs 1=Payload returned in Reply
          */
-        /* >>> memo LSI: bug fix on following line's 3rd argument (thanks
-         * to clang compiler) */
-        memset(smpReq, 0, sizeof(*smpReq));
-
+        memset(smpReq, 0, sizeof(smpReq));
         smpReq->RequestDataLength = rresp->request_len - 4; // <<<<<<<<<<<< ??
         smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
         ucp = (unsigned char *)&smpReq->SASAddress;
@@ -261,43 +243,43 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
             (smpReply->SASStatus != MPI_SASSTATUS_SUCCESS)) {
                 if (verbose) {
                         switch(smpReply->SASStatus) {
-                        case MPI_SASSTATUS_UNKNOWN_ERROR:
+                        case MPI_SASSTATUS_UNKNOWN_ERROR: 
                                 fprintf(stderr, "Unknown SAS (SMP) error\n");
                                 break;
-                        case MPI_SASSTATUS_INVALID_FRAME:
+                        case MPI_SASSTATUS_INVALID_FRAME: 
                                 fprintf(stderr, "Invalid frame\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_BAD_DEST:
+                        case MPI_SASSTATUS_UTC_BAD_DEST: 
                                 fprintf(stderr, "Unable to connect (bad "
                                         "destination)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_BREAK_RECEIVED:
+                        case MPI_SASSTATUS_UTC_BREAK_RECEIVED: 
                                 fprintf(stderr, "Unable to connect (break "
                                         "received)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED:
+                        case MPI_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED: 
                                 fprintf(stderr, "Unable to connect (connect "
                                         "rate not supported)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_PORT_LAYER_REQUEST:
+                        case MPI_SASSTATUS_UTC_PORT_LAYER_REQUEST: 
                                 fprintf(stderr, "Unable to connect (port "
                                         "layer request)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED:
+                        case MPI_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED: 
                                 fprintf(stderr, "Unable to connect (protocol "
                                         "(SMP target) not supported)\n");
                                 break;
-                        case MPI_SASSTATUS_UTC_WRONG_DESTINATION:
+                        case MPI_SASSTATUS_UTC_WRONG_DESTINATION: 
                                 fprintf(stderr, "Unable to connect (wrong "
                                         "destination)\n");
                                 break;
-                        case MPI_SASSTATUS_SHORT_INFORMATION_UNIT:
+                        case MPI_SASSTATUS_SHORT_INFORMATION_UNIT: 
                                 fprintf(stderr, "Short information unit\n");
                                 break;
-                        case MPI_SASSTATUS_DATA_INCORRECT_DATA_LENGTH:
+                        case MPI_SASSTATUS_DATA_INCORRECT_DATA_LENGTH: 
                                 fprintf(stderr, "Incorrect data length\n");
                                 break;
-                        case MPI_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT:
+                        case MPI_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT: 
                                 fprintf(stderr, "Initiator response "
                                         "timeout\n");
                                 break;
@@ -335,8 +317,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
         } else
                 ret = 0;
 
-        memcpy(rresp->response, mpiBlkPtr->dataInBufPtr,
-               rresp->max_response_len);
+        memcpy(rresp->response, mpiBlkPtr->dataInBufPtr, rresp->max_response_len);
         rresp->act_response_len = -1;
 
 err_out:
@@ -362,8 +343,7 @@ SmpTwoSGLsIoctl(int fd, int ioc_num)
         uint numBytes;
         int  status;
         /* here is my hard coded expander sas address */
-        unsigned char expanderSasAddr[] =
-                         {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
+        unsigned char expanderSasAddr[] = {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;
@@ -401,7 +381,7 @@ SmpTwoSGLsIoctl(int fd, int ioc_num)
          * Bit7: 0=two SGLs 1=Payload returned in Reply
          */
         memset(smpReq, 0, sizeof(smpReq));
-        smpReq->RequestDataLength = sizeof(smp_request);  // <<<<<<<<<< ??
+        smpReq->RequestDataLength = sizeof(smp_request);        // <<<<<<<<<<<< ??
         smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
         memcpy(&smpReq->SASAddress, expanderSasAddr, 8);
 
@@ -448,8 +428,7 @@ SmpImmediateIoctl(int fd, int ioc_num)
         uint numBytes;
         int  status;
         /* here is my hard coded expander sas address */
-        unsigned char expanderSasAddr[] =
-                         {0x9C, 0x03, 0x00, 0x00, 0x60, 0x05, 0x06, 0x50};
+        unsigned char expanderSasAddr[] = {0x9C,0x03,0x00,0x00,0x60,0x05,0x06,0x50};
         /* here is a Request General */
         unsigned char smp_request[] = {0x40, 0, 0, 0};
         u16     ioc_stat;

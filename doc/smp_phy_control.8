@@ -1,4 +1,4 @@
-.TH SMP_PHY_CONTROL "8" "November 2015" "smp_utils\-0.99" SMP_UTILS
+.TH SMP_PHY_CONTROL "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
 smp_phy_control \- invoke PHY CONTROL SMP function
 .SH SYNOPSIS
@@ -6,10 +6,9 @@ smp_phy_control \- invoke PHY CONTROL SMP function
 [\fI\-\-attached=ADN\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
 [\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-max=MA\fR]
 [\fI\-\-min=MI\fR] [\fI\-\-op=OP\fR] [\fI\-\-phy=ID\fR] [\fI\-\-pptv=TI\fR]
-[\fI\-\-pwrdis=PDC\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
-[\fI\-\-sas_pa=CO\fR] [\fI\-\-sas_sl=CO\fR] [\fI\-\-sata_pa=CO\fR]
-[\fI\-\-sata_sl=CO\fR] [\fI\-\-verbose\fR] [\fI\-\-version\fR]
-\fISMP_DEVICE[,N]\fR
+[\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR] [\fI\-\-sas_pa=CO\fR]
+[\fI\-\-sas_sl=CO\fR] [\fI\-\-sata_pa=CO\fR] [\fI\-\-sata_sl=CO\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
@@ -63,82 +62,33 @@ man page for more information.
 .TP
 \fB\-M\fR, \fB\-\-max\fR=\fIMA\fR
 permits the programmed maximum physical link rate to be changed on the
-gven phy. Permitted values are:
-.br
-  \fB0\fR  : no change
-.br
-  \fB8\fR  : 1.5 Gbps
-.br
-  \fB9\fR  : 3 Gbps
-.br
-  \fB10\fR : 6 Gbps
-.br
-  \fB11\fR : 12 Gbps
-.br
-  \fB12\fR : 22.5 Gbps
-.br
-Default value is 0.
+gven phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
+Gbps, 10 \-> 6 Gbps or 11 \-> 12 Gbps. Default value is 0.
 .TP
 \fB\-m\fR, \fB\-\-min\fR=\fIMI\fR
 permits the programmed minimum physical link rate to be changed on the
-given phy. Permitted values are:
-.br
-  \fB0\fR  : no change
-.br
-  \fB8\fR  : 1.5 Gbps
-.br
-  \fB9\fR  : 3 Gbps
-.br
-  \fB10\fR : 6 Gbps
-.br
-  \fB11\fR : 12 Gbps
-.br
-  \fB12\fR : 22.5 Gbps
-.br
-Default value is 0.
+given phy. Permitted values are: 0 \-> no change, 8 \-> 1.5 Gbps, 9 \-> 3
+Gbps, 10 \-> 6 Gbps or 11 \-> 12 Gbps. Default value is 0.
 .TP
 \fB\-o\fR, \fB\-\-op\fR=\fIOP\fR
 specifies the operation to be performed on the given phy. The \fIOP\fR
 argument can be either numeric or a string. If a number is given, it is put
 into the 'phy operation' field of the request. Allowable strings are
-abbreviations of which only the first two characters need to match. Each
-line in the following list contains a numeric value, a string and then a
-brief explanation:
-.br
-  \fB0\fR : \fBnop\fR  : no operation
-.br
-  \fB1\fR : \fBlr\fR   : link reset
-.br
-  \fB2\fR : \fBhr\fR   : hard reset
-.br
-  \fB3\fR : \fBdis\fR  : disable phy
-.br
-  \fB5\fR : \fBcel\fR  : clear error log
-.br
-  \fB6\fR : \fBca\fR   : clear affiliation
-.br
-  \fB7\fR : \fBtspss\fR: transmit SATA port selection signal
-.br
-  \fB8\fR : \fBcitnl\fR: clear STP I_T nexus loss (bit)
-.br
-  \fB9\fR : \fBsadn\fR : set attached device name
-.br
-The default value is 0 (no operation).
+abbreviations of which only the first two characters need to match. The
+supported strings (with corresponding value in square brackets) are: 'nop'
+[0] (no operation), 'lr' [1] (link reset), 'hr' [2] (hard reset), 'dis'
+[3] (disable phy), 'cel' [5] (clear error log), 'ca' [6] (clear
+affiliation), 'tspss' [7] (transmit SATA port selection signal), 'citnl'
+[8] (clear STP I_T nexus loss (bit)), and 'sadn' [9] (set attached device
+name). The default value is 0 (no operation).
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
-phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
+phy identifier. \fIID\fR is a value between 0 and 154. Default is 0.
 .TP
 \fB\-P\fR, \fB\-\-pptv\fR=\fITI\fR
 partial pathway timeout value. The units are microseconds and the permitted
 values are between 0 and 15 inclusive. 7 microseconds is recommended by
 sas2r07.
-.TP
-\fB\-D\fR, \fB\-\-pwrdis\fR=\fIPDC\fR
-where \fIPDC\fR is the power disable control value. The default value is 0
-which means no change. The value of 1 is reserved; 2, if supported, instructs
-the management device server to negate the POWER DISABLE signal; while 3, if
-supported, instructs it to assert that signal. This applies to the phy
-given by \fIID\fR (which defaults to 0).
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
 send the response (less the CRC field) to stdout in binary. All error
@@ -188,7 +138,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2015 Douglas Gilbert
+Copyright \(co 2006\-2011 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

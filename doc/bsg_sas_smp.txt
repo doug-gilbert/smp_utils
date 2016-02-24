@@ -24,8 +24,8 @@ The SAS-2 standard outlines two ways to control expanders:
   b) an Out of Band communication method which SAS-2 does not define
      but nominates ethernet as an example
 
-This document outlines using method a) via the Linux "block SCSI
-pass-through" (bsg) driver to access SAS expanders.
+This document outlines using method a) via the "block SCSI pass-through"
+(bsg) driver to access SAS expanders.
 
 
 The bsg driver
@@ -218,4 +218,4 @@ signals may be controlled by the SMP READ GPIO and WRITE GPIO functions.
 
 
 
-Douglas Gilbert 20140515
+Douglas Gilbert 20110802

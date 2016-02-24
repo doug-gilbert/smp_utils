@@ -39,12 +39,12 @@ ff,ff,ff,ff,ff,ff,ff,ff ff,ff,ff,ff,ff,ff,ff,ff
 
 # Not all SAS-2 expanders do the transpose insertion. Users may need
 # to check. Such a check could be done with:
-#   smp_rep_zone_perm_tbl --bits=13 <expander_dev>
+#   smp_rep_zone_perm_tbl --bits=12 <expander_dev>
 #
 # Note that the t10 annex example shows the ZP array with its origin
 # (i.e. ZP[0,0]) in the top left corner. However smp_rep_zone_perm_tbl's
 # output will show the origin in the top right corner (due to SCSI's big
-# endian internal representation). To override that, the "--bits=13" option
+# endian internal representation). To override that, the "--bits=12" option
 # presents the output like the t10 annex example (i.e. bit oriented, little
 # endian).
 #

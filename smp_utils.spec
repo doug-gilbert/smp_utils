@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.99
+%define version 0.97
 %define release 1
 
 Summary:        Utilities for SAS Serial Management Protocol (SMP)
@@ -20,8 +20,8 @@ This is a package of utilities. Each utility sends a Serial Attached
 SCSI (SAS) Serial Management Protocol (SMP) request to a SMP target.
 If the request fails then the error is decoded. If the request succeeds
 then the response is either decoded, printed out in hexadecimal or
-output in binary. This package supports the linux 2.6 and 3 series and
-has ports to FreeBSD and Solaris.
+output in binary. This package supports the linux 2.6 series and has
+ports to FreeBSD and Solaris.
 
 Warning: These utilities access SAS expanders (storage switches) and
 the incorrect usage of them may render your system and others inoperable.
@@ -64,7 +64,7 @@ fi
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING COVERAGE CREDITS INSTALL NEWS README
-%attr(755,root,root) %{_bindir}/*
+%attr(755,root,root) %{_sbindir}/*
 %{_mandir}/man8/*
 
 %files libs
@@ -80,12 +80,6 @@ fi
 
 
 %changelog
-* Mon Feb 01 2016 - dgilbert at interlog dot com
-- add --dsn option
-  * smp_utils-0.99
-* Mon May 26 2014 - dgilbert at interlog dot com
-- put execs back in /usr/bin, add aac interface
-  * smp_utils-0.98
 * Fri Jan 20 2012 - dgilbert at interlog dot com
 - change to ./configure style build, put execs in /usr/sbin
   * smp_utils-0.97

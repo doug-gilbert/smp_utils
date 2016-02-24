@@ -1,6 +1,6 @@
 .TH SMP_REP_SELF_CONF_STAT "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
 .SH NAME
-smp_rep_self_conf_stat \- invoke REPORT SELF\-CONFIGURATION STATUS SMP function
+smp_rep_self_conf_stat \- invoke REPORT SELF-CONFIGURATION STATUS SMP function
 .SH SYNOPSIS
 .B smp_rep_self_conf_stat
 [\fI\-\-brief\fR] [\fI\-\-help\fR] [\fI\-\-hex\fR] [\fI\-\-index=SDI\fR]
@@ -10,7 +10,7 @@ smp_rep_self_conf_stat \- invoke REPORT SELF\-CONFIGURATION STATUS SMP function
 .SH DESCRIPTION
 .\" Add any additional description here
 .PP
-Sends a SAS Serial Management Protocol (SMP) REPORT SELF\-CONFIGURATION STATUS
+Sends a SAS Serial Management Protocol (SMP) REPORT SELF-CONFIGURATION STATUS
 function request to an SMP target. The SMP target is identified by the
 \fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the interface,
 the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR. The mpt interface
@@ -31,11 +31,11 @@ output the usage message then exit.
 output the response (less the CRC field) in hexadecimal.
 .TP
 \fB\-i\fR, \fB\-\-index\fR=\fISDI\fR
-\fISDI\fR is the starting self\-configuration status descriptor index, an
+\fISDI\fR is the starting self-configuration status descriptor index, an
 integer in the range 0 to 65535. The default value is 1 . If \fISDI\fR is 0
 then no descriptors are placed in the response plus the "starting
-self\-configuration status descriptor index" and "total number of
-self\-configuration status descriptors" fields in the response are both set
+self-configuration status descriptor index" and "total number of
+self-configuration status descriptors" fields in the response are both set
 to 0. That makes setting \fISDI\fR to 0 a lot less useful tha it could have
 been. \fISDI\fR may be decimal (default) or
 hexadecimal prefixed by '0x' (or '0X') or with a 'h' (or 'H') suffix.
@@ -46,16 +46,16 @@ path through the operating system to the SMP initiator. See the smp_utils
 man page for more information.
 .TP
 \fB\-l\fR, \fB\-\-last\fR
-Sends a REPORT SELF\-CONFIGURATION STATUS request to find out the contents
-of the "last self\-configuration status descriptor index" field in the
-response. If it is different from \fISDI\fR then it re\-issues that request
-with the "starting self\-configuration status descriptor index" field set
+Sends a REPORT SELF-CONFIGURATION STATUS request to find out the contents
+of the "last self-configuration status descriptor index" field in the
+response. If it is different from \fISDI\fR then it re-issues that request
+with the "starting self-configuration status descriptor index" field set
 to the "last" value. Often only the last (i.e. most recent) recorded
 descriptor is of interest and that is what this option should show. In
 cases there may be more than one descriptor starting at the last index.
 .TP
 \fB\-o\fR, \fB\-\-one\fR
-If multiple self\-configuration status descriptors are found, then only
+If multiple self-configuration status descriptors are found, then only
 output the first one.
 .TP
 \fB\-r\fR, \fB\-\-raw\fR
@@ -75,16 +75,16 @@ increase the verbosity of the output. Can be used multiple times.
 \fB\-V\fR, \fB\-\-version\fR
 print the version string and then exit.
 .SH NOTES
-The "last self\-configuration status descriptor index" field in the response
+The "last self-configuration status descriptor index" field in the response
 may indicate the lowest index of the last recorded (i.e. most recent) "clump"
 of status descriptors placed in the expander's storage.
 .PP
-This utility flags the "last self\-configuration status descriptor index"
+This utility flags the "last self-configuration status descriptor index"
 descriptor in its output with a ">>>" indication. For brief output the
 descriptor line starts with ">>>" while for normal output (i.e. when
 \fI\-\-brief\fR not given) the index has ">>>" placed in front of it.
 .SH CONFORMING TO
-The SMP REPORT SELF\-CONFIGURATION STATUS function was introduced in SAS\-2 .
+The SMP REPORT SELF-CONFIGURATION STATUS function was introduced in SAS\-2 .
 .SH AUTHORS
 Written by Douglas Gilbert.
 .SH "REPORTING BUGS"

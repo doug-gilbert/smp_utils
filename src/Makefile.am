@@ -2,11 +2,11 @@
 ## Copied from sg3_utils. Some remnants left commented out as examples
 ## if OS_LINUX
 
-# binaries were in in a sbin directory (e.g. /usr/sbin) using
-# sbin_PROGRAMS . Caused problems so put back in normal
-# place with bin_PROGRAMS = xxxx .
+# install binaries in a sbin directory (e.g. /usr/sbin). If there
+# are utilities that don't need superuser, then they could be
+# placed in bin_PROGRAMS .
 
-bin_PROGRAMS = \
+sbin_PROGRAMS = \
 	smp_conf_general smp_conf_phy_event smp_conf_route_info \
 	smp_conf_zone_man_pass smp_conf_zone_perm_tbl \
 	smp_conf_zone_phy_info smp_discover smp_discover_list \
@@ -27,16 +27,9 @@ bin_PROGRAMS = \
 
 ## endif
 
-# for testing with various compilers
-## CC = gcc
-## CC = g++
-## CC = clang
-## CC = clang++
 
-# -std=<s> can be c99, c11, gnu11, etc. Default is gnu89 (gnu90 is the same)
 AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
-## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c11
-## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c++14
+# AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c99
 
 smp_conf_general_SOURCES =	smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la @os_libs@

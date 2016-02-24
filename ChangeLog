@@ -2,35 +2,6 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20160202] [svn:r151]
-  - smp_discover(_list): add --dsn option to show
-    device slot number in single line per phy summary
-    - attached SAS device type, word SAS added (spl4r01)
-    - add SAS connector types, shared with NVMe (ses3r8)
- - add G5 (22.5 Gbps) settings [spl4r06]
- - sync with spl4r06
-
-Changelog for smp_utils-0.98 [20140526] [svn:r138]
-  - add Linux aacraid support, interface name : aac
-    - device name has form /dev/aac[N[,E_ID]]
-  - smp_discover, smp_discover_list: in 1 line summary use
-    routing attribute "U" instead of "T" if "table to
-    table supported" set in report general response
-    - output device slot (group) number if len > 109
-    - add 'attached persistent capable' bit (spl3r2)
-    - add pwr_dis_* fields (spl3r3)
-    - add '--cap' option to decode phy capabilities
-    - change 'end device' to 'SAS or SATA device'
-  - smp_discover: '-mm' produces full output for each phy
-  - smp_rep_broadcast: add broadcast type names
-  - smp_general: add 'initiates ssp close' and 'ssp
-    maximum connect time limit' fields (spl3r04)
-  - add support for mpt3ctl (Linux LSI 12 Gbps HBAs)
-  - change binary install from /usr/sbin to /usr/bin since
-    sbin caused problems
-  - examples folder scripts cleanup
-  - make code more C11/C++ friendly
-
 Changelog for smp_utils-0.97 [20120120] [svn:r116]
   - smp_conf_phy_event: new utility
   - change to ./configure style build and use smputils

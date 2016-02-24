@@ -59,7 +59,7 @@
  */
 #define MPT_MISCDEV_BASENAME            "mptctl"
 #define MPT_MISCDEV_PATHNAME            "/dev/" MPT_MISCDEV_BASENAME
-#define MPT_CSMI_DESCRIPTION	        "LSI Logic Corporation: Fusion MPT Driver " MPT_LINUX_VERSION_COMMON
+#define MPT_CSMI_DESCRIPTION	        "LSI Logic Corporation: Fusion MPT Driver "MPT_LINUX_VERSION_COMMON
 
 #define MPT_PRODUCT_LENGTH              12
 
@@ -391,8 +391,8 @@ typedef struct _hp_header {
 
 /*
  *  Header:
- *  iocnum	required (input)
- *  host	ignored
+ *  iocnum 	required (input)
+ *  host 	ignored
  *  channe	ignored
  *  id		ignored
  *  lun		ignored
@@ -442,8 +442,8 @@ typedef struct _hp_host_info_rev0 {
 
 /*
  *  Header:
- *  iocnum	required (input)
- *  host	required
+ *  iocnum 	required (input)
+ *  host 	required
  *  channel	required	(bus number)
  *  id		required
  *  lun		ignored
@@ -539,7 +539,7 @@ typedef struct _MPI_FW_DIAG_QUERY
     U16                 Flags;
     U32                 ExtendedType;
     U32                 ProductSpecific[4];
-    U32                 DataSize;
+    U32                 DataSize;   
     U32                 DriverAddedBufferSize;
     U32                 UniqueId;
 } MPI_FW_DIAG_QUERY, *PTR_MPI_FW_DIAG_QUERY;
@@ -578,3 +578,4 @@ typedef struct _mpt_diag_read_buffer {
 } mpt_diag_read_buffer_t;
 
 #endif
+
