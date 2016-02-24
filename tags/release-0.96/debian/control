@@ -1,0 +1,18 @@
+Source: smp-utils
+Section: admin
+Priority: optional
+Maintainer: Douglas Gilbert <dgilbert@interlog.com>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: http://sg.danny.cz/sg/smp_utils.html
+
+Package: smp-utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: SAS Expander (SMP) utilities for SAS/SATA disk arrays
+ Utilities that send a Serial Attached SCSI (SAS) Management
+ Protocol (SMP) request to a SMP target. If the request fails then
+ the error is decoded. If the request succeeds then the response is
+ either decoded, printed out in hexadecimal or output in binary.
+ This package supports multiple interfaces since SMP passthroughs
+ are not mature. This package supports the Linux 2.6 series.

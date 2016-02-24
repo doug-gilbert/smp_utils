@@ -1,0 +1,157 @@
+.TH SMP_CONF_ZONE_PERM_TBL "8" "June 2011" "smp_utils\-0.96" SMP_UTILS
+.SH NAME
+smp_conf_zone_perm_tbl \- invoke CONFIGURE ZONE PERMISSION TABLE function
+.SH SYNOPSIS
+.B smp_conf_zone_perm_tbl
+[\fI\-\-deduce\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
+[\fI\-\-hex\fR] [\fI\-\-interface=PARAMS\fR] [\fI\-\-numzg=NG\fR]
+\fI\-\-permf=FN\fR [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-save=SAV\fR] [\fI\-\-start=SS\fR] [\fI\-\-verbose\fR]
+[\fI\-\-version\fR] \fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends one or more SAS Management Protocol (SMP) CONFIGURE ZONE PERMISSION
+TABLE function requests to a SMP target. The SMP target is identified by
+the \fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the
+interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
+The mpt interface uses \fISMP_DEVICE\fR to identify a HBA (an SMP initiator)
+and needs the additional \fI,N\fR to differentiate between HBAs if there
+are multiple present.
+.PP
+The zone permission table has a row for each source zone group and a column
+for each destination zone group. Each element in the table (ZP[s,d]) is a
+single bit indicating whether the source zone group can access the
+destination zone group (the bit is set: 1) or not (the bit is clear: 0).
+There are two different table sizes: 128 and 256 zone groups. Descriptors
+provided to this function request are either 16 bytes (128 bits) or 32
+bytes (256 bits) long. Each descriptor is basically a row in the zone
+permission table.
+
+Apart from being row in the zone permission table each descriptor is
+transposed and applied to the corresponding destination column.
+This "maintains symmetry about the ZP[s,s] table axis" in the words of the
+draft. Also descriptors are applied in the order that they appear in the
+request (i.e. ascending source zone group numbers).
+.PP
+The maximum number of descriptors that one CONFIGURE ZONE PERMISSION
+TABLE function request can hold is limited to 63 if there are 128 zone
+groups; and is limited to 31 if there are 256 zone groups. A full zone table
+will contain 128 (or 256) descriptors so to configure a full table requires
+multiple CONFIGURE ZONE PERMISSION TABLE requests.
+.PP
+The number of zone permission configuration descriptors is determined by
+reading the \fIFN\fR file associated with the \fI\-\-permf=FN\fR option.
+If there are more descriptors than can fit in one CONFIGURE ZONE PERMISSION
+TABLE function request then multiple requests are sent. All descriptors
+found in the \fIFN\fR file will be sent unless an earlier function response
+indicates there has been an error.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-d\fR, \fB\-\-deduce\fR
+deduce number of zone groups from number of bytes on active \fIFN\fR lines.
+With 128 zone groups each active line will contain 16 (or less) bytes.
+With this option if any active line in \fIFN\fR contains more than 16
+bytes then 256 zone groups are assumed, otherwise 128 zone groups are
+assumed. This option cannot be given with the \fI\-\-numzg=NG\fR option (as
+they may contradict one another).
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+.TP
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
+starting (first) source zone group (default: zone group 0). If multiple
+function requests are sent, this field in subsequent function requests
+will be adjusted to reflect those descriptors already sent. Note that
+the \fISS\fR value may be picked up from \fIFN\fR and if this option
+and that value are not the same, an error is generated.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response (less the CRC field) in hexadecimal.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-n\fR, \fB\-\-numzg\fR=\fIZG\fR
+number of zone groups. \fIZG\fR can be 0 (default) or 1. 0 implies 128 zone
+groups while 1 implies 256 zone groups. This option cannot be used with the
+\fI\-\-deduce\fR option.
+.TP
+\fB\-P\fR, \fB\-\-permf\fR=\fIFN\fR
+FN is a file containing zone permission configuration descriptors in ASCII
+hexadecimal; either as bytes separated by space, tab, comma or newline,
+or as longer strings of hexadecimal bytes in which every 2 digits
+represents a byte. Empty lines and those starting with "#" are ignored.
+A line with "\-\-start=<num>" will be taken as the starting source zone
+group number (i.e. <num> becomes \fISS\fR) unless it contradicts the
+command line \fI\-\-start=SS\fR option. Otherwise lines starting with "\-"
+are ignored.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response (less the CRC field) to stdout in binary. All error
+messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. The mpt interface needs
+this option and it will typically be an expander's SAS address. The
+\fISAS_ADDR\fR is in decimal but most SAS addresses are shown in hexadecimal.
+To give a number in hexadecimal either prefix it with '0x' or put a
+trailing 'h' on it.
+.TP
+\fB\-S\fR, \fB\-\-save\fR=\fISAV\fR
+set the 'save' field in the SMP request. \fISAV\fR may take these values:
+0 for updating the shadow values (default), 1 for updating the saved values,
+2 for updating shadow values and if available the saved values, 3 for
+updating both saved and shadow values.
+.TP
+\fB\-f\fR, \fB\-\-start\fR=\fISS\fR
+See entry above, listed in order by its short option letter (i.e.
+\fI\-f\fR).
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH NOTES
+For simplicity, each active line in the \fIFN\fR file should contain
+16 or 32 bytes. 16 bytes if there are 128 zone groups or 32 bytes if
+there are 256 zone groups.
+.PP
+SCSI is big endian. So for 128 zone groups, the first byte placed in
+the zone permission configuration descriptor is ZP[0,127\-120]. If the
+\fI\-\-start=SS\fR option is given then the first byte is
+ZP[\fISS\fR,127\-120]. For 256 zone groups, the first bytes are
+ZP[0,255\-248] and ZP[\fISS\fR,255\-248] respectively.
+.PP
+There is an annex called "Zone permission configuration descriptor
+examples" in recent SAS\-2 and later drafts (Annex H in spl2r01.pdf).
+.PP
+There are some examples of the \fI\-\-permf=FN\fR format in the examples
+directory. Not all SAS-2 expanders properly implement descriptor transpose
+and only place the descriptor in the row corresponding to the source zone
+group.
+.SH CONFORMING TO
+The SMP CONFIGURE ZONE PERMISSION TABLE function was introduced in SAS\-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2011 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_conf_zone_phy_info, smp_zone_activate(smp_utils)

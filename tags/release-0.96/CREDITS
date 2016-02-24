@@ -1,0 +1,12 @@
+The author of smp_utils would like to thank the following people who
+have made contributions:
+
+Eric Moore <Eric dot Moore at lsi dot com> help with mptctl
+        interface [20061129]
+
+Luben Tuikov <ltuikov at yahoo dot com> 'smp_discover --multiple' format
+	and various other suggestions and testing [20060801]
+
+FUJITA Tomonori <fujita dot tomonori at lab dot ntt dot co dot jp>
+	implementing sgv4 ith working examples [20071220]
+

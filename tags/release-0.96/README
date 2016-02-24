@@ -1,0 +1,36 @@
+This is a package of utilities. Each utility sends a Serial Attached
+SCSI (SAS) Management Protocol (SMP) request to a SMP target.
+If the request fails then the error is decoded. If the request succeeds
+then the response is either decoded, printed out in hexadecimal or
+output in binary. This package supports multiple interfaces since
+SMP passthroughs are not mature. This package supports the linux
+2.4 and 2.6 series and should be easy to port to other operating
+systems.
+
+See COVERAGE file for more information about the coverage of various
+SMP functions.
+
+Each utility in the smp_utils package has a corresponding man page.
+Additionally there is a 'smp_utils' man page that contains common
+information, including options used by most or all utilities plus
+the various exit status values.
+
+There are examples of setting up and disabling zoning in the examples
+directory.
+
+
+The reference documents are:
+  sas-r05.pdf          www.t10.org   draft prior to original SAS spec
+  sas1r10.pdf          www.t10.org   draft prior to SAS 1.1 spec
+  sas2r16.pdf          www.t10.org   draft prior to SAS-2
+  spl-r07.pdf          www.t10.org   draft prior to SAS-2.1
+  spl2r01.pdf          www.t10.org   current draft
+  SFF_8485.PDF         www.sffcommittee.com   SGPIO revision 0.7
+
+In SAS-2.1 the lower levels were put into a document of that name
+while the higher levels were put in a new document called the
+SAS Protocol Layer (SPL).
+
+
+Doug Gilbert
+19th June 2011

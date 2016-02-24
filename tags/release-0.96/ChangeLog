@@ -1,0 +1,99 @@
+Each utility has its own version number, date of last change and
+some description at the top of its ".c" file. All utilities in the main
+directory have their own "man" pages.
+
+Changelog for smp_utils-0.96 [20110620] [svn:r96]
+  - smp_conf_zone_perm_tbl, smp_conf_zone_man_pass
+    smp_conf_zone_phy_info, smp_ena_dis_zoning,
+    smp_rep_broadcast, smp_rep_phy_event, smp_rep_phy_event_list,
+    smp_rep_self_conf_stat, smp_rep_zone_man_pass,
+    smp_rep_zone_perm_tbl, smp_zone_activate, smp_zoned_broadcast,
+    smp_zone_lock, smp_zone_unlock:
+      add these new utilities
+  - all utilities: sync to SPL-2 (spl2r01)
+    -those with '--phy=ID' option: increase max from 128 to 254
+  - smp_discover, smp_discover_list: add --adn and --summary
+    - make --summary default if --phy=ID option not given
+    - with --summary show disabled and errored phys
+  - smp_discover: add --my and --zero option
+  - smp_discover_list: add --zpi=FN option
+  - smp_rep_general, smp_rep_manufacturer, smp_rep_phy_err_log,
+    smp_rep_phy_sata: add --zero options
+  - smp_conf_general: add --power option
+  - smp_read_gpio, smp_write_gpio: add --enhanced option
+  - add examples directory, mainly for zoning
+  - remove doc/smp_utils.html , refer readers to web page
+  - remove tpl (ai) interface
+
+Changelog for smp_utils-0.95 [20101116] [svn:r47]
+  - place link to smp_utils.html examples in man pages
+  - alter Makefile for non-root users
+  - add spl-r04 discover changes (spl is upper layers of sas-2.1)
+  - mpt: cope with mpt2 ioctl that uses a different magic number
+
+Changelog for smp_utils-0.94 [20081229] [svn:r40]
+  - smp_discover: sync to sas2r15
+  - smp_discover_list: sync to sas2r15
+  - smp_rep_general: sync to sas2r15
+  - smp_rep_exp_route_tbl: sync to sas2r15
+  - smp_lib: sync to sas2r15
+  - sgv4: more detail in error messages
+  - sgv4: drop scsi.h include, gives problems with lk 2.6.27
+  - mpt: allow either /dev/mptctl or /dev/mpt2ctl [10;220-221]
+    - warn if target SAS address is 0x00000000 when -v given
+
+Changelog for smp_utils-0.93 [20080106] [svn:r7]
+  - sgv4: add new interface
+  - smp_phy_control: sync with sas2r10
+  - smp_rep_phy_sata: affiliation contexts, added sas2r08
+  - smp_discover: add '--list' option for attribute=value output
+  - smp_rep_general: sync with sas2r09..12
+  - smp_discover, smp_discover_list: sync with sas2r09..12
+    - warn if expander's SAS address is different from requested
+  - add smp_rep_exp_route_tbl utility
+  - abridge output from responses when prior to SAS-2
+  - rename this file from CHANGELOG to ChangeLog
+  - place code in subversion repository
+  - move smp_lib.h into include directory
+  - move man pages into doc directory
+    - add 'conforms to' section
+  - fix FreeBSD build
+
+Changelog for smp_utils-0.92 [20061208]
+  - all: suggest using '-v' if smp_send_req() fails
+  - smp_lib: sync function names and results with sas2r07
+  - smp_rep_general: sync with sas2r07
+  - smp_rep_route_info: add '--multiple' and '--num="
+    options. Underlying SMP function may be called multiple
+    times to show one line per phy's route table.
+  - smp_lib.h: add C++ 'extern "C" ' wrapper
+  - smp_discover+smp_discover_list: sync with sas2r07
+  - smp_conf_general: add new SMP function
+  - smp_utils.8: suggestions for finding expander SAS addresses
+    and mptsas ioc_num
+  - Makefile.freebsd: builds utilities on FreeBSD
+  - man pages: cleanup
+
+Changelog for smp_utils-0.91 [20060822]
+  - add '--multiple' to smp_discover
+  - add uniform exit status values (see 'man smp_utils')
+  - fix affiliations flags in smp_rep_phy_sata
+  - report bad operation abbreviations in smp_phy_control
+  - add '--change_report' option to smp_rep_general
+  - improve mpt error detection and reporting
+  - add information to COVERAGE file
+  - smp_rep_general: add physical presence and zoning bits
+  - smp_phy_test: add new SMP function
+  - smp_discover_list: add new SMP function
+  - smp_conf_route_info, smp_phy_control, smp_phy_test:
+    add '--expected=' option to set "expected expander
+    change count" in request
+
+Changelog for smp_utils-0.90 [20060611]
+  - add smp_read_gpio utility (READ GPIO REGISTER)
+  - add logic to read SMP_UTILS_DEVICE and SMP_UTILS_SAS_ADDR
+    environment variables if those options not on command line
+  - add smp_conf_route_info (CONFIGURE ROUTE INFORMATION)
+  - add smp_write_gpio (WRITE GPIO REGISTER)
+  - add debian build infrastructure
+  - add smp_utils.html to doc subdirectory
