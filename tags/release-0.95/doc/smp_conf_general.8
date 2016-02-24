@@ -1,0 +1,89 @@
+.TH SMP_CONF_GENERAL "8" "January 2008" "smp_utils\-0.93" SMP_UTILS
+.SH NAME
+smp_conf_general \- invoke CONFIGURE GENERAL SMP function
+.SH SYNOPSIS
+.B smp_conf_general
+[\fI\-\-connect=CO\fR] [\fI\-\-expected=EX\fR] [\fI\-\-help\fR]
+[\fI\-\-hex\fR] [\fI\-\-inactivity=IN\fR] [\fI\-\-interface=PARAMS\fR]
+[\fI\-\-nexus=NE\fR] [\fI\-\-raw\fR] [\fI\-\-sa=SAS_ADDR\fR]
+[\fI\-\-verbose\fR] [\fI\-\-version\fR]
+\fISMP_DEVICE[,N]\fR
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Sends a SAS Management Protocol (SMP) CONFIGURE GENERAL
+request function to a SMP target. The SMP target is identified by
+the \fISMP_DEVICE\fR and the \fI\-\-sa=SAS_ADDR\fR. Depending on the
+interface, the \fISAS_ADDR\fR may be deduced from the \fISMP_DEVICE\fR.
+With one interface there is one \fISMP_DEVICE\fR per machine so the
+\fISMP_DEVICE,N\fR syntax is needed to differentiate between HBAs if
+there are multiple present.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options as well.
+.TP
+\fB\-c\fR, \fB\-\-connect\fR=\fICO\fR
+sets the "update STP maximum connect time limit" flag and the
+corresponding "STP maximum connect time limit" field to \fICO\fR. Unit of
+\fICO\fR is 100 microseconds. A \fICO\fR of zero is taken to mean no
+maximum connection time limit.
+.TP
+\fB\-E\fR, \fB\-\-expected\fR=\fIEX\fR
+set the 'expected expander change count' field in the SMP request.
+The value \fIEX\fR is from 0 to 65535 inclusive with 0 being the default
+value. When \fIEX\fR is greater than zero then if the value doesn't match
+the expander change count of the SMP target (i.e. the expander) when
+the request arrives then the target ignores the request and sets a
+function result of "invalid expander change count" in the response.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+output the usage message then exit.
+.TP
+\fB\-H\fR, \fB\-\-hex\fR
+output the response in hexadecimal.
+.TP
+\fB\-i\fR, \fB\-\-inactivity\fR=\fIIN\fR
+sets the "update STP bus inactivity time limit" flag and the
+corresponding "STP bus inactivity time limit" field to \fIIN\fR. Unit of
+\fIIN\fR is 100 microseconds. A \fIIN\fR of zero is taken to mean no bus
+inactivity time limit.
+.TP
+\fB\-I\fR, \fB\-\-interface\fR=\fIPARAMS\fR
+interface specific parameters. In this case "interface" refers to the
+path through the operating system to the SMP initiator. See the smp_utils
+man page for more information.
+.TP
+\fB\-n\fR, \fB\-\-nexus\fR=\fINE\fR
+sets the "update STP SMP I_T nexus loss time" flag and the
+corresponding "STP SMP I_T nexus loss time" field to \fINE\fR. Unit of
+\fINE\fR is one millisecond. A \fINE\fR of zero is taken to mean a vendor
+specific amount of time; a \fINE\fR of 65535 means the port shall never
+recognize an I_T nexus loss.
+.TP
+\fB\-r\fR, \fB\-\-raw\fR
+send the response to stdout in binary. All error messages are sent to stderr.
+.TP
+\fB\-s\fR, \fB\-\-sa\fR=\fISAS_ADDR\fR
+specifies the SAS address of the SMP target device. Typically this is an
+expander. This option may not be needed if the \fISMP_DEVICE\fR has the
+target's SAS address within it. The \fISAS_ADDR\fR is in decimal but most SAS
+addresses are shown in hexadecimal. To give a number in hexadecimal either
+prefix it with '0x' or put a trailing 'h' on it.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+increase the verbosity of the output. Can be used multiple times
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print the version string and then exit.
+.SH CONFORMING TO
+The SMP CONFIGURE GENERAL function was introduced in SAS-2 .
+.SH AUTHORS
+Written by Douglas Gilbert.
+.SH "REPORTING BUGS"
+Report bugs to <dgilbert at interlog dot com>.
+.SH COPYRIGHT
+Copyright \(co 2006\-2008 Douglas Gilbert
+.br
+This software is distributed under a FreeBSD license. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.B smp_utils, smp_rep_general(smp_utils)
