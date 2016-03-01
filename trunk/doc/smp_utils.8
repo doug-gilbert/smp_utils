@@ -203,6 +203,25 @@ the response to an SMP function failed sanity checks.
 .B 99
 any error that can't be categorized into values 1 to 97 may yield this value.
 This includes transport and operating system errors.
+.TP
+.B 126
+the utility was found but could not be executed. That might occur if the
+executable does not have execute permissions.
+.TP
+.B 127
+This is the exit status for utility not found. That might occur when a
+script calls a utility in this package but the PATH environment variable
+has not been properly set up, so the script cannot find the executable.
+.TP
+.B 128 + <signum>
+If a signal kills a utility then the exit status is 128 plus the signal
+number. For example if a segmentation fault occurs then a utility is
+typically killed by SIGSEGV which according to 'man 7 signal' has an
+associated signal number of 11; so the exit status will be 139 .
+.TP
+.B 255
+the utility tried to yield an exit status of 255 or larger. That should
+not happen; given here for completeness.
 .SH NOTES
 Finding the SAS address of an expander can be a challenge in some
 environments. An enclosure containing one or more expanders may have the
