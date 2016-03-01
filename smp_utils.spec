@@ -80,8 +80,8 @@ fi
 
 
 %changelog
-* Mon Feb 01 2016 - dgilbert at interlog dot com
-- add --dsn option
+* Mon Feb 29 2016 - dgilbert at interlog dot com
+- move toward G5 (22.5 Gbps)
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com
 - put execs back in /usr/bin, add aac interface
