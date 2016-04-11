@@ -53,10 +53,10 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  *
  * First defined in SAS-2. From and including SAS-2.1 this function is
- * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
+ * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.39 20160201";    /* spl4r05 */
+static const char * version_str = "1.40 20160326";    /* spl4r07 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -162,7 +162,8 @@ usage(void)
           "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
           "expander\n"
           "                         attached; 2 -> expander "
-          "or SAS device\n"
+          "or SAS SATA"
+          "                         device; 3 -> SAS SATA device\n"
           "    --help|-h            print out usage message\n"
           "    --hex|-H             print response in hexadecimal\n"
           "    --ignore|-i          sets the Ignore Zone Group bit; "
@@ -862,6 +863,8 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117)
         printf("  STP buffer size: %u\n", sg_get_unaligned_be16(rp + 116));
+    if (len > 118)
+        printf("  Buffered phy burst size (KiB): %u\n", rp[118]);
     return 0;
 }
 
@@ -934,6 +937,7 @@ decode_desc1_multiline(const unsigned char * rp, int z_enabled,
     /* printf("  zone address resolved: %d\n", !!(rp[9] & 0x8)); */
     printf("  zone group persistent: %d\n", !!(rp[9] & 0x4));
     printf("  inside ZPSDS: %d\n", !!(rp[9] & 0x2));
+    printf("  Buffered phy burst size (KiB): %u\n", rp[20]);
     return 0;
 }
 

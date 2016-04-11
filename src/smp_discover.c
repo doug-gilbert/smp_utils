@@ -53,10 +53,10 @@
  * This utility issues a DISCOVER function and outputs its response.
  *
  * First defined in SAS-1. From and including SAS-2.1 this function is
- * defined in the SPL series. The most recent SPL-3 draft is spl3r07.pdf .
+ * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.51 20151122";    /* spl4r05 */
+static const char * version_str = "1.52 20160326";    /* spl4r07 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -663,6 +663,8 @@ print_single_list(const unsigned char * rp, int len, int show_exp_cc,
     printf("  att_stp_init=%d\n", !! (0x4 & rp[14]));
     printf("  att_stp_targ=%d\n", !! (0x4 & rp[15]));
     if (! do_brief) {
+        if (len > 118)
+            printf("  buff_phy_bs=%d\n", rp[118]);
         if (sas2 || (rp[45] & 0x7f)) {
             printf("  conn_elem_ind=%d\n", rp[46]);
             printf("  conn_p_link=%d\n", rp[47]);
@@ -957,6 +959,8 @@ print_single(const unsigned char * rp, int len, int just1,
         printf("  device slot group output connector: %.6s\n", rp + 110);
     if (len > 117)
         printf("  STP buffer size: %u\n", sg_get_unaligned_be16(rp + 116));
+    if (len > 118)
+        printf("  Buffered phy burst size (KiB): %u\n", rp[118]);
     return 0;
 }
 
