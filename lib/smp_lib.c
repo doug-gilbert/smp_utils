@@ -37,7 +37,7 @@
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.21 20160201";    /* spl-4 rev 2 */
+static const char * version_str = "1.22 20160420";    /* spl-4 rev 2 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"

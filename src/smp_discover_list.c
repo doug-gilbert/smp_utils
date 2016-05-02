@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -56,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.40 20160326";    /* spl4r07 */
+static const char * version_str = "1.41 20160501";    /* spl4r07 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -135,71 +136,72 @@ static void
 usage(void)
 {
     pr2serr("Usage: "
-          "smp_discover_list  [--adn] [--brief] [--cap] [--descriptor=TY]\n"
-          "                          [--dsn] [--filter=FI] [--help] [--hex] "
-          "[--ignore]\n"
-          "                          [--interface=PARAMS] [--num=NUM] "
-          "[--one]\n"
-          "                          [--phy=ID] [--raw] [--sa=SAS_ADDR] "
-          "[--summary]\n"
-          "                          [--verbose] [--version] [--zpi=FN]\n"
-          "                          <smp_device>[,<n>]\n");
+            "smp_discover_list  [--adn] [--brief] [--cap] [--descriptor=TY]\n"
+            "                          [--dsn] [--filter=FI] [--help] "
+            "[--hex] "
+            "[--ignore]\n"
+            "                          [--interface=PARAMS] [--num=NUM] "
+            "[--one]\n"
+            "                          [--phy=ID] [--raw] [--sa=SAS_ADDR] "
+            "[--summary]\n"
+            "                          [--verbose] [--version] [--zpi=FN]\n"
+            "                          <smp_device>[,<n>]\n");
     pr2serr(
-          "  where:\n"
-          "    --adn|-A             output attached device name in one "
-          "line per\n"
-          "                         phy mode (i.e. with --one)\n"
-          "    --brief|-b           brief: less output, can be used "
-          "multiple times\n"
-          "    --cap|-c             decode phy capabilities bits\n"
-          "    --descriptor=TY|-d TY    descriptor type:\n"
-          "                         0 -> long (as in DISCOVER); 1 -> "
-          "short (24 byte)\n"
-          "                         default is 1 if --brief given, "
-          "else default is 0\n"
-          "    --dsn|-D             show device slot number in 1 line\n"
-          "                         per phy output, if available\n"
-          "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
-          "expander\n"
-          "                         attached; 2 -> expander "
-          "or SAS SATA"
-          "                         device; 3 -> SAS SATA device\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
-          "    --ignore|-i          sets the Ignore Zone Group bit; "
-          "will show\n"
-          "                         phys otherwise hidden by zoning\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
-          "(def: 1)\n"
-          "    --one|-o             one line output per response "
-          "descriptor (phy)\n"
-          "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
-          "    --raw|-r             output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). "
-          "Depending on\n"
-          "                                 the interface, may not be "
-          "needed\n");
+            "  where:\n"
+            "    --adn|-A             output attached device name in one "
+            "line per\n"
+            "                         phy mode (i.e. with --one)\n"
+            "    --brief|-b           brief: less output, can be used "
+            "multiple times\n"
+            "    --cap|-c             decode phy capabilities bits\n"
+            "    --descriptor=TY|-d TY    descriptor type:\n"
+            "                         0 -> long (as in DISCOVER); 1 -> "
+            "short (24 byte)\n"
+            "                         default is 1 if --brief given, "
+            "else default is 0\n"
+            "    --dsn|-D             show device slot number in 1 line\n"
+            "                         per phy output, if available\n"
+            "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
+            "expander\n"
+            "                         attached; 2 -> expander "
+            "or SAS SATA"
+            "                         device; 3 -> SAS SATA device\n"
+            "    --help|-h            print out usage message\n"
+            "    --hex|-H             print response in hexadecimal\n"
+            "    --ignore|-i          sets the Ignore Zone Group bit; "
+            "will show\n"
+            "                         phys otherwise hidden by zoning\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --num=NUM|-n NUM     maximum number of descriptors to fetch "
+            "(def: 1)\n"
+            "    --one|-o             one line output per response "
+            "descriptor (phy)\n"
+            "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
+            "    --raw|-r             output response in binary\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n");
     pr2serr(
-          "    --summary|-S         output 1 line per active phy; "
-          "typically\n"
-          "                         equivalent to: '-o -d 1 -n 254 -b' .\n"
-          "                         This option is assumed if '--phy=ID' "
-          "not given\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n"
-          "    --zpi=FN|-Z FN       FN is file that zone phy information "
-          "will be\n"
-          "                         written to (for "
-          "smp_conf_zone_phy_info)\n\n"
-          "Performs one or more SMP DISCOVER LIST functions. If '--phy=ID' "
-          "not given\nthen '--summary' is assumed. The '--summary' option "
-          "shows the disposition\nof each active expander phy in table "
-          "form.\n"
-          );
+            "    --summary|-S         output 1 line per active phy; "
+            "typically\n"
+            "                         equivalent to: '-o -d 1 -n 254 -b' .\n"
+            "                         This option is assumed if '--phy=ID' "
+            "not given\n"
+            "    --verbose|-v         increase verbosity\n"
+            "    --version|-V         print version string and exit\n"
+            "    --zpi=FN|-Z FN       FN is file that zone phy information "
+            "will be\n"
+            "                         written to (for "
+            "smp_conf_zone_phy_info)\n\n"
+            "Performs one or more SMP DISCOVER LIST functions. If '--phy=ID' "
+            "not given\nthen '--summary' is assumed. The '--summary' option "
+            "shows the disposition\nof each active expander phy in table "
+            "form.\n"
+            );
 }
 
 static void
@@ -316,34 +318,31 @@ static const char * smp_short_attached_device_type[] = {
 };
 
 static char *
-smp_get_plink_rate(int val, int prog, int b_len, char * b)
+smp_get_plink_rate(int val, bool prog, int b_len, char * b)
 {
     switch (val) {
-    case 0:
-        snprintf(b, b_len, "not programmable");
-        break;
     case 8:
         snprintf(b, b_len, "1.5 Gbps");
-        break;
+        return b;
     case 9:
         snprintf(b, b_len, "3 Gbps");
-        break;
+        return b;
     case 0xa:
         snprintf(b, b_len, "6 Gbps");
-        break;
+        return b;
     case 0xb:
         snprintf(b, b_len, "12 Gbps");
-        break;
+        return b;
     case 0xc:
         snprintf(b, b_len, "22.5 Gbps");
-        break;
+        return b;
     default:
-        if (prog && (0 == val))
-            snprintf(b, b_len, "not programmable");
-        else
-            snprintf(b, b_len, "reserved [%d]", val);
         break;
     }
+    if (prog && (0 == val))
+        snprintf(b, b_len, "not programmable");
+    else
+        snprintf(b, b_len, "reserved [%d]", val);
     return b;
 }
 
@@ -651,7 +650,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
-           ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
+           ((p_cap >> 30) & 0x1), (p_cap >> 24) & 0xf);
     prev_nl = 1;
     g15_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
@@ -754,15 +753,15 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         printf("  attached smp priority capable: %d\n", !!(rp[34] & 2));
         printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         printf("  programmed minimum physical link rate: %s\n",
-               smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1,
+               smp_get_plink_rate(((rp[40] >> 4) & 0xf), true,
                                   sizeof(b), b));
         printf("  hardware minimum physical link rate: %s\n",
-               smp_get_plink_rate((rp[40] & 0xf), 0, sizeof(b), b));
+               smp_get_plink_rate((rp[40] & 0xf), false, sizeof(b), b));
         printf("  programmed maximum physical link rate: %s\n",
-               smp_get_plink_rate(((rp[41] >> 4) & 0xf), 1,
+               smp_get_plink_rate(((rp[41] >> 4) & 0xf), true,
                                   sizeof(b), b));
         printf("  hardware maximum physical link rate: %s\n",
-               smp_get_plink_rate((rp[41] & 0xf), 0,
+               smp_get_plink_rate((rp[41] & 0xf), false,
                                   sizeof(b), b));
         printf("  phy change count: %d\n", rp[42]);
         printf("  virtual phy: %d\n", !!(rp[43] & 0x80));
@@ -871,7 +870,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
 /* short format: only DISCOVER LIST has this abridged 24 byte descriptor.
  * Returns 0 for okay, else -1 . */
 static int
-decode_desc1_multiline(const unsigned char * rp, int z_enabled,
+decode_desc1_multiline(const unsigned char * rp, bool z_enabled,
                        struct opts_t * op)
 {
     int func_res, phy_id, adt, route_attr;
@@ -946,7 +945,7 @@ decode_desc1_multiline(const unsigned char * rp, int z_enabled,
   * seen ZG other than 1, else -1 (for problem) . */
 static int
 decode_1line(const unsigned char * rp, int len, int desc,
-             int z_enabled, int has_t2t, struct opts_t * op)
+             bool z_enabled, int has_t2t, struct opts_t * op)
 {
     uint64_t ull, adn;
     int phy_id, off, plus, negot, adt, route_attr, vp, asa_off;
@@ -1172,7 +1171,8 @@ decode_1line(const unsigned char * rp, int len, int desc,
 static void
 output_header_info(const unsigned char * rp, struct opts_t * op)
 {
-    int hdr_ecc, sphy_id, z_enabled ;
+    int hdr_ecc, sphy_id;
+    bool z_enabled;
 
     hdr_ecc = sg_get_unaligned_be16(rp + 4);
     sphy_id = rp[8];
@@ -1187,7 +1187,7 @@ output_header_info(const unsigned char * rp, struct opts_t * op)
             fprintf(op->zpi_filep, "#  starting phy id: %d\n", sphy_id);
             fprintf(op->zpi_filep, "#  maximum number of phys output: %d\n",
                     op->do_num);
-            fprintf(op->zpi_filep, "#  zoning enabled: %d\n", z_enabled);
+            fprintf(op->zpi_filep, "#  zoning enabled: %d\n", (int)z_enabled);
             fprintf(op->zpi_filep, "#\n# Values below are in hex, phy_id in "
                     "first column, zone group in last\n");
         }
@@ -1204,7 +1204,7 @@ output_header_info(const unsigned char * rp, struct opts_t * op)
             printf("  discover list descriptor length: %d bytes\n",
                    rp[12] * 4);
             printf("  zoning supported: %d\n", !!(rp[16] & 0x80));
-            printf("  zoning enabled: %d\n", z_enabled);
+            printf("  zoning enabled: %d\n", (int)z_enabled);
             printf("  self configuring: %d\n", !!(rp[16] & 0x8));
             printf("  zone configuring: %d\n", !!(rp[16] & 0x4));
             printf("  configuring: %d\n", !!(rp[16] & 0x2));
@@ -1231,7 +1231,7 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     int subvalue = 0;
     char * cp;
-    int z_enabled = 0;
+    bool z_enabled = false;
     int zg_not1 = 0;
     int checked_rg = 0;
     int has_t2t = 0;
