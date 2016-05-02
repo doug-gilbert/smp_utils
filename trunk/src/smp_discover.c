@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -56,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.52 20160326";    /* spl4r07 */
+static const char * version_str = "1.53 20160501";    /* spl4r07 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -132,63 +133,64 @@ static void
 usage(void)
 {
     pr2serr("Usage: "
-          "smp_discover [--adn] [--brief] [--cap] [--dsn] [--help] [--hex]\n"
-          "                    [--ignore] [--interface=PARAMS] [--list] "
-          "[--multiple]\n"
-          "                    [--my] [--num=NUM] [--phy=ID] [--raw] "
-          "[--sa=SAS_ADDR]\n"
-          "                    [--summary] [--verbose] [--version] "
-          "[--zero]\n"
-          "                    SMP_DEVICE[,N]\n"
-          "  where:\n"
-          "    --adn|-A             output attached device name in one "
-          "line per\n"
-          "                         phy mode (i.e. with --multiple)\n"
-          "    --brief|-b           less output, can be used multiple "
-          "times\n"
-          "    --cap|-c             decode phy capabilities bits\n"
-          "    --dsn|-D             show device slot number in 1 line\n"
-          "                         per phy output, if available\n"
-          "    --help|-h            print out usage message\n"
-          "    --hex|-H             print response in hexadecimal\n"
-          "    --ignore|-i          sets the Ignore Zone Group bit; "
-          "will show\n"
-          "                         phys otherwise hidden by zoning\n"
-          "    --interface=PARAMS|-I PARAMS    specify or override "
-          "interface\n"
-          "    --list|-l            output attribute=value, 1 per line\n"
-          "    --multiple|-m        query multiple phys, output 1 line "
-          "for each\n"
-          "                         if given twice, full output for each "
-          "phy\n"
-          "    --my|-M              output my (expander's) SAS address\n"
-          "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
-          "is given\n"
-          "                         (def: 0 -> the rest)\n"
-          "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
-          "    --raw|-r             output response in binary\n"
-          "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
-          "target (use leading\n"
-          "                                 '0x' or trailing 'h'). Depending "
-          "on\n"
-          "                                 the interface, may not be "
-          "needed\n"
-          "    --summary|-S         query phys, output 1 line for each "
-          "active one,\n"
-          "                         equivalent to '--multiple --brief' "
-          "('-mb').\n"
-          "                         This option is assumed if '--phy=ID' "
-          "not given\n"
-          "    --verbose|-v         increase verbosity\n"
-          "    --version|-V         print version string and exit\n"
-          "    --zero|-z            zero Allocated Response Length "
-          "field,\n"
-          "                         may be required prior to SAS-2\n\n"
-          "Sends one or more SMP DISCOVER functions. If '--phy=ID' not "
-          "given then\n'--summary' is assumed. The '--summary' option "
-          "shows the disposition\nof each active expander phy in table "
-          "form.\n"
-          );
+            "smp_discover [--adn] [--brief] [--cap] [--dsn] [--help] "
+            "[--hex]\n"
+            "                    [--ignore] [--interface=PARAMS] [--list] "
+            "[--multiple]\n"
+            "                    [--my] [--num=NUM] [--phy=ID] [--raw] "
+            "[--sa=SAS_ADDR]\n"
+            "                    [--summary] [--verbose] [--version] "
+            "[--zero]\n"
+            "                    SMP_DEVICE[,N]\n"
+            "  where:\n"
+            "    --adn|-A             output attached device name in one "
+            "line per\n"
+            "                         phy mode (i.e. with --multiple)\n"
+            "    --brief|-b           less output, can be used multiple "
+            "times\n"
+            "    --cap|-c             decode phy capabilities bits\n"
+            "    --dsn|-D             show device slot number in 1 line\n"
+            "                         per phy output, if available\n"
+            "    --help|-h            print out usage message\n"
+            "    --hex|-H             print response in hexadecimal\n"
+            "    --ignore|-i          sets the Ignore Zone Group bit; "
+            "will show\n"
+            "                         phys otherwise hidden by zoning\n"
+            "    --interface=PARAMS|-I PARAMS    specify or override "
+            "interface\n"
+            "    --list|-l            output attribute=value, 1 per line\n"
+            "    --multiple|-m        query multiple phys, output 1 line "
+            "for each\n"
+            "                         if given twice, full output for each "
+            "phy\n"
+            "    --my|-M              output my (expander's) SAS address\n"
+            "    --num=NUM|-n NUM     number of phys to fetch when '-m' "
+            "is given\n"
+            "                         (def: 0 -> the rest)\n"
+            "    --phy=ID|-p ID       phy identifier [or starting phy id]\n"
+            "    --raw|-r             output response in binary\n"
+            "    --sa=SAS_ADDR|-s SAS_ADDR    SAS address of SMP "
+            "target (use leading\n"
+            "                                 '0x' or trailing 'h'). "
+            "Depending on\n"
+            "                                 the interface, may not be "
+            "needed\n"
+            "    --summary|-S         query phys, output 1 line for each "
+            "active one,\n"
+            "                         equivalent to '--multiple --brief' "
+            "('-mb').\n"
+            "                         This option is assumed if '--phy=ID' "
+            "not given\n"
+            "    --verbose|-v         increase verbosity\n"
+            "    --version|-V         print version string and exit\n"
+            "    --zero|-z            zero Allocated Response Length "
+            "field,\n"
+            "                         may be required prior to SAS-2\n\n"
+            "Sends one or more SMP DISCOVER functions. If '--phy=ID' not "
+            "given then\n'--summary' is assumed. The '--summary' option "
+            "shows the disposition\nof each active expander phy in table "
+            "form.\n"
+            );
 }
 
 static void
@@ -304,34 +306,31 @@ static const char * smp_short_attached_device_type[] = {
 };
 
 static char *
-smp_get_plink_rate(int val, int prog, int b_len, char * b)
+smp_get_plink_rate(int val, bool prog, int b_len, char * b)
 {
     switch (val) {
-    case 0:
-        snprintf(b, b_len, "not programmable");
-        break;
     case 8:
         snprintf(b, b_len, "1.5 Gbps");
-        break;
+        return b;
     case 9:
         snprintf(b, b_len, "3 Gbps");
-        break;
+        return b;
     case 0xa:
         snprintf(b, b_len, "6 Gbps");
-        break;
+        return b;
     case 0xb:
         snprintf(b, b_len, "12 Gbps");
-        break;
+        return b;
     case 0xc:
         snprintf(b, b_len, "22.5 Gbps");
-        break;
+        return b;
     default:
-        if (prog && (0 == val))
-            snprintf(b, b_len, "not programmable");
-        else
-            snprintf(b, b_len, "reserved [%d]", val);
         break;
     }
+    if (prog && (0 == val))
+        snprintf(b, b_len, "not programmable");
+    else
+        snprintf(b, b_len, "reserved [%d]", val);
     return b;
 }
 
@@ -517,7 +516,7 @@ find_sas_connector_type(int conn_type, char * buff, int buff_len)
 static int
 do_discover(struct smp_target_obj * top, int disc_phy_id,
             unsigned char * resp, int max_resp_len,
-            int silence_err_report, const struct opts_t * op)
+            bool silence_err_report, const struct opts_t * op)
 {
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -619,7 +618,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
 /* Note that the inner attributes are output in alphabetical order. */
 /* N.B. This function has not been kept up to date. */
 static int
-print_single_list(const unsigned char * rp, int len, int show_exp_cc,
+print_single_list(const unsigned char * rp, int len, bool show_exp_cc,
                   int do_brief)
 {
     int sas2;
@@ -746,7 +745,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
-           ((p_cap >> 30) & 0x1), ((p_cap >> 24) & 0xf));
+           ((p_cap >> 30) & 0x1), (p_cap >> 24) & 0xf);
     prev_nl = 1;
     g15_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
@@ -788,7 +787,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 }
 
 static int
-print_single(const unsigned char * rp, int len, int just1,
+print_single(const unsigned char * rp, int len, bool just1,
              const struct opts_t * op)
 {
     int sas2, res;
@@ -851,13 +850,13 @@ print_single(const unsigned char * rp, int len, int just1,
             printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         }
         printf("  programmed minimum physical link rate: %s\n",
-               smp_get_plink_rate(((rp[40] >> 4) & 0xf), 1, sizeof(b), b));
+               smp_get_plink_rate(((rp[40] >> 4) & 0xf), true, sizeof(b), b));
         printf("  hardware minimum physical link rate: %s\n",
-               smp_get_plink_rate((rp[40] & 0xf), 0, sizeof(b), b));
+               smp_get_plink_rate((rp[40] & 0xf), false, sizeof(b), b));
         printf("  programmed maximum physical link rate: %s\n",
-               smp_get_plink_rate(((rp[41] >> 4) & 0xf), 1, sizeof(b), b));
+               smp_get_plink_rate(((rp[41] >> 4) & 0xf), true, sizeof(b), b));
         printf("  hardware maximum physical link rate: %s\n",
-               smp_get_plink_rate((rp[41] & 0xf), 0, sizeof(b), b));
+               smp_get_plink_rate((rp[41] & 0xf), false, sizeof(b), b));
         printf("  phy change count: %d\n", rp[42]);
         printf("  virtual phy: %d\n", !!(rp[43] & 0x80));
         printf("  partial pathway timeout value: %d us\n", (rp[43] & 0xf));
@@ -975,7 +974,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
     int len, ret;
 
     /* If do_discover() works, returns response length (less CRC bytes) */
-    len = do_discover(top, op->phy_id, rp, sizeof(rp), 0, op);
+    len = do_discover(top, op->phy_id, rp, sizeof(rp), false, op);
     if (len < 0)
         ret = (len < -2) ? (-4 - len) : len;
     else
@@ -999,9 +998,9 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
         return ret;
     }
     if (op->do_list)
-        return print_single_list(rp, len, 1, op->do_brief);
+        return print_single_list(rp, len, true, op->do_brief);
     else
-        return print_single(rp, len, 1, op);
+        return print_single(rp, len, true, op);
 }
 
 #define MAX_PHY_ID 254
@@ -1024,7 +1023,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
     expander_sa = 0;
     num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
     for (k = op->phy_id; k < num; ++k) {
-        len = do_discover(top, k, rp, sizeof(rp), 1, op);
+        len = do_discover(top, k, rp, sizeof(rp), true, op);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
         else
@@ -1066,11 +1065,11 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             continue;
 
         if (op->do_list) {
-            print_single_list(rp, len, 0, op->do_brief);
+            print_single_list(rp, len, false, op->do_brief);
             continue;
         }
         if (op->multiple > 1) {
-            print_single(rp, len, 0, op);
+            print_single(rp, len, false, op);
             continue;
         }
         adt = ((0x70 & rp[12]) >> 4);
