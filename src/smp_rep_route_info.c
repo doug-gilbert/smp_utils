@@ -38,6 +38,8 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -52,7 +54,7 @@
  * response.
  */
 
-static const char * version_str = "1.11 20160201";
+static const char * version_str = "1.12 20160501";
 
 #define REP_ROUTE_INFO_RESP_LEN 44
 
