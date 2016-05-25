@@ -1,4 +1,4 @@
-.TH SMP_PHY_TEST "8" "May 2011" "smp_utils\-0.96" SMP_UTILS
+.TH SMP_PHY_TEST "8" "May 2016" "smp_utils\-0.99" SMP_UTILS
 .SH NAME
 smp_phy_test \- invoke PHY TEST FUNTION SMP function
 .SH SYNOPSIS
@@ -76,9 +76,10 @@ transmits the test pattern at the specified physical link rate:
 value is 9.
 .TP
 \fB\-P\fR, \fB\-\-pattern\fR=\fIPA\fR
-specifies the type of test pattern to transmit. SAS\-2 (rev15) values are:
-1 \-> JTPAT, 2 \-> CJTPAT, 10h \-> TRAIN, 11h \-> TRAIN_DONE, 12h \-> IDLE,
-13h \-> SCRAMBLED_0, 40h \-> "two_dwords".  Default value is 2.
+specifies the type of test pattern to transmit. SPL\-4 (rev 8) values are:
+1 \-> JTPAT, 2 \-> CJTPAT, 3 \-> PRBS9, 4 \-> PRBS15, 10h \-> TRAIN,
+11h \-> TRAIN_DONE, 12h \-> IDLE, 13h \-> SCRAMBLED_0, 40h \-> TWO_DWORDS.
+The default value is 2 (i.e. CJTPAT).
 .TP
 \fB\-p\fR, \fB\-\-phy\fR=\fIID\fR
 phy identifier. \fIID\fR is a value between 0 and 254. Default is 0.
@@ -115,7 +116,7 @@ Written by Douglas Gilbert.
 .SH "REPORTING BUGS"
 Report bugs to <dgilbert at interlog dot com>.
 .SH COPYRIGHT
-Copyright \(co 2006\-2011 Douglas Gilbert
+Copyright \(co 2006\-2016 Douglas Gilbert
 .br
 This software is distributed under a FreeBSD license. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
