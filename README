@@ -26,9 +26,12 @@ The reference documents are:
   sas-r05.pdf      www.t10.org   draft prior to original SAS spec
   sas1r10.pdf      www.t10.org   draft prior to SAS 1.1 spec
   sas2r16.pdf      www.t10.org   draft prior to SAS-2
+  sas3r06.pdf      www.t10.org   draft prior to SAS-3
+  sas4r09.pdf      www.t10.org   current draft
   spl-r07.pdf      www.t10.org   draft prior to SPL ANSI INCITS 476-2011
   spl2r04c.pdf     www.t10.org   draft prior to SPL-2
-  spl3r06g.pdf      www.t10.org   current draft
+  spl3r07.pdf      www.t10.org   draft prior to SPL-3
+  spl4r11.pdf      www.t10.org   current draft
   SFF_8485.PDF     www.sffcommittee.com   SGPIO revision 0.7
 
 In SAS-2.1 the physical layer was put into a document of that name
@@ -37,4 +40,4 @@ the SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-29th February 2016
+4th March 2017

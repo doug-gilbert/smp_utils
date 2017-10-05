@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.05 20160201";
+static const char * version_str = "1.06 20171004";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
@@ -138,16 +138,19 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-static const char *
-get_broadcast_type_str(int bt_num)
+static char *
+get_broadcast_type_str(int bt_num, int b_len, char * b)
 {
     int max_num = sizeof(broadcast_type_name) /
                   sizeof(broadcast_type_name[0]);
 
-    if ((bt_num < 0) || (bt_num >= max_num))
-        return "unknown";
-    else
-        return broadcast_type_name[bt_num];
+    if ((bt_num < 0) || (bt_num >= max_num)) {
+        snprintf(b, b_len, "Reserved [0x%x]", bt_num);
+        return b;
+    } else {
+        snprintf(b, b_len, "%s", broadcast_type_name[bt_num]);
+        return b;
+    }
 }
 
 
@@ -207,7 +210,7 @@ main(int argc, char * argv[])
             ++do_raw;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -260,7 +263,7 @@ main(int argc, char * argv[])
     if (0 == sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
@@ -376,7 +379,7 @@ main(int argc, char * argv[])
         printf("  Expander change count: %d\n", res);
     bt_hdr = smp_resp[6] & 0xf;
     printf("  broadcast type: %d [%s]\n", bt_hdr,
-           get_broadcast_type_str(bt_hdr));
+           get_broadcast_type_str(bt_hdr, sizeof(b), b));
     printf("  broadcast descriptor length: %d dwords\n", smp_resp[10]);
     bd_len = smp_resp[10] * 4;
     num_bd = smp_resp[11];
@@ -392,7 +395,7 @@ main(int argc, char * argv[])
         bt = bdp[0] & 0xf;
         if (verbose || (bt_hdr != bt))
             printf("     broadcast type: %d [%s]\n", bt,
-                   get_broadcast_type_str(bt));
+                   get_broadcast_type_str(bt, sizeof(b), b));
         if (0xff == bdp[1])
             printf("     no specific phy id\n");
         else

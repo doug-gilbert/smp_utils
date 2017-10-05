@@ -174,9 +174,218 @@ smp_get_func_res_str(int func_res, int buff_len, char * buff)
     return buff;
 }
 
-bool smp_is_naa5(uint64_t addr)
+bool
+smp_is_naa5(uint64_t addr)
 {
     return (0x5 == ((addr >> 60) & 0xf));
+}
+
+/* Connector names are taken from the most recent SES draft; in this case
+ * ses4r01. If plink is true the "(<maximum >physical links: <n>)" is
+ * appended to connector type string. <n> is 0 if conn_type is 0 or not
+ * found. <maximum > only prints "maximum " when <n> is greater than 1 .
+ * Returns buff as its result and its length (including a trailing null
+ * character) will not exceed buff_len. */
+char *
+smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
+                           char * buff)
+{
+    int pl_num = 0;
+    int n;
+
+    if ((NULL == buff) || (buff_len < 1))
+        return buff;
+    switch (conn_type) {
+/* External connectors */
+    case 0x0:
+        snprintf(buff, buff_len, "No information");
+        break;
+    case 0x1:
+        snprintf(buff, buff_len, "SAS 4x receptacle (SFF-8470)");
+        pl_num = 4;
+        break;
+    case 0x2:
+        snprintf(buff, buff_len, "Mini SAS 4x receptacle (SFF-8088)");
+        pl_num = 4;
+        break;
+    case 0x3:
+        snprintf(buff, buff_len, "QSFP+ receptacle (SFF-8436)");
+        pl_num = 4;
+        break;
+    case 0x4:
+        snprintf(buff, buff_len, "Mini SAS 4x active receptacle (SFF-8088)");
+        pl_num = 4;
+        break;
+    case 0x5:
+        snprintf(buff, buff_len, "Mini SAS HD 4x receptacle (SFF-8644)");
+        pl_num = 4;
+        break;
+    case 0x6:
+        snprintf(buff, buff_len, "Mini SAS HD 8x receptacle (SFF-8644)");
+        pl_num = 8;
+        break;
+    case 0x7:
+        snprintf(buff, buff_len, "Mini SAS HD 16x receptacle (SFF-8644)");
+        pl_num = 16;
+        break;
+    case 0xf:
+        snprintf(buff, buff_len, "Vendor specific external connector");
+        pl_num = -1;
+        break;
+/* Internal wide connectors */
+    case 0x10:
+        snprintf(buff, buff_len, "SAS 4i plug (SFF-8484)");
+        pl_num = 4;
+        break;
+    case 0x11:
+        snprintf(buff, buff_len, "Mini SAS 4i receptacle (SFF-8087)");
+        pl_num = 4;
+        break;
+    case 0x12:
+        snprintf(buff, buff_len, "Mini SAS HD 4i receptacle (SFF-8643)");
+        pl_num = 4;
+        break;
+    case 0x13:
+        snprintf(buff, buff_len, "Mini SAS HD 8i receptacle (SFF-8643)");
+        pl_num = 8;
+        break;
+    case 0x14:
+        snprintf(buff, buff_len, "Mini SAS HD 16i receptacle (SFF-8643)");
+        pl_num = 16;
+        break;
+    case 0x15:
+        snprintf(buff, buff_len, "SAS Slimline 4i (SFF-8654)");
+        pl_num = 4;
+        break;
+    case 0x16:
+        snprintf(buff, buff_len, "SAS Slimline 8i (SFF-8654)");
+        pl_num = 8;
+        break;
+    case 0x17:
+        snprintf(buff, buff_len, "SAS MiniLink 4i (SFF-8612)");
+        pl_num = 4;
+        break;
+    case 0x18:
+        snprintf(buff, buff_len, "SAS MiniLink 8i (SFF-8612)");
+        pl_num = 8;
+        break;
+/* Internal connectors to end devices */
+    case 0x20:
+        snprintf(buff, buff_len, "SAS Drive backplane receptacle (SFF-8482)");
+        pl_num = 2;
+        break;
+    case 0x21:
+        snprintf(buff, buff_len, "SATA host plug");
+        pl_num = 1;
+        break;
+    case 0x22:
+        snprintf(buff, buff_len, "SAS Drive plug (SFF-8482)");
+        pl_num = 2;
+        break;
+    case 0x23:
+        snprintf(buff, buff_len, "SATA device plug");
+        pl_num = 1;
+        break;
+    case 0x24:
+        snprintf(buff, buff_len, "Micro SAS receptacle");
+        pl_num = 2;
+        break;
+    case 0x25:
+        snprintf(buff, buff_len, "Micro SATA device plug");
+        pl_num = 1;
+        break;
+    case 0x26:
+        snprintf(buff, buff_len, "Micro SAS plug (SFF-8486");
+        pl_num = 2;
+        break;
+    case 0x27:
+        snprintf(buff, buff_len, "Micro SAS/SATA plug (SFF-8486)");
+        pl_num = 2;
+        break;
+    case 0x28:
+        snprintf(buff, buff_len, "12 Gb/s SAS Drive backplane receptacle "
+                 "(SFF-8680)");
+        pl_num = 2;
+        break;
+    case 0x29:
+        snprintf(buff, buff_len, "12Gb/s SAS Drive Plug (SFF-8680) ");
+        pl_num = 2;
+        break;
+    case 0x2a:
+        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded "
+                 "receptacle (SFF-8639)");
+        pl_num = 6;
+        break;
+    case 0x2b:
+        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded plug "
+                "(SFF-8639)");
+        pl_num = 6;
+        break;
+    case 0x2c:
+        snprintf(buff, buff_len, "SAS MultiLink drive backplane receptacle "
+                 "(SFF-8630)");
+        pl_num = 4;
+        break;
+    case 0x2d:
+        snprintf(buff, buff_len, "SAS MultiLink drive backplane plug "
+                 "(SFF-8630)");
+        pl_num = 4;
+        break;
+    case 0x2f:
+        snprintf(buff, buff_len, "SAS virtual connector");
+        pl_num = 1;
+        break;
+    case 0x3f:
+        snprintf(buff, buff_len, "Vendor specific internal connector");
+        pl_num = -1;
+        break;
+    case 0x40:
+        snprintf(buff, buff_len, "SAS high density drive backplane "
+                 "receptacle (SFF-8631)");
+        pl_num = 8;
+        break;
+    case 0x41:
+        snprintf(buff, buff_len, "SAS high density drive backplane "
+                 "plug (SFF-8631)");
+        pl_num = 8;
+        break;
+    default:
+        if (conn_type < 0x10)
+            snprintf(buff, buff_len, "unknown external connector type: 0x%x",
+                     conn_type);
+        else if (conn_type < 0x20)
+            snprintf(buff, buff_len, "unknown internal wide connector type: "
+                     "0x%x", conn_type);
+        else if (conn_type < 0x30)
+            snprintf(buff, buff_len, "unknown internal connector to end "
+                     "device, type: 0x%x", conn_type);
+        else if (conn_type < 0x3f)
+            snprintf(buff, buff_len, "unknown internal connector"
+                     ", type: 0x%x", conn_type);
+        else if (conn_type < 0x70)
+            snprintf(buff, buff_len, "reserved connector type: 0x%x",
+                     conn_type);
+        else if (conn_type < 0x80)
+            snprintf(buff, buff_len, "vendor specific connector type: 0x%x",
+                     conn_type);
+        else    /* conn_type is a 7 bit field, so this is impossible */
+            snprintf(buff, buff_len, "unexpected connector type: 0x%x",
+                     conn_type);
+        break;
+    }
+    if (! plink)
+        return buff;
+    n = strlen(buff);
+    if (n >= (buff_len - 1))
+        return buff;    /* no room for suffix */
+    if (pl_num < 1)
+        snprintf(buff + n, buff_len - n, "(physical links: 0)");
+    else if (pl_num < 2)
+        snprintf(buff + n, buff_len - n, "(physical links: 1)");
+    else
+        snprintf(buff + n, buff_len - n, "(maximu physical links: %d)",
+                 pl_num);
+    return buff;
 }
 
 
@@ -360,6 +569,39 @@ smp_get_num(const char * buf)
     }
 }
 
+/* If the number in 'buf' can not be decoded then -1 is returned. Accepts a
+ * hex prefix (0x or 0X) or a 'h' (or 'H') suffix; otherwise decimal is
+ * assumed. Does not accept multipliers. Accept a comma (","), hyphen ("-"),
+ * a whitespace or newline as terminator. */
+int
+smp_get_num_nomult(const char * buf)
+{
+    int res, len, num;
+    unsigned int unum;
+    char * commap;
+
+    if ((NULL == buf) || ('\0' == buf[0]))
+        return -1;
+    len = strlen(buf);
+    commap = (char *)strchr(buf + 1, ',');
+    if (('0' == buf[0]) && (('x' == buf[1]) || ('X' == buf[1]))) {
+        res = sscanf(buf + 2, "%x", &unum);
+        num = unum;
+    } else if (commap && ('H' == toupper((int)*(commap - 1)))) {
+        res = sscanf(buf, "%x", &unum);
+        num = unum;
+    } else if ((NULL == commap) && ('H' == toupper((int)buf[len - 1]))) {
+        res = sscanf(buf, "%x", &unum);
+        num = unum;
+    } else
+        res = sscanf(buf, "%d", &num);
+    if (1 == res)
+        return num;
+    else
+        return -1;
+}
+
+
 /* If the number in 'buf' can be decoded or the multiplier is unknown
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a decimal
    multiplier suffix (as per GNU's dd (since 2002: SI and IEC 60027-2)).
@@ -456,6 +698,32 @@ smp_get_llnum(const char * buf)
             return -1LL;
         }
     }
+}
+
+/* If the number in 'buf' can not be decoded then -1 is returned. Accepts a
+ * hex prefix (0x or 0X) or a 'h' (or 'H') suffix; otherwise decimal is
+ * assumed. Does not accept multipliers. Accept a comma (","), hyphen ("-"),
+ * a whitespace or newline as terminator. Only decimal numbers can represent
+ * negative numbers and '-1' must be treated separately. */
+int64_t
+smp_get_llnum_nomult(const char * buf)
+{
+    int res, len;
+    int64_t num;
+    uint64_t unum;
+
+    if ((NULL == buf) || ('\0' == buf[0]))
+        return -1;
+    len = strlen(buf);
+    if (('0' == buf[0]) && (('x' == buf[1]) || ('X' == buf[1]))) {
+        res = sscanf(buf + 2, "%" SCNx64 "", &unum);
+        num = unum;
+    } else if ('H' == toupper(buf[len - 1])) {
+        res = sscanf(buf, "%" SCNx64 "", &unum);
+        num = unum;
+    } else
+        res = sscanf(buf, "%" SCNd64 "", &num);
+    return (1 == res) ? num : -1;
 }
 
 /* If the non-negative number in 'buf' can be decoded in decimal (default)

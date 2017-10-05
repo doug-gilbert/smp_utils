@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  * its response.
  */
 
-static const char * version_str = "1.03 20160117";
+static const char * version_str = "1.04 20171003";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -550,7 +550,7 @@ main(int argc, char * argv[])
             ++do_raw;
             break;
         case 's':
-            sa_ll = smp_get_llnum(optarg);
+            sa_ll = smp_get_llnum_nomult(optarg);
             if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -617,7 +617,7 @@ main(int argc, char * argv[])
     if (0 == sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n    use 0\n");

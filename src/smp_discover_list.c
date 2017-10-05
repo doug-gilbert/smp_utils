@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.41 20160501";    /* spl4r07 */
+static const char * version_str = "1.41 20171005";    /* spl4r11 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -165,7 +165,7 @@ usage(void)
             "expander\n"
             "                         attached; 2 -> expander "
             "or SAS SATA"
-            "                         device; 3 -> SAS SATA device\n"
+            "                         device; 3 -> SAS SATA (end) device\n"
             "    --help|-h            print out usage message\n"
             "    --hex|-H             print response in hexadecimal\n"
             "    --ignore|-i          sets the Ignore Zone Group bit; "
@@ -389,137 +389,6 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
-}
-
-static char *
-find_sas_connector_type(int conn_type, char * buff, int buff_len)
-{
-    switch (conn_type) {
-    case 0x0:
-        snprintf(buff, buff_len, "No information");
-        break;
-    case 0x1:
-        snprintf(buff, buff_len, "SAS 4x receptacle (SFF-8470) "
-                 "[max 4 phys]");
-        break;
-    case 0x2:
-        snprintf(buff, buff_len, "Mini SAS 4x receptacle (SFF-8088) "
-                 "[max 4 phys]");
-        break;
-    case 0x3:
-        snprintf(buff, buff_len, "QSFP+ receptacle (SFF-8436) "
-                "[max 4 phys]");
-        break;
-    case 0x4:
-        snprintf(buff, buff_len, "Mini SAS 4x active receptacle (SFF-8088) "
-                "[max 4 phys]");
-        break;
-    case 0x5:
-        snprintf(buff, buff_len, "Mini SAS HD 4x receptacle (SFF-8644) "
-                "[max 4 phys]");
-        break;
-    case 0x6:
-        snprintf(buff, buff_len, "Mini SAS HD 8x receptacle (SFF-8644) "
-                "[max 8 phys]");
-        break;
-    case 0x7:
-        snprintf(buff, buff_len, "Mini SAS HD 16x receptacle (SFF-8644) "
-                "[max 16 phys]");
-        break;
-    case 0xf:
-        snprintf(buff, buff_len, "Vendor specific external connector");
-        break;
-    case 0x10:
-        snprintf(buff, buff_len, "SAS 4i plug (SFF-8484) [max 4 phys]");
-        break;
-    case 0x11:
-        snprintf(buff, buff_len, "Mini SAS 4i receptacle (SFF-8087) "
-                 "[max 4 phys]");
-        break;
-    case 0x12:
-        snprintf(buff, buff_len, "Mini SAS HD 4i receptacle (SFF-8643) "
-                "[max 4 phys]");
-        break;
-    case 0x13:
-        snprintf(buff, buff_len, "Mini SAS HD 8i receptacle (SFF-8643) "
-                "[max 8 phys]");
-        break;
-    case 0x20:
-        snprintf(buff, buff_len, "SAS Drive backplane receptacle (SFF-8482) "
-                 "[max 2 phys]");
-        break;
-    case 0x21:
-        snprintf(buff, buff_len, "SATA host plug [max 1 phy]");
-        break;
-    case 0x22:
-        snprintf(buff, buff_len, "SAS Drive plug (SFF-8482) [max 2 phys]");
-        break;
-    case 0x23:
-        snprintf(buff, buff_len, "SATA device plug [max 1 phy]");
-        break;
-    case 0x24:
-        snprintf(buff, buff_len, "Micro SAS receptacle "
-                "[max 2 phys]");
-        break;
-    case 0x25:
-        snprintf(buff, buff_len, "Micro SATA device plug "
-                "[max 1 phy]");
-        break;
-    case 0x26:
-        snprintf(buff, buff_len, "Micro SAS plug "
-                "[max 2 phys]");
-        break;
-    case 0x27:
-        snprintf(buff, buff_len, "Micro SAS/SATA plug "
-                "[max 2 phys]");
-        break;
-    case 0x28:
-        snprintf(buff, buff_len, "12 Gb/s SAS Drive backplane receptacle "
-                "(SFF-8680) [max 2 phys]");
-        break;
-    case 0x29:
-        snprintf(buff, buff_len, "12Gb/s SAS Drive Plug (SFF-8680) "
-                "[max 2 phys]");
-        break;
-    case 0x2a:
-        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded "
-                "receptacle (SFF-8639) [max 6 phys]");
-        break;
-    case 0x2b:
-        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded plug "
-                "(SFF-8639) [max 6 phys]");
-        break;
-    case 0x2f:
-        snprintf(buff, buff_len, "SAS virtual connector [max 1 phy]");
-        break;
-    case 0x3f:
-        snprintf(buff, buff_len, "Vendor specific internal connector");
-        break;
-    default:
-        if (conn_type < 0x10)
-            snprintf(buff, buff_len, "unknown external connector type: 0x%x",
-                     conn_type);
-        else if (conn_type < 0x20)
-            snprintf(buff, buff_len, "unknown internal wide connector type: "
-                     "0x%x", conn_type);
-        else if (conn_type < 0x30)
-            snprintf(buff, buff_len, "unknown internal connector to end "
-                     "device, type: 0x%x", conn_type);
-        else if (conn_type < 0x3f)
-            snprintf(buff, buff_len, "unknown internal connector"
-                     ", type: 0x%x", conn_type);
-        else if (conn_type < 0x70)
-            snprintf(buff, buff_len, "reserved connector type: 0x%x",
-                     conn_type);
-        else if (conn_type < 0x80)
-            snprintf(buff, buff_len, "vendor specific connector type: 0x%x",
-                     conn_type);
-        else    /* conn_type is a 7 bit field, so this is impossible */
-            snprintf(buff, buff_len, "unexpected connector type: 0x%x",
-                     conn_type);
-        break;
-    }
-    return buff;
 }
 
 /* Returns 0 when successful, -1 for low level errors and > 0
@@ -750,6 +619,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         printf("  attached inside ZPSDS persistent: %d\n", !!(rp[33] & 4));
         printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
         printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+        printf("  attached apta capable: %d\n", !!(rp[34] & 4));
         printf("  attached smp priority capable: %d\n", !!(rp[34] & 2));
         printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         printf("  programmed minimum physical link rate: %s\n",
@@ -782,7 +652,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
         return 0;
     }
     printf("  connector type: %s\n",
-           find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
+           smp_get_connector_type_str((rp[45] & 0x7f), true, sizeof(b), b));
     printf("  connector element index: %d\n", rp[46]);
     printf("  connector physical link: %d\n", rp[47]);
     printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
@@ -1320,7 +1190,7 @@ main(int argc, char * argv[])
             ++op->do_raw;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -1381,7 +1251,7 @@ main(int argc, char * argv[])
     if (0 == op->sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");

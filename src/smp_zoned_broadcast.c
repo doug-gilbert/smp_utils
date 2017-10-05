@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.04 20160201";
+static const char * version_str = "1.05 20171004";
 
 static struct option long_options[] = {
     {"broadcast", 1, 0, 'b'},
@@ -311,7 +311,7 @@ main(int argc, char * argv[])
             ++do_raw;
             break;
         case 's':
-            sa_ll = smp_get_llnum(optarg);
+            sa_ll = smp_get_llnum_nomult(optarg);
             if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -367,7 +367,7 @@ main(int argc, char * argv[])
     if (0 == sa) {
         ccp = getenv("SMP_UTILS_SAS_ADDR");
         if (ccp) {
-           sa_ll = smp_get_llnum(ccp);
+           sa_ll = smp_get_llnum_nomult(ccp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n    use 0\n");

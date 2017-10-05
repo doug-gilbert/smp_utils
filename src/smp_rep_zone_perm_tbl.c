@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 Douglas Gilbert.
+ * Copyright (c) 2011-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.07 20160201";
+static const char * version_str = "1.08 20171004";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -283,7 +283,7 @@ main(int argc, char * argv[])
             }
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -336,7 +336,7 @@ main(int argc, char * argv[])
     if (0 == sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n    use 0\n");

@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,6 +204,15 @@ int smp_get_func_def_resp_len(int func_code);
  * nibbe. Returns 1 if NAA-5 format, else 0. */
 bool smp_is_naa5(uint64_t addr);
 
+/* Connector names are taken from the most recent SES draft; in this case
+ * ses4r01. If plink is true the "(<maximum >physical links: <n>)" is
+ * appended to connector type string. <n> is 0 if conn_type is 0 or not
+ * found. <maximum > only prints "maximum " when <n> is greater than 1 .
+ * Returns buff as its result and its length (including a trailing null
+ * character) will not exceed buff_len. */
+char * smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
+                                  char * buff);
+
 const char * smp_lib_version();
 
 struct smp_val_name {
@@ -236,6 +245,13 @@ void dStrHex(const char* str, int len, int no_ascii);
    GB *1,000,000,000 and <n>x<m> which multiplies <n> by <m> . */
 int smp_get_num(const char * buf);
 
+/* If the number in 'buf' can not be decoded then -1 is returned. Accepts a
+ * hex prefix (0x or 0X) or a 'h' (or 'H') suffix; otherwise decimal is
+ * assumed. Does not accept multipliers. Accept a comma (","), hyphen ("-"),
+ * a whitespace or newline as terminator. Only decimal numbers can represent
+ * negative numbers and '-1' must be treated separately. */
+int smp_get_num_nomult(const char * buf);
+
 /* If the number in 'buf' can not be decoded or the multiplier is unknown
    then -1LL is returned. Accepts a hex prefix (0x or 0X) or a 'h' (or 'H')
    suffix. Otherwise a decimal multiplier suffix may be given. In addition
@@ -243,12 +259,18 @@ int smp_get_num(const char * buf);
    t T TiB  *(2**40); TB *(10**12); p P PiB  *(2**50); PB  *(10**15) . */
 int64_t smp_get_llnum(const char * buf);
 
+/* If the number in 'buf' can not be decoded then -1 is returned. Accepts a
+ * hex prefix (0x or 0X) or a 'h' (or 'H') suffix; otherwise decimal is
+ * assumed. Does not accept multipliers. Accept a comma (","), hyphen ("-"),
+ * a whitespace or newline as terminator. Only decimal numbers can represent
+ * negative numbers and '-1' must be treated separately. */
+int64_t smp_get_llnum_nomult(const char * buf);
+
 /* If the non-negative number in 'buf' can be decoded in decimal (default)
  * or hex then it is returned, else -1 is returned. Skips leading and
  * trailing spaces, tabs and commas. Hex numbers are indicated by a "0x"
  * or "0X" prefix, or by a 'h' or 'H' suffix. */
-int
-smp_get_dhnum(const char * buf);
+int smp_get_dhnum(const char * buf);
 
 
 #ifdef __cplusplus

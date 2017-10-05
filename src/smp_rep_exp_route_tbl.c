@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2016 Douglas Gilbert.
+ * Copyright (c) 2007-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@
  * its response.
  */
 
-static const char * version_str = "1.12 20160201";    /* sync with sas2r15 */
+static const char * version_str = "1.13 20171003";    /* sync with sas2r15 */
 
 
 static struct option long_options[] = {
@@ -326,7 +326,7 @@ main(int argc, char * argv[])
             ++opts.do_raw;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -381,7 +381,7 @@ main(int argc, char * argv[])
     if (0 == opts.sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n    use 0\n");

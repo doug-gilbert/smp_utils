@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.53 20160501";    /* spl4r07 */
+static const char * version_str = "1.54 20171003";    /* spl4r11 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -284,7 +284,7 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
 
 /* Since spl4r01 these are 'attached SAS device type's */
 static const char * smp_attached_device_type[] = {
-    "no device attached",
+    "no device attached",         /* 0x0 */
     "SAS or SATA device",         /* was 'end device' */
     "expander device",            /* was 'edge expander' in SAS-1.1 */
     "expander device (fanout)",   /* marked as obsolete in SAS-2.0 */
@@ -377,137 +377,6 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
     default: snprintf(b, b_len, "reserved [%d]", val); break;
     }
     return b;
-}
-
-static char *
-find_sas_connector_type(int conn_type, char * buff, int buff_len)
-{
-    switch (conn_type) {
-    case 0x0:
-        snprintf(buff, buff_len, "No information");
-        break;
-    case 0x1:
-        snprintf(buff, buff_len, "SAS 4x receptacle (SFF-8470) "
-                 "[max 4 phys]");
-        break;
-    case 0x2:
-        snprintf(buff, buff_len, "Mini SAS 4x receptacle (SFF-8088) "
-                 "[max 4 phys]");
-        break;
-    case 0x3:
-        snprintf(buff, buff_len, "QSFP+ receptacle (SFF-8436) "
-                "[max 4 phys]");
-        break;
-    case 0x4:
-        snprintf(buff, buff_len, "Mini SAS 4x active receptacle (SFF-8088) "
-                "[max 4 phys]");
-        break;
-    case 0x5:
-        snprintf(buff, buff_len, "Mini SAS HD 4x receptacle (SFF-8644) "
-                "[max 4 phys]");
-        break;
-    case 0x6:
-        snprintf(buff, buff_len, "Mini SAS HD 8x receptacle (SFF-8644) "
-                "[max 8 phys]");
-        break;
-    case 0x7:
-        snprintf(buff, buff_len, "Mini SAS HD 16x receptacle (SFF-8644) "
-                "[max 16 phys]");
-        break;
-    case 0xf:
-        snprintf(buff, buff_len, "Vendor specific external connector");
-        break;
-    case 0x10:
-        snprintf(buff, buff_len, "SAS 4i plug (SFF-8484) [max 4 phys]");
-        break;
-    case 0x11:
-        snprintf(buff, buff_len, "Mini SAS 4i receptacle (SFF-8087) "
-                 "[max 4 phys]");
-        break;
-    case 0x12:
-        snprintf(buff, buff_len, "Mini SAS HD 4i receptacle (SFF-8643) "
-                "[max 4 phys]");
-        break;
-    case 0x13:
-        snprintf(buff, buff_len, "Mini SAS HD 8i receptacle (SFF-8643) "
-                "[max 8 phys]");
-        break;
-    case 0x20:
-        snprintf(buff, buff_len, "SAS Drive backplane receptacle (SFF-8482) "
-                 "[max 2 phys]");
-        break;
-    case 0x21:
-        snprintf(buff, buff_len, "SATA host plug [max 1 phy]");
-        break;
-    case 0x22:
-        snprintf(buff, buff_len, "SAS Drive plug (SFF-8482) [max 2 phys]");
-        break;
-    case 0x23:
-        snprintf(buff, buff_len, "SATA device plug [max 1 phy]");
-        break;
-    case 0x24:
-        snprintf(buff, buff_len, "Micro SAS receptacle "
-                "[max 2 phys]");
-        break;
-    case 0x25:
-        snprintf(buff, buff_len, "Micro SATA device plug "
-                "[max 1 phy]");
-        break;
-    case 0x26:
-        snprintf(buff, buff_len, "Micro SAS plug "
-                "[max 2 phys]");
-        break;
-    case 0x27:
-        snprintf(buff, buff_len, "Micro SAS/SATA plug "
-                "[max 2 phys]");
-        break;
-    case 0x28:
-        snprintf(buff, buff_len, "12 Gb/s SAS Drive backplane receptacle "
-                "(SFF-8680) [max 2 phys]");
-        break;
-    case 0x29:
-        snprintf(buff, buff_len, "12Gb/s SAS Drive Plug (SFF-8680) "
-                "[max 2 phys]");
-        break;
-    case 0x2a:
-        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded "
-                "receptacle (SFF-8639) [max 6 phys]");
-        break;
-    case 0x2b:
-        snprintf(buff, buff_len, "Multifunction 12 Gb/s 6x Unshielded plug "
-                "(SFF-8639) [max 6 phys]");
-        break;
-    case 0x2f:
-        snprintf(buff, buff_len, "SAS virtual connector [max 1 phy]");
-        break;
-    case 0x3f:
-        snprintf(buff, buff_len, "Vendor specific internal connector");
-        break;
-    default:
-        if (conn_type < 0x10)
-            snprintf(buff, buff_len, "unknown external connector type: 0x%x",
-                     conn_type);
-        else if (conn_type < 0x20)
-            snprintf(buff, buff_len, "unknown internal wide connector type: "
-                     "0x%x", conn_type);
-        else if (conn_type < 0x30)
-            snprintf(buff, buff_len, "unknown internal connector to end "
-                     "device, type: 0x%x", conn_type);
-        else if (conn_type < 0x3f)
-            snprintf(buff, buff_len, "unknown internal connector"
-                     ", type: 0x%x", conn_type);
-        else if (conn_type < 0x70)
-            snprintf(buff, buff_len, "reserved connector type: 0x%x",
-                     conn_type);
-        else if (conn_type < 0x80)
-            snprintf(buff, buff_len, "vendor specific connector type: 0x%x",
-                     conn_type);
-        else    /* conn_type is a 7 bit field, so this is impossible */
-            snprintf(buff, buff_len, "unexpected connector type: 0x%x",
-                     conn_type);
-        break;
-    }
-    return buff;
 }
 
 /* Returns length of response in bytes, excluding the CRC on success,
@@ -621,16 +490,18 @@ static int
 print_single_list(const unsigned char * rp, int len, bool show_exp_cc,
                   int do_brief)
 {
-    int sas2;
+    bool sas2;
 
-    sas2 = !! (rp[3]);
+    sas2 = !! (rp[3]);          /* response length other than zero */
     if (sas2 && show_exp_cc && (! do_brief)) {
         printf("expander_cc=%u\n", sg_get_unaligned_be16(rp + 4));
     }
     printf("phy_id=%d\n", rp[9]);
     if (! do_brief) {
-        if (sas2)
+        if (sas2) {
+            printf("  att_apta_cap=%d\n", !!(0x4 & rp[34]));
             printf("  att_br_cap=%d\n", !!(0x1 & rp[33]));
+        }
         if (len > 59)
             printf("  att_dev_name=0x%" PRIx64 "\n",
                    sg_get_unaligned_be64(rp + 52));
@@ -639,6 +510,7 @@ print_single_list(const unsigned char * rp, int len, bool show_exp_cc,
     if (sas2 && (! do_brief)) {
         printf("  att_iz_per=%d\n", !!(0x4 & rp[33]));
         printf("  att_pa_cap=%d\n", !!(0x8 & rp[33]));
+        printf("  att_per_cap=%d\n", !!(0x80 & rp[33]));
     }
     printf("  att_phy_id=%d\n", rp[32]);
     if (sas2 && (! do_brief)) {
@@ -790,7 +662,8 @@ static int
 print_single(const unsigned char * rp, int len, bool just1,
              const struct opts_t * op)
 {
-    int sas2, res;
+    int res;
+    bool sas2;
     unsigned int ui;
     uint64_t ull = 0;
     char b[256];
@@ -801,7 +674,7 @@ print_single(const unsigned char * rp, int len, bool just1,
         printf("Discover response%s:\n", (op->do_brief ? " (brief)" : ""));
     else
         printf("phy identifier: %d\n", rp[9]);
-    sas2 = !! (rp[3]);
+    sas2 = !! (rp[3]);          /* response length other than zero */
     res = sg_get_unaligned_be16(rp + 4);
     if ((sas2 && (! op->do_brief)) || (op->verbose > 3)) {
         if (op->verbose || (res > 0))
@@ -846,6 +719,7 @@ print_single(const unsigned char * rp, int len, bool just1,
                    !!(rp[33] & 4));
             printf("  attached requested inside ZPSDS: %d\n", !!(rp[33] & 2));
             printf("  attached break_reply capable: %d\n", !!(rp[33] & 1));
+            printf("  attached apta capable: %d\n", !!(rp[34] & 4));
             printf("  attached smp priority capable: %d\n", !!(rp[34] & 2));
             printf("  attached pwr_dis capable: %d\n", !!(rp[34] & 1));
         }
@@ -859,7 +733,8 @@ print_single(const unsigned char * rp, int len, bool just1,
                smp_get_plink_rate((rp[41] & 0xf), false, sizeof(b), b));
         printf("  phy change count: %d\n", rp[42]);
         printf("  virtual phy: %d\n", !!(rp[43] & 0x80));
-        printf("  partial pathway timeout value: %d us\n", (rp[43] & 0xf));
+        printf("  partial pathway timeout value: %d microsecs\n",
+               (rp[43] & 0xf));
     }
     res = (0xf & rp[44]);
     switch (res) {
@@ -876,7 +751,8 @@ print_single(const unsigned char * rp, int len, bool just1,
     }
     if (sas2 || (rp[45] & 0x7f)) {
         printf("  connector type: %s\n",
-               find_sas_connector_type((rp[45] & 0x7f), b, sizeof(b)));
+               smp_get_connector_type_str((rp[45] & 0x7f), true, sizeof(b),
+                                          b));
         printf("  connector element index: %d\n", rp[46]);
         printf("  connector physical link: %d\n", rp[47]);
         printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
@@ -1073,8 +949,8 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             continue;
         }
         adt = ((0x70 & rp[12]) >> 4);
-        /* attached SAS device type: 0-> none, 1-> device, 2-> expander,
-         * 3-> fanout expnader (obsolete), rest-> reserved */
+        /* attached SAS device type: 0-> none, 1-> (SAS or SATA end) device,
+         * 2-> expander, 3-> fanout expander (obsolete), rest-> reserved */
         if ((op->do_brief > 1) && (0 == adt))
             continue;
 
@@ -1335,7 +1211,7 @@ main(int argc, char * argv[])
             ++op->do_raw;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -1397,7 +1273,7 @@ main(int argc, char * argv[])
     if (0 == op->sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n");
