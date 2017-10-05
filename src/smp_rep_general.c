@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2017 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.28 20160201";    /* spl4r05 */
+static const char * version_str = "1.30 20171004";    /* spl4r8b */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -192,7 +192,7 @@ main(int argc, char * argv[])
             ++do_raw;
             break;
         case 's':
-           sa_ll = smp_get_llnum(optarg);
+           sa_ll = smp_get_llnum_nomult(optarg);
            if (-1LL == sa_ll) {
                 pr2serr("bad argument to '--sa'\n");
                 return SMP_LIB_SYNTAX_ERROR;
@@ -248,7 +248,7 @@ main(int argc, char * argv[])
     if (0 == sa) {
         cp = getenv("SMP_UTILS_SAS_ADDR");
         if (cp) {
-           sa_ll = smp_get_llnum(cp);
+           sa_ll = smp_get_llnum_nomult(cp);
            if (-1LL == sa_ll) {
                 pr2serr("bad value in environment variable "
                         "SMP_UTILS_SAS_ADDR\n    use 0\n");
@@ -391,6 +391,7 @@ main(int argc, char * argv[])
         /* following "externally" word added in SAS-2 */
         printf("  externally configurable route table: %d\n",
                !!(smp_resp[10] & 0x1));
+        printf("  extended fairness: %d\n", !!(smp_resp[11] & 0x2));
         printf("  initiates SSP close: %d\n", !!(smp_resp[11] & 0x1));
         if (smp_resp[12]) { /* assume naa-5 present */
             /* not in SAS-1; in SAS-1.1 and SAS-2 */
@@ -398,21 +399,19 @@ main(int argc, char * argv[])
             for (k = 0; k < 8; ++k)
                 printf("%02x", smp_resp[12 + k]);
             printf("\n");
-        }
-        if ((0 == smp_resp[12]) && verbose)
+        } else if (verbose)
             printf("  enclosure logical identifier <empty>\n");
         u = sg_get_unaligned_be16(smp_resp + 28);
         if (0 == u) {
             if (verbose)
-                printf("  SSP maximum connect time unlimited\n");
+                printf("  SSP connect time unlimited\n");
         } else
-            printf("  SSP maximum connect time limit: %u (100 usec units)\n",
-                   u);
+            printf("  SSP connect time limit: %u (100 usec units)\n", u);
         if (len < 36)
             goto err_out;
-        printf("  STP bus inactivity timer: %u (unit: 100ms)\n",
+        printf("  STP bus inactivity limit: %u (unit: 100ms)\n",
                sg_get_unaligned_be16(smp_resp + 30));
-        printf("  STP maximum connect time: %u (unit: 100ms)\n",
+        printf("  STP connect time limit: %u (unit: 100ms)\n",
                sg_get_unaligned_be16(smp_resp + 32));
         printf("  STP SMP I_T nexus loss time: %u (unit: ms)\n",
                sg_get_unaligned_be16(smp_resp + 34));
@@ -422,12 +421,12 @@ main(int argc, char * argv[])
         if (len < 40)
             goto err_out;
     }
-    zsupp = !!(smp_resp[36] & 0x2);
+    zsupp = !!(smp_resp[36] & 0x2);     /* zoning supported */
     if (zsupp || do_full) {
         printf("  number of zone groups: %d (0->128, 1->256)\n",
                ((smp_resp[36] & 0xc0) >> 6));
         printf("  zone locked: %d\n", !!(smp_resp[36] & 0x10));
-        psupp = !!(smp_resp[36] & 0x8);
+        psupp = !!(smp_resp[36] & 0x8); /* physical presence supported */
         if (do_full)
             printf("  physical presence supported: %d\n", psupp);
         if (psupp || do_full)
@@ -478,6 +477,8 @@ main(int argc, char * argv[])
                smp_resp[53]);
         printf("  number of enclosure connector element indexes: %d\n",
                smp_resp[54]);
+        printf("  initial time to delay expander forward open indication: "
+               "%d (unit: 100ns)\n", smp_resp[55]);
     }
     if (len < 60)
         goto err_out;
