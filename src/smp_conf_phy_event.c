@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
@@ -63,20 +64,20 @@ struct pes_name_t {
 };
 
 static struct option long_options[] = {
-    {"clear", 0, 0, 'C'},
-    {"enumerate", 0, 0, 'e'},
-    {"expected", 1, 0, 'E'},
-    {"file", 1, 0, 'f'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"pes", 1, 0, 'P'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"thres", 1, 0, 'T'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"clear", no_argument, 0, 'C'},
+    {"enumerate", no_argument, 0, 'e'},
+    {"expected", required_argument, 0, 'E'},
+    {"file", required_argument, 0, 'f'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"pes", required_argument, 0, 'P'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"thres", required_argument, 0, 'T'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -201,20 +202,20 @@ usage(void)
  * '0X') or has a trailing 'h' (or 'H') in which case it is assumed to be
  * hexadecimal. */
 unsigned int
-get_unum(const char * buf, int * err)
+get_unum(const char * buf, bool * err)
 {
     int res, len;
     unsigned unum;
 
     if ((NULL == buf) || ('\0' == buf[0])) {
         if (err)
-            *err = 1;
+            *err = true;
         return 0;
     }
     len = strspn(buf, "0123456789aAbBcCdDeEfFhHxX");
     if (0 == len) {
         if (err)
-            *err = 1;
+            *err = true;
         return 0;
     }
     if (('0' == buf[0]) && (('x' == buf[1]) || ('X' == buf[1])))
@@ -225,11 +226,11 @@ get_unum(const char * buf, int * err)
         res = sscanf(buf, "%u", &unum);
     if (1 == res) {
         if (err)
-            *err = 0;
+            *err = false;
         return unum;
     } else {
         if (err)
-            *err = 1;
+            *err = true;
         return 0;
     }
 }
@@ -242,7 +243,8 @@ static int
 build_pes_arr(const char * inp, unsigned char * pes_arr,
               int * pes_arr_len, int max_arr_len)
 {
-    int in_len, k, err;
+    bool err;
+    int in_len, k;
     const char * lcp;
     unsigned int unum;
     const char * cp;
@@ -299,7 +301,8 @@ static int
 build_thres_arr(const char * inp, unsigned int * thres_arr,
                 int * thres_arr_len, int max_arr_len)
 {
-    int in_len, k, err;
+    bool err;
+    int in_len, k;
     const char * lcp;
     unsigned int unum;
     const char * cp;
@@ -357,12 +360,13 @@ static int
 build_joint_arr(const char * file_name, unsigned char * pes_arr,
                 unsigned int * thres_arr, int * arr_len, int max_arr_len)
 {
-    char line[512];
+    bool bit0, err, have_stdin;
+    int in_len, k, j, m, ind;
     int off = 0;
-    int in_len, k, j, m, have_stdin, ind, bit0, err;
+    unsigned int unum;
     char * lcp;
     FILE * fp;
-    unsigned int unum;
+    char line[512];
 
     have_stdin = ((1 == strlen(file_name)) && ('-' == file_name[0]));
     if (have_stdin)
@@ -405,7 +409,7 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
             unum = get_unum(lcp, &err);
             if (! err) {
                 ind = ((off + k) >> 1);
-                bit0 = 0x1 & (off + k);
+                bit0 = !!(0x1 & (off + k));
                 if (ind >= max_arr_len) {
                     pr2serr("%s: array length exceeded\n", __func__);
                     return 1;
@@ -459,19 +463,23 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_clear = false;
+    bool do_enumerate = false;
+    bool do_raw = false;
     int res, c, k, j, len, num_desc, act_resplen, pes_elem, thres_elem;
-    int do_clear = 0;
-    int do_enumerate = 0;
-    int expected_cc = 0;
     int do_hex = 0;
+    int expected_cc = 0;
     int phy_id = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
+    int64_t sa_ll;
+    uint64_t sa = 0;
+    char * cp;
     const char * file_op = NULL;
     const char * pes_op = NULL;
     const char * thres_op = NULL;
-    int64_t sa_ll;
-    uint64_t sa = 0;
+    const struct pes_name_t * pnp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -481,10 +489,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    const struct pes_name_t * pnp;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(smp_req, 0, sizeof(smp_req));
     memset(pes_arr, 0, sizeof(pes_arr));
@@ -502,10 +506,10 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'C':
-            ++do_clear;
+            do_clear = true;
             break;
         case 'e':
-            ++do_enumerate;
+            do_enumerate = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -547,7 +551,7 @@ main(int argc, char * argv[])
             pes_op = optarg;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);
@@ -637,7 +641,7 @@ main(int argc, char * argv[])
         }
     }
 
-    if ((0 == do_clear) && (! file_op) && (! pes_op))
+    if ((! do_clear) && (NULL == file_op) && (! pes_op))
         pr2serr("warning: without --clear, --file and --pes not much will "
                 "happen\n");
     if (file_op && pes_op) {

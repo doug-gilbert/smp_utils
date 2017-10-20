@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.41 20171005";    /* spl4r11 */
+static const char * version_str = "1.43 20171019";    /* spl4r12 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -88,24 +88,23 @@ static struct option long_options[] = {
 };
 
 struct opts_t {
-    int do_adn;
+    bool do_adn;
+    bool do_cap_phy;
+    bool do_dsn;
+    bool desc_type_given;
+    bool ign_zp;
+    bool num_given;
+    bool do_1line;
+    bool phy_id_given;
+    bool do_raw;
+    bool do_summary;
     int do_brief;
-    int do_cap_phy;
-    int do_dsn;
     int desc_type;              /* 0 -> full, 1 -> short format */
-    int desc_type_given;
     int filter;
     int do_hex;
-    int ign_zp;
     int do_num;
-    int num_given;
-    int do_1line;
     int phy_id;
-    int phy_id_given;
-    int do_raw;
-    int do_summary;
     int verbose;
-    int sa_given;
     uint64_t sa;
     const char * zpi_fn;
     FILE * zpi_filep;
@@ -213,9 +212,9 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-/* Returns 1 if 'Table to Table Supported' bit set on REPORT GENERAL
- * respone. Returns 0 otherwise. */
-static int
+/* Returns true if 'Table to Table Supported' bit set on REPORT GENERAL
+ * respone. Returns false otherwise. */
+static bool
 has_table2table_routing(struct smp_target_obj * top,
                         const struct opts_t * optsp)
 {
@@ -514,7 +513,8 @@ static const char * g_name_long[] =
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
-    int k, skip, prev_nl;
+    bool prev_nl;
+    int k, skip;
     unsigned int g15_val, g;
     const char * cp;
 
@@ -531,29 +531,29 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             break;
         case 1:
             printf("    %s: with SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         case 2:
             printf("    %s: without SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         case 3:
             printf("    %s: with+without SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         default:
             printf("    %s: g15_val=0x%x, k=%d", cp, g15_val, k);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         }
         if ((3 == k) && (0 == skip)) {
             printf("\n");
             skip = 2;
-            prev_nl = 1;
+            prev_nl = true;
         }
         if ((1 == k) && (skip < 2)) {
             printf("\n");
-            prev_nl = 1;
+            prev_nl = true;
         }
     }
     if (! prev_nl)
@@ -655,12 +655,15 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
            smp_get_connector_type_str((rp[45] & 0x7f), true, sizeof(b), b));
     printf("  connector element index: %d\n", rp[46]);
     printf("  connector physical link: %d\n", rp[47]);
-    printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
+    printf("  phy power condition: %s\n",
+           smp_get_phy_pwr_cond_str(((rp[48] & 0xc0) >> 6), sizeof(b), b));
     printf("  sas slumber capable: %d\n", !!(rp[48] & 0x8));
     printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
     printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
     printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
-    printf("  pwr_dis signal: %d\n", (rp[49] & 0xc0) >> 6);
+    printf("  pwr_dis signal: %s\n",
+           smp_get_pwr_dis_signal_str(((rp[49] & 0xc0) >> 6),
+                                      sizeof(b), b));
     printf("  pwr_dis control capable: %d\n", (rp[49] & 0x30) >> 4);
     printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
     printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
@@ -817,13 +820,14 @@ static int
 decode_1line(const unsigned char * rp, int len, int desc,
              bool z_enabled, int has_t2t, struct opts_t * op)
 {
-    uint64_t ull, adn;
-    int phy_id, off, plus, negot, adt, route_attr, vp, asa_off;
+    bool plus;
+    bool zg_not1 = true;
+    int phy_id, off, negot, adt, route_attr, vp, asa_off;
     int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
-    int zg_not1 = 0;
+    uint64_t ull, adn;
+    const char * cp;
     char b[256];
     char dsn[10] = "";
-    const char * cp;
 
     switch (desc) {
     case 0:     /* longer descriptor */
@@ -932,13 +936,13 @@ decode_1line(const unsigned char * rp, int len, int desc,
             return 0;
         }
         if (z_enabled && (1 != z_group)) {
-            ++zg_not1;
+            zg_not1 = true;
             printf("  ZG:%d", z_group);
         }
         if ('\0' != dsn[0])
              printf("%s", dsn);
         printf("\n");
-        return !! zg_not1;
+        return (int)zg_not1;
     }
     if ((0 == desc) && op->do_adn) {
         adn = sg_get_unaligned_be64(rp + 52);
@@ -951,61 +955,61 @@ decode_1line(const unsigned char * rp, int len, int desc,
                (vp ? " V" : ""));
     if (a_init & 0xf) {
         off = 0;
-        plus = 0;
+        plus = false;
         off += snprintf(b + off, sizeof(b) - off, " i(");
         if (a_init & 0x8) {
             off += snprintf(b + off, sizeof(b) - off, "SSP");
-            ++plus;
+            plus = true;
         }
         if (a_init & 0x4) {
             off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         if (a_init & 0x2) {
             off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         if (a_init & 0x1) {
             off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         printf("%s)", b);
     }
     if (a_target & 0xf) {
         off = 0;
-        plus = 0;
+        plus = false;
         off += snprintf(b + off, sizeof(b) - off, " t(");
         if (a_target & 0x80) {
             off += snprintf(b + off, sizeof(b) - off, "PORT_SEL");
-            ++plus;
+            plus = true;
         }
         if (a_target & 0x8) {
             off += snprintf(b + off, sizeof(b) - off, "%sSSP",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         if (a_target & 0x4) {
             off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         if (a_target & 0x2) {
             off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         if (a_target & 0x1) {
             off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                             (plus ? "+" : ""));
-            ++plus;
+            plus = true;
         }
         printf("%s)", b);
     }
     printf("]");
-    if ((op->do_brief < 2) && (0 == op->do_adn)) {
+    if ((op->do_brief < 2) && (! op->do_adn)) {
         switch(negot) {
         case 8:
             cp = "  1.5 Gbps";
@@ -1028,21 +1032,21 @@ decode_1line(const unsigned char * rp, int len, int desc,
         }
         printf("%s", cp);
         if (z_enabled && (1 != z_group)) {
-            ++zg_not1;
+            zg_not1 = true;
             printf("  ZG:%d", z_group);
         }
         if ('\0' != dsn[0])
             printf("%s", dsn);
     }
     printf("\n");
-    return !! zg_not1;
+    return (int)zg_not1;
 }
 
 static void
 output_header_info(const unsigned char * rp, struct opts_t * op)
 {
-    int hdr_ecc, sphy_id;
     bool z_enabled;
+    int hdr_ecc, sphy_id;
 
     hdr_ecc = sg_get_unaligned_be16(rp + 4);
     sphy_id = rp[8];
@@ -1092,22 +1096,23 @@ output_header_info(const unsigned char * rp, struct opts_t * op)
 int
 main(int argc, char * argv[])
 {
+    bool checked_rg = false;
+    bool has_t2t = false;
+    bool no_more;
+    bool z_enabled = false;
+    bool zg_not1 = false;
     int res, c, len, hdr_ecc, num_desc, resp_filter, resp_desc_type;
-    int desc_len, k, j, no_more, err, off, adt, fresult;
+    int desc_len, k, j, err, off, adt, fresult;
+    int ret = 0;
+    int subvalue = 0;
     int64_t sa_ll;
+    char * cp;
+    struct opts_t * op;
     char i_params[256];
     char device_name[512];
     unsigned char resp[1020 + 8];
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    bool z_enabled = false;
-    int zg_not1 = 0;
-    int checked_rg = 0;
-    int has_t2t = 0;
-    int ret = 0;
     struct opts_t opts;
-    struct opts_t * op;
 
     op = &opts;
     memset(op, 0, sizeof(opts));
@@ -1122,13 +1127,13 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'A':
-            ++op->do_adn;
+            op->do_adn = true;
             break;
         case 'b':
             ++op->do_brief;
             break;
         case 'c':
-            ++op->do_cap_phy;
+            op->do_cap_phy = true;
             break;
         case 'd':
            op->desc_type = smp_get_num(optarg);
@@ -1136,10 +1141,10 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--desc'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++op->desc_type_given;
+            op->desc_type_given = true;
             break;
         case 'D':
-            ++op->do_dsn;
+            op->do_dsn = true;
             break;
         case 'f':
            op->filter = smp_get_num(optarg);
@@ -1156,7 +1161,7 @@ main(int argc, char * argv[])
             ++op->do_hex;
             break;
         case 'i':
-            ++op->ign_zp;
+            op->ign_zp = true;
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
@@ -1172,10 +1177,10 @@ main(int argc, char * argv[])
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++op->num_given;
+            op->num_given = true;
             break;
         case 'o':
-            ++op->do_1line;
+            op->do_1line = true;
             break;
         case 'p':
            op->phy_id = smp_get_num(optarg);
@@ -1184,10 +1189,10 @@ main(int argc, char * argv[])
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++op->phy_id_given;
+            op->phy_id_given = true;
             break;
         case 'r':
-            ++op->do_raw;
+            op->do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -1196,11 +1201,9 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             op->sa = (uint64_t)sa_ll;
-            if (op->sa > 0)
-                ++op->sa_given;
             break;
         case 'S':
-            ++op->do_summary;
+            op->do_summary = true;
             break;
         case 'v':
             ++op->verbose;
@@ -1274,18 +1277,19 @@ main(int argc, char * argv[])
     if (op->desc_type_given && op->desc_type) { /* asked for short format */
         if (op->do_dsn) {
             pr2serr("warning: --dsn option ignored when --desc_type=1\n");
-            op->do_dsn = 0;
+            op->do_dsn = false;
         }
     }
-    if (0 == op->do_dsn) {
+    if (! op->do_dsn) {
         cp = getenv("SMP_UTILS_DSN");
         if (cp)
-            ++op->do_dsn;
+            op->do_dsn = true;
     }
-    if ((0 == op->do_summary) && (0 == op->do_1line) &&
-        (! op->num_given) && (0 == op->phy_id_given) &&
-        (NULL == op->zpi_fn))
-        ++op->do_summary;
+    if (op->do_summary || op->do_1line || op->num_given ||
+        op->phy_id_given || op->zpi_fn)
+        ;
+    else
+        op->do_summary = true;
     if (op->zpi_fn) {
         if (op->do_summary || op->desc_type_given || op->filter ||
             op->do_adn) {
@@ -1295,21 +1299,20 @@ main(int argc, char * argv[])
         }
         if (! op->num_given)
             op->do_num = 254;
-        op->do_1line = 1;
+        op->do_1line = true;
         op->desc_type = 1;
-        op->ign_zp = 1;        /* set --ignore */
+        op->ign_zp = true;        /* set --ignore */
     }
-    if (0 == op->desc_type_given) {
+    if (! op->desc_type_given) {
         op->desc_type = op->do_brief ? 1 : 0;
         if (op->do_adn || op->do_dsn)
             op->desc_type = 0;
     }
     if (op->do_summary) {
         ++op->do_brief;
-        if ((0 == op->desc_type_given) && (0 == op->do_adn) &&
-            (0 == op->do_dsn))
+        if ((! op->desc_type_given) && (! op->do_adn) && (! op->do_dsn))
             op->desc_type = 1;
-        op->do_1line = 1;
+        op->do_1line = true;
         op->do_num = 254;
     } else if (! (op->num_given || op->zpi_fn))
         op->do_num = 1;
@@ -1317,7 +1320,7 @@ main(int argc, char * argv[])
         pr2serr("--adn and --descriptor=1 options clash since there is no "
                 "'attached\ndevice name' field in the short format. "
                 "Ignoring --adn .\n");
-        op->do_adn = 0;
+        op->do_adn = false;
     }
 
     res = smp_initiator_open(device_name, subvalue, i_params, op->sa,
@@ -1339,7 +1342,7 @@ main(int argc, char * argv[])
         }
     }
 
-    no_more = 0;
+    no_more = false;
     for (j = 0; (j < op->do_num) && (! no_more); j += num_desc) {
         memset(resp, 0, sizeof(resp));
         if ((op->phy_id + j) > 254) {
@@ -1354,9 +1357,9 @@ main(int argc, char * argv[])
         }
         num_desc = resp[9];
         if ((0 == op->desc_type) && (num_desc < MAX_DLIST_LONG_DESCS))
-            no_more = 1;
+            no_more = true;
         if ((1 == op->desc_type) && (num_desc < MAX_DLIST_SHORT_DESCS))
-            no_more = 1;
+            no_more = true;
         if (op->do_hex || op->do_raw)
             continue;
         len = (resp[3] * 4) + 4;    /* length in bytes excluding CRC field */
@@ -1386,7 +1389,7 @@ main(int argc, char * argv[])
             off = 48 + (k * desc_len);
             if (op->do_1line) {
                 if (! checked_rg) {
-                    ++checked_rg;
+                    checked_rg = true;
                     has_t2t = has_table2table_routing(&tobj, op);
                 }
                 res = decode_1line(resp + off, desc_len, resp_desc_type,
@@ -1394,7 +1397,7 @@ main(int argc, char * argv[])
                 if (res < 0)
                     ++err;
                 else if (res > 0)
-                    ++zg_not1;
+                    zg_not1 = true;
             } else {
                 fresult = resp[off + 2];    /* function result, 0 -> ok */
                 if (0 == resp_desc_type) {
@@ -1423,7 +1426,7 @@ main(int argc, char * argv[])
                 ret = SMP_LIB_CAT_OTHER;
         }
     }
-    if ((zg_not1) && (0 == op->do_brief) && (NULL == op->zpi_fn))
+    if (zg_not1 && (0 == op->do_brief) && (NULL == op->zpi_fn))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
 
 err_out:

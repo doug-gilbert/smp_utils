@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,7 +53,7 @@
  * its response.
  */
 
-static const char * version_str = "1.08 20171004";
+static const char * version_str = "1.09 20171017";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -79,21 +80,21 @@ static int numzg_blen[] = {
 };
 
 static struct option long_options[] = {
-        {"append", 0, 0, 'a'},
-        {"bits", 1, 0, 'B'},
-        {"help", 0, 0, 'h'},
-        {"hex", 0, 0, 'H'},
-        {"interface", 1, 0, 'I'},
-        {"multiple", 0, 0, 'm'},
-        {"num", 1, 0, 'n'},
-        {"nocomma", 0, 0, 'N'},
-        {"permf", 1, 0, 'P'},
-        {"raw", 0, 0, 'r'},
-        {"report", 1, 0, 'R'},
-        {"sa", 1, 0, 's'},
-        {"start", 1, 0, 'f'},
-        {"verbose", 0, 0, 'v'},
-        {"version", 0, 0, 'V'},
+        {"append", no_argument, 0, 'a'},
+        {"bits", required_argument, 0, 'B'},
+        {"help", no_argument, 0, 'h'},
+        {"hex", no_argument, 0, 'H'},
+        {"interface", required_argument, 0, 'I'},
+        {"multiple", no_argument, 0, 'm'},
+        {"num", required_argument, 0, 'n'},
+        {"nocomma", no_argument, 0, 'N'},
+        {"permf", required_argument, 0, 'P'},
+        {"raw", no_argument, 0, 'r'},
+        {"report", required_argument, 0, 'R'},
+        {"sa", required_argument, 0, 's'},
+        {"start", required_argument, 0, 'f'},
+        {"verbose", no_argument, 0, 'v'},
+        {"version", no_argument, 0, 'V'},
         {0, 0, 0, 0},
 };
 
@@ -184,22 +185,28 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_append = false;
+    bool do_raw = false;
+    bool first;
+    bool mndesc_given = false;
+    bool multiple = false;
+    bool nocomma = false;
     int res, c, k, j, m, len, desc_len, num_desc, numzg, max_sszg;
-    int desc_per_resp, first, rtype, act_resplen;
-    int do_append = 0;
-    int do_hex = 0;
-    int multiple = 0;
-    int nocomma = 0;
-    int mndesc = DEF_MAX_NUM_DESC;
-    int mndesc_given = 0;
-    const char * permf = NULL;
-    int do_raw = 0;
-    int report_type = 0;
-    int sszg = 0;
+    int desc_per_resp, rtype, act_resplen;
     int bits_col = 0;
+    int do_hex = 0;
+    int mndesc = DEF_MAX_NUM_DESC;
+    int report_type = 0;
+    int ret = 0;
+    int sszg = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
+    unsigned char * descp;
+    FILE * foutp = stdout;
+    const char * permf = NULL;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -207,11 +214,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    unsigned char * descp;
-    FILE * foutp = stdout;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     memset(smp_resp, 0, sizeof smp_resp);
@@ -225,7 +227,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'a':
-            ++do_append;
+            do_append = true;
             break;
         case 'B':
            bits_col = smp_get_num(optarg);
@@ -261,19 +263,19 @@ main(int argc, char * argv[])
             if (0 == mndesc)
                 mndesc = DEF_MAX_NUM_DESC;
             else
-                ++mndesc_given;
+                mndesc_given = true;
             break;
         case 'm':
-            ++multiple;
+            multiple = true;
             break;
         case 'N':
-            ++nocomma;
+            nocomma = true;
             break;
         case 'P':
            permf = optarg;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 'R':
            report_type = smp_get_num(optarg);
@@ -380,7 +382,7 @@ main(int argc, char * argv[])
     max_sszg = 256;
     desc_per_resp = 63;
 
-    for (j = sszg, first = 1; j < max_sszg; j +=  desc_per_resp) {
+    for (j = sszg, first = true; j < max_sszg; j +=  desc_per_resp) {
         memset(smp_req, 0, sizeof smp_req);
         smp_req[0] = SMP_FRAME_TYPE_REQ;
         smp_req[1] = SMP_FN_REPORT_ZONE_PERMISSION_TBL;
@@ -482,7 +484,7 @@ main(int argc, char * argv[])
         num_desc = smp_resp[15];
         rtype = 0x3 & smp_resp[6];
         if (first) {
-            first = 0;
+            first = false;
             if (0 == numzg) {
                 max_sszg = 128;
                 desc_per_resp = 63;
@@ -552,7 +554,7 @@ main(int argc, char * argv[])
             }
             fprintf(foutp, "\n");
         }
-        if ((0 == multiple) || (mndesc < desc_per_resp))
+        if ((! multiple) || (mndesc < desc_per_resp))
             break;
     }
 

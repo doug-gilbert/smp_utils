@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -51,7 +52,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.06 20171004";
+static const char * version_str = "1.07 20171017";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
@@ -68,14 +69,14 @@ static const char * broadcast_type_name[] = {
 };
 
 static struct option long_options[] = {
-    {"broadcast", 1, 0, 'b'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"broadcast", required_argument, 0, 'b'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -157,13 +158,17 @@ get_broadcast_type_str(int bt_num, int b_len, char * b)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
     int res, c, k, j, len, bd_len, num_bd, bt, bt_hdr, act_resplen;
-    int do_hex = 0;
     int btype = 0;
-    int do_raw = 0;
+    int do_hex = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    unsigned char * bdp;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -172,10 +177,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[SMP_FN_REPORT_BROADCAST_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    unsigned char * bdp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -207,7 +208,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);

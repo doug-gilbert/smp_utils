@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -52,7 +53,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static const char * version_str = "1.21 20171003";
+static const char * version_str = "1.22 20171017";
 
 static struct option long_options[] = {
     {"attached", required_argument, 0, 'a'},
@@ -68,9 +69,13 @@ static struct option long_options[] = {
     {"pwrdis", required_argument, 0, 'D'},
     {"raw", no_argument, 0, 'r'},
     {"sa", required_argument, 0, 's'},
+    {"sas-pa", required_argument, 0, 'q'},
     {"sas_pa", required_argument, 0, 'q'},
+    {"sas-sl", required_argument, 0, 'l'},
     {"sas_sl", required_argument, 0, 'l'},
+    {"sata-pa", required_argument, 0, 'Q'},
     {"sata_pa", required_argument, 0, 'Q'},
+    {"sata-sl", required_argument, 0, 'L'},
     {"sata_sl", required_argument, 0, 'L'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
@@ -200,6 +205,7 @@ list_op_abbrevs()
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
     int res, c, k, len, act_resplen;
     int expected_cc = 0;
     int do_hex = 0;
@@ -213,11 +219,14 @@ main(int argc, char * argv[])
     int pptv = -1;
     int phy_id = 0;
     int pwrdis = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
     uint64_t adn = 0;
+    char * cp;
+    struct smp_val_name * vnp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -228,10 +237,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    struct smp_val_name * vnp;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -374,7 +379,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);

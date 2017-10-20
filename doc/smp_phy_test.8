@@ -1,4 +1,4 @@
-.TH SMP_PHY_TEST "8" "September 2017" "smp_utils\-0.99" SMP_UTILS
+.TH SMP_PHY_TEST "8" "October 2017" "smp_utils\-0.99" SMP_UTILS
 .SH NAME
 smp_phy_test \- invoke PHY TEST FUNTION SMP function
 .SH SYNOPSIS
@@ -73,7 +73,8 @@ man page for more information.
 \fB\-l\fR, \fB\-\-linkrate\fR=\fILR\fR
 transmits the test pattern at the specified physical link rate:
 8 \-> 1.5 Gbps, 9 \-> 3 Gbps, 10 \-> 6 Gbps, 11 \-> 12 Gbps. Default
-value is 9.
+value is 0xa (i.e. 6 Gbps). Prior to version 0.99 the default value
+was 9 (i.e. 3 Gbps).
 .TP
 \fB\-P\fR, \fB\-\-pattern\fR=\fIPA\fR
 specifies the type of test pattern to transmit. SPL\-4 (rev 8) values are:

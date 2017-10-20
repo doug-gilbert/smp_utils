@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -52,18 +53,18 @@
  * This utility issues a ZONE UNLOCK function and outputs its response.
  */
 
-static const char * version_str = "1.06 20171004";
+static const char * version_str = "1.07 20171017";
 
 static struct option long_options[] = {
-    {"activate", 0, 0, 'a'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"activate", no_argument, 0, 'a'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -134,25 +135,25 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool activate_required = false;
+    bool do_raw = false;
     int res, c, k, len, act_resplen;
-    int activate_required = 0;
-    int expected_cc = 0;
     int do_hex = 0;
-    int do_raw = 0;
+    int expected_cc = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_ZONE_UNLOCK,
                                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, };
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -165,7 +166,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'a':
-            activate_required = 1;
+            activate_required = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -186,7 +187,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);
@@ -269,7 +270,8 @@ main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     sg_put_unaligned_be16(expected_cc, smp_req + 4);
-    smp_req[6] = activate_required & 1;
+    if (activate_required)
+        smp_req[6] = 1;
     if (verbose) {
         pr2serr("    Zone unlock request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)

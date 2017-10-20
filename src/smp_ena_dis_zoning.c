@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,20 +53,21 @@
  * response.
  */
 
-static const char * version_str = "1.08 20171003";
+static const char * version_str = "1.08 20171017";
 
 static struct option long_options[] = {
-    {"disable", 0, 0, 'd'},
-    {"ena-dis", 1, 0, 'e'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"save", 1, 0, 'S'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"disable", no_argument, 0, 'd'},
+    {"ena-dis", required_argument, 0, 'e'},
+    {"ena_dis", required_argument, 0, 'e'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"save", required_argument, 0, 'S'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -143,17 +145,20 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool disable = false;
+    bool do_raw = false;
+    bool ena_dis_given = false;
     int res, c, k, len, act_resplen;
-    int disable = 0;
-    int ena_dis = 1;    /* what is the point of ena_dis=0 (no change)? */
-    int ena_dis_given = 0;
-    int expected_cc = 0;
     int do_hex = 0;
-    int do_raw = 0;
     int do_save = 0;
+    int ena_dis = 1;    /* what is the point of ena_dis=0 (no change)? */
+    int expected_cc = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -163,9 +168,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -178,7 +180,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'd':
-            ++disable;
+            disable = true;
             break;
         case 'e':
             ena_dis = smp_get_num(optarg);;
@@ -186,7 +188,7 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--ena-dis'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++ena_dis_given;
+            ena_dis_given = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -207,7 +209,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);

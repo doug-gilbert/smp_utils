@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.54 20171003";    /* spl4r11 */
+static const char * version_str = "1.56 20171019";    /* spl4r12 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -65,23 +65,23 @@ static const char * version_str = "1.54 20171003";    /* spl4r11 */
 
 
 struct opts_t {
-    int do_adn;
+    bool do_adn;
+    bool do_cap_phy;
+    bool do_dsn;
+    bool ign_zp;
+    bool do_list;
+    bool do_my;
+    bool phy_id_given;
+    bool do_raw;
+    bool do_summary;
+    bool do_zero;
+    bool sa_given;
     int do_brief;
-    int do_cap_phy;
-    int do_dsn;
     int do_hex;
-    int ign_zp;
-    int do_list;
     int multiple;
-    int do_my;
     int do_num;
     int phy_id;
-    int phy_id_given;
-    int do_raw;
-    int do_summary;
     int verbose;
-    int do_zero;
-    int sa_given;
     uint64_t sa;
 };
 
@@ -202,18 +202,18 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-/* Returns 1 if 'Table to Table Supported' bit set on REPORT GENERAL
- * respone. Returns 0 otherwise. */
-static int
+/* Returns true if 'Table to Table Supported' bit set on REPORT GENERAL
+ * respone. Returns false otherwise. */
+static bool
 has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
 {
+    int len, res, k, act_resplen;
+    char * cp;
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
                                0, 0, 0, 0, 0, 0};
     struct smp_req_resp smp_rr;
     unsigned char rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
     char b[256];
-    char * cp;
-    int len, res, k, act_resplen;
 
     memset(rp, 0, sizeof(rp));
     if (op->verbose) {
@@ -387,12 +387,12 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
             unsigned char * resp, int max_resp_len,
             bool silence_err_report, const struct opts_t * op)
 {
+    int len, res, k, act_resplen;
+    char * cp;
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    struct smp_req_resp smp_rr;
     char b[256];
-    char * cp;
-    int len, res, k, act_resplen;
+    struct smp_req_resp smp_rr;
 
     memset(resp, 0, max_resp_len);
     if (! op->do_zero) {     /* SAS-2 or later */
@@ -612,13 +612,14 @@ static const char * g_name_long[] =
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
-    int k, skip, prev_nl;
+    bool prev_nl;
+    int k, skip;
     unsigned int g15_val, g;
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
            ((p_cap >> 30) & 0x1), (p_cap >> 24) & 0xf);
-    prev_nl = 1;
+    prev_nl = true;
     g15_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
         cp = op->verbose ? g_name_long[4 - k] : g_name[4 - k];
@@ -629,29 +630,29 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             break;
         case 1:
             printf("    %s: with SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         case 2:
             printf("    %s: without SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         case 3:
             printf("    %s: with+without SSC", cp);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         default:
             printf("    %s: g15_val=0x%x, k=%d", cp, g15_val, k);
-            prev_nl = 0;
+            prev_nl = false;
             break;
         }
         if ((3 == k) && (0 == skip)) {
             printf("\n");
             skip = 2;
-            prev_nl = 1;
+            prev_nl = true;
         }
         if ((1 == k) && (skip < 2)) {
             printf("\n");
-            prev_nl = 1;
+            prev_nl = true;
         }
     }
     if (! prev_nl)
@@ -662,8 +663,8 @@ static int
 print_single(const unsigned char * rp, int len, bool just1,
              const struct opts_t * op)
 {
-    int res;
     bool sas2;
+    int res;
     unsigned int ui;
     uint64_t ull = 0;
     char b[256];
@@ -755,13 +756,17 @@ print_single(const unsigned char * rp, int len, bool just1,
                                           b));
         printf("  connector element index: %d\n", rp[46]);
         printf("  connector physical link: %d\n", rp[47]);
-        printf("  phy power condition: %d\n", (rp[48] & 0xc0) >> 6);
+        printf("  phy power condition: %s\n",
+               smp_get_phy_pwr_cond_str(((rp[48] & 0xc0) >> 6),
+                                        sizeof(b), b));
         printf("  sas power capable: %d\n", (rp[48] >> 4) & 0x3);
         printf("  sas slumber capable: %d\n", !!(rp[48] & 0x8));
         printf("  sas partial capable: %d\n", !!(rp[48] & 0x4));
         printf("  sata slumber capable: %d\n", !!(rp[48] & 0x2));
         printf("  sata partial capable: %d\n", !!(rp[48] & 0x1));
-        printf("  pwr_dis signal: %d\n", (rp[49] & 0xc0) >> 6);
+        printf("  pwr_dis signal: %s\n",
+               smp_get_pwr_dis_signal_str(((rp[49] & 0xc0) >> 6),
+                                          sizeof(b), b));
         printf("  pwr_dis control capable: %d\n", (rp[49] & 0x30) >> 4);
         printf("  sas slumber enabled: %d\n", !!(rp[49] & 0x8));
         printf("  sas partial enabled: %d\n", !!(rp[49] & 0x4));
@@ -845,9 +850,9 @@ print_single(const unsigned char * rp, int len, bool just1,
 static int
 do_single(struct smp_target_obj * top, const struct opts_t * op)
 {
-    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
-    uint64_t ull;
     int len, ret;
+    uint64_t ull;
+    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
 
     /* If do_discover() works, returns response length (less CRC bytes) */
     len = do_discover(top, op->phy_id, rp, sizeof(rp), false, op);
@@ -886,15 +891,16 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * op)
 {
-    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
+    bool checked_rg = false;
+    bool first = true;
+    bool has_t2t = false;
+    bool plus;
+    int ret, len, k, num, off, negot, adt, zg;
     uint64_t ull, adn, expander_sa;
-    int ret, len, k, num, off, plus, negot, adt, zg;
+    const char * cp;
     char b[256];
     char dsn[10] = "";
-    int first = 1;
-    int checked_rg = 0;
-    int has_t2t = 0;
-    const char * cp;
+    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
 
     expander_sa = 0;
     num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
@@ -927,7 +933,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             }
         }
         if (first && (! op->do_raw)) {
-            first = 0;
+            first = false;
             if (op->sa_given && (op->sa != expander_sa))
                 printf("  <<< Warning: reported expander address is not the "
                        "one requested >>>\n");
@@ -964,7 +970,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             break;
         case 2:
             if (! checked_rg) {
-                ++checked_rg;
+                checked_rg = true;
                 has_t2t = has_table2table_routing(top, op);
             }
             /* table routing phy when expander does t2t is Universal */
@@ -1035,56 +1041,56 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
                    ((rp[43] & 0x80) ? " V" : ""));
         if (rp[14] & 0xf) {
             off = 0;
-            plus = 0;
+            plus = false;
             off += snprintf(b + off, sizeof(b) - off, " i(");
             if (rp[14] & 0x8) {
                 off += snprintf(b + off, sizeof(b) - off, "SSP");
-                ++plus;
+                plus = true;
             }
             if (rp[14] & 0x4) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             if (rp[14] & 0x2) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             if (rp[14] & 0x1) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             printf("%s)", b);
         }
         if (rp[15] & 0xf) {
             off = 0;
-            plus = 0;
+            plus = false;
             off += snprintf(b + off, sizeof(b) - off, " t(");
             if (rp[15] & 0x80) {
                 off += snprintf(b + off, sizeof(b) - off, "PORT_SEL");
-                ++plus;
+                plus = true;
             }
             if (rp[15] & 0x8) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSSP",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             if (rp[15] & 0x4) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSTP",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             if (rp[15] & 0x2) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSMP",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             if (rp[15] & 0x1) {
                 off += snprintf(b + off, sizeof(b) - off, "%sSATA",
                                 (plus ? "+" : ""));
-                ++plus;
+                plus = true;
             }
             printf("%s)", b);
         }
@@ -1134,15 +1140,15 @@ int
 main(int argc, char * argv[])
 {
     int res, c;
+    int ret = 0;
+    int subvalue = 0;
     int64_t sa_ll;
+    char * cp;
+    struct opts_t * op;
     char i_params[256];
     char device_name[512];
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
     struct opts_t opts;
-    struct opts_t * op;
 
     op = &opts;
     memset(op, 0, sizeof(opts));
@@ -1157,16 +1163,16 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'A':
-            ++op->do_adn;
+            op->do_adn = true;
             break;
         case 'b':
             ++op->do_brief;
             break;
         case 'D':
-            ++op->do_dsn;
+            op->do_dsn = true;
             break;
         case 'c':
-            ++op->do_cap_phy;
+            op->do_cap_phy = true;
             break;
         case 'h':
         case '?':
@@ -1176,20 +1182,20 @@ main(int argc, char * argv[])
             ++op->do_hex;
             break;
         case 'i':
-            ++op->ign_zp;
+            op->ign_zp = true;
             break;
         case 'I':
             strncpy(i_params, optarg, sizeof(i_params));
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-            ++op->do_list;
+            op->do_list = true;
             break;
         case 'm':
             ++op->multiple;
             break;
         case 'M':
-            ++op->do_my;
+            op->do_my = true;
             break;
         case 'n':
            op->do_num = smp_get_num(optarg);
@@ -1205,10 +1211,10 @@ main(int argc, char * argv[])
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++op->phy_id_given;
+            op->phy_id_given = true;
             break;
         case 'r':
-            ++op->do_raw;
+            op->do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -1218,7 +1224,7 @@ main(int argc, char * argv[])
             }
             op->sa = (uint64_t)sa_ll;
             if (op->sa > 0)
-                ++op->sa_given;
+                op->sa_given = true;
             break;
         case 'v':
             ++op->verbose;
@@ -1227,10 +1233,10 @@ main(int argc, char * argv[])
             pr2serr("version: %s\n", version_str);
             return 0;
         case 'S':
-            ++op->do_summary;
+            op->do_summary = true;
             break;
         case 'z':
-            ++op->do_zero;
+            op->do_zero = true;
             break;
         default:
             pr2serr("unrecognised switch code 0x%x ??\n", c);
@@ -1293,18 +1299,18 @@ main(int argc, char * argv[])
             }
         }
     }
-    if (0 == op->do_dsn) {
+    if (! op->do_dsn) {
         cp = getenv("SMP_UTILS_DSN");
         if (cp)
-            ++op->do_dsn;
+            op->do_dsn = true;
     }
     if (op->do_my) {
         op->multiple = 0;
-        op->do_summary = 0;
+        op->do_summary = false;
         op->do_num = 1;
-    } else if ((0 == op->do_summary) && (0 == op->multiple) &&
-               (0 == op->do_num) && (0 == op->phy_id_given))
-        ++op->do_summary;
+    } else if ((! op->do_summary) && (0 == op->multiple) &&
+               (0 == op->do_num) && (! op->phy_id_given))
+        op->do_summary = true;
     if (op->do_summary) {
         ++op->do_brief;
         op->multiple = 1;

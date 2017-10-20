@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -52,20 +53,20 @@
  * This utility issues a ZONED BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.05 20171004";
+static const char * version_str = "1.06 20171017";
 
 static struct option long_options[] = {
-    {"broadcast", 1, 0, 'b'},
-    {"expected", 1, 0, 'E'},
-    {"fszg", 1, 0, 'F'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"szg", 1, 0, 'S'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"broadcast", required_argument, 0, 'b'},
+    {"expected", required_argument, 0, 'E'},
+    {"fszg", required_argument, 0, 'F'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"szg", required_argument, 0, 'S'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -143,10 +144,10 @@ fd2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
 {
     int fn_len, in_len, k, j, m;
     int h;
+    int off = 0;
     const char * lcp;
     FILE * fp;
     char line[512];
-    int off = 0;
 
     if ((NULL == fname) || (NULL == mp_arr) || (NULL == mp_arr_len))
         return 1;
@@ -246,27 +247,27 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
     int res, c, k, len, n, act_resplen;
-    int expected_cc = 0;
-    const char * fszg = NULL;
-    const char * zgl = NULL;
-    int do_hex = 0;
     int btype = 0;
-    int do_raw = 0;
+    int do_hex = 0;
+    int expected_cc = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    const char * ccp;
+    char * cp;
+    const char * fszg = NULL;
+    const char * zgl = NULL;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[1028];
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    const char * ccp;
-    int ret = 0;
 
     memset(smp_req, 0, sizeof smp_req);
     memset(device_name, 0, sizeof device_name);
@@ -308,7 +309,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);

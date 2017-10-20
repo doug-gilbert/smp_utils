@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -52,25 +53,25 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static const char * version_str = "1.16 20171004"; /* sync with spl4r11 */
+static const char * version_str = "1.17 20171017"; /* sync with spl4r12 */
 
 static struct option long_options[] = {
-    {"control", 1, 0, 'c'},
-    {"dwords", 1, 0, 'd'},
-    {"expected", 1, 0, 'E'},
-    {"function", 1, 0, 'f'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"linkrate", 1, 0, 'l'},
-    {"pattern", 1, 0, 'P'},
-    {"phy", 1, 0, 'p'},
-    {"sa", 1, 0, 's'},
+    {"control", required_argument, 0, 'c'},
+    {"dwords", required_argument, 0, 'd'},
+    {"expected", required_argument, 0, 'E'},
+    {"function", required_argument, 0, 'f'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"linkrate", required_argument, 0, 'l'},
+    {"pattern", required_argument, 0, 'P'},
+    {"phy", required_argument, 0, 'p'},
+    {"sa", required_argument, 0, 's'},
     {"sata", 0, 0, 't'},
-    {"spread", 1, 0, 'S'},
-    {"raw", 0, 0, 'r'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"spread", required_argument, 0, 'S'},
+    {"raw", no_argument, 0, 'r'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -117,8 +118,8 @@ usage(void)
             "    --hex|-H               print response in hexadecimal\n"
             "    --interface=PARAMS|-I PARAMS    specify or override "
             "interface\n"
-            "    --linkrate=LR|-l LR    physical link rate (def: 9 -> "
-            "3 Gbps)\n"
+            "    --linkrate=LR|-l LR    physical link rate (def: 0xa -> "
+            "6 Gbps)\n"
             "    --pattern=PA|-P PA     phy test pattern (def: 2 -> "
             "CJTPAT)\n"
             "    --phy=ID|-p ID         phy identifier (def: 0)\n"
@@ -151,21 +152,24 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
+    bool do_sata = false;
     int res, c, k, len, act_resplen;
     int do_control = 0;
-    uint64_t dwords = 0;
     int expected_cc = 0;
     int do_function = 0;
     int do_hex = 0;
-    int linkrate = 9;   /* 3 Gbps */
+    int do_ssc = 0;
+    int linkrate = 0xa;   /* 6 Gbps */
     int pattern = 2;    /* CJTPAT */
     int phy_id = 0;
-    int do_raw = 0;
-    int do_sata = 0;
-    int do_ssc = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
+    uint64_t dwords = 0;
     uint64_t sa = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -176,9 +180,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -261,7 +262,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);
@@ -280,7 +281,7 @@ main(int argc, char * argv[])
             }
             break;
         case 't':
-            ++do_sata;
+            do_sata = true;
             break;
         case 'v':
             ++verbose;
@@ -359,7 +360,8 @@ main(int argc, char * argv[])
     smp_req[11] = pattern;
     smp_req[15] = linkrate & 0xf;
     smp_req[15] |= (do_ssc << 4) & 0x30;
-    smp_req[15] |= (do_sata << 6) & 0x40;
+    if (do_sata)
+        smp_req[15] |= 0x40;
     smp_req[19] = do_control;
     sg_put_unaligned_be64(dwords, smp_req + 20);
     if (verbose) {

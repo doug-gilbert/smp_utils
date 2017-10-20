@@ -37,6 +37,7 @@ bin_PROGRAMS = \
 AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
 ## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c11
 ## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c++14
+## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=gnu++1z
 
 smp_conf_general_SOURCES =	smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la @os_libs@

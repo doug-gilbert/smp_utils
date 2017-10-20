@@ -40,13 +40,15 @@
 #include <fcntl.h>
 //#include <curses.h>
 #include <unistd.h>
-#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 //#include <scsi/scsi.h>
-#include <linux/types.h>
+#include <sys/sysmacros.h>
+#ifndef major
+#include <sys/types.h>
+#endif
 #include <scsi/sg.h>
 
 #ifdef HAVE_CONFIG_H
@@ -85,7 +87,7 @@ close_lin_bsg_device(int fd)
 /* Returns 0 on success else -1 . */
 int
 send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
-	         int verbose)
+                 int verbose)
 {
     fd = fd;
     subvalue = subvalue;
@@ -95,7 +97,7 @@ send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
 }
 
 
-# else	/* have <linux/bsg.h> and want to use it */
+# else  /* have <linux/bsg.h> and want to use it */
 
 #include <linux/bsg.h>
 
@@ -238,7 +240,7 @@ open_lin_bsg_device(const char * dev_name, int verbose)
         if (ret < 0) {
             if (verbose) {
                 perror("open_lin_bsg_device: open() temporary device node "
-		       "failed");
+                       "failed");
                 fprintf(stderr, "\t\ttried to open %s\n", buff);
             }
             goto close_sysfs;
@@ -272,7 +274,7 @@ close_lin_bsg_device(int fd)
 /* Returns 0 on success else -1 . */
 int
 send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
-	         int verbose)
+                 int verbose)
 {
     struct sg_io_v4 hdr;
     unsigned char cmd[16];      /* unused */

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -51,24 +52,25 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.12 20171003";    /* spl4r11 */
+static const char * version_str = "1.13 20171017";    /* spl4r12 */
 
 static struct option long_options[] = {
-    {"connect", 1, 0, 'c'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"inactivity", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"nexus", 1, 0, 'p'},
-    {"open", 1, 0, 'o'},
-    {"power", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"reduced", 1, 0, 'R'},
-    {"sa", 1, 0, 's'},
-    {"ssp", 1, 0, 'S'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"connect", required_argument, 0, 'c'},
+    {"expander", required_argument, 0, 'e'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"inactivity", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"nexus", required_argument, 0, 'p'},
+    {"open", required_argument, 0, 'o'},
+    {"power", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"reduced", required_argument, 0, 'R'},
+    {"sa", required_argument, 0, 's'},
+    {"ssp", required_argument, 0, 'S'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -96,18 +98,23 @@ pr2serr(const char * fmt, ...)
 static void
 usage(void)
 {
-    pr2serr("Usage: smp_conf_general [--connect=CO] [--expected=EX] [--help] "
-            "[--hex]\n"
-            "                        [--inactivity=IN] "
-            "[--interface=PARAMS]\n"
-            "                        [--nexus=NE] [--open=OP] [--power=PD] "
-            "[--raw]\n"
-            "                        [--reduced=RE] [--sa=SAS_ADDR] "
-            "[--ssp=CTL]\n"
-            "                        [--verbose] [--version] SMP_DEVICE[,N]\n"
+    pr2serr("Usage: smp_conf_general [--connect=CO] [--expander=ITDEFOI] "
+            "[--expected=EX]\n"
+            "                        [--help] [--hex] [--inactivity=IN]\n"
+            "                        [--interface=PARAMS] [--nexus=NE] "
+            "[--open=OP]\n"
+            "                        [--power=PD] [--raw] [--reduced=RE]\n"
+            "                        [--sa=SAS_ADDR] [--ssp=CTL] "
+            "[--verbose]\n"
+            "                        [--version] SMP_DEVICE[,N]\n"
             "  where:\n"
             "    --connect=CO|-c CO     STP maximum connect time limit "
             "(100 us)\n"
+            "    --expander=ITDEFOI|-e ITDEFOI    initial time to delay "
+            "expander\n"
+            "                                     forward open indication "
+            "(def: 0,\n"
+            "                                     units: 100 ns)\n"
             "    --expected=EX|-E EX    set expected expander change "
             "count to EX\n"
             "    --help|-h              print out usage message then exit\n"
@@ -150,27 +157,32 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_connect = false;
+    bool do_inactivity = false;
+    bool do_itdefoi = false;
+    bool do_nexus = false;
+    bool do_open = false;
+    bool do_pdt = false;
+    bool do_raw = false;
+    bool do_reduced = false;
+    bool do_ssp = false;
     int res, c, k, len, act_resplen;
-    int expected_cc = 0;
-    int do_connect = 0;
-    int do_hex = 0;
-    int do_inactivity = 0;
-    int do_nexus = 0;
-    int do_open = 0;
-    int do_pdt = 0;
-    int do_reduced = 0;
-    int do_ssp = 0;
     int connect_val = 0;
+    int expected_cc = 0;
+    int do_hex = 0;
     int inactivity_val = 0;
+    int itdefoi_val = 0;
     int nexus_val = 0;
     int open_val = 0;
     int power_val = 0;
     int reduced_val = 0;
+    int ret = 0;
     int ssp_ctl = 0;
-    int do_raw = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -180,16 +192,13 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:E:hHi:I:n:o:p:rR:s:S:vV", long_options,
-                        &option_index);
+        c = getopt_long(argc, argv, "c:e:E:hHi:I:n:o:p:rR:s:S:vV",
+                        long_options, &option_index);
         if (c == -1)
             break;
 
@@ -200,7 +209,15 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--connect'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_connect;
+            do_connect = true;
+            break;
+        case 'e':
+            itdefoi_val = smp_get_num(optarg);
+            if ((itdefoi_val < 0) || (itdefoi_val > 255)) {
+                pr2serr("bad argument to '--expander'\n");
+                return SMP_LIB_SYNTAX_ERROR;
+            }
+            do_itdefoi = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -227,7 +244,7 @@ main(int argc, char * argv[])
                         "to 65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_inactivity;
+            do_inactivity = true;
             break;
         case 'n':
             nexus_val = smp_get_num(optarg);
@@ -236,7 +253,7 @@ main(int argc, char * argv[])
                         "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_nexus;
+            do_nexus = true;
             break;
         case 'o':
             open_val = smp_get_num(optarg);
@@ -245,7 +262,7 @@ main(int argc, char * argv[])
                         "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_open;
+            do_open = true;
             break;
         case 'p':
             power_val = smp_get_num(optarg);
@@ -254,10 +271,10 @@ main(int argc, char * argv[])
                         "255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_pdt;
+            do_pdt = true;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 'R':
             reduced_val = smp_get_num(optarg);
@@ -266,7 +283,7 @@ main(int argc, char * argv[])
                         "255\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_reduced;
+            do_reduced = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);
@@ -283,7 +300,7 @@ main(int argc, char * argv[])
                         "65535\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++do_ssp;
+            do_ssp = true;
             break;
         case 'v':
             ++verbose;
@@ -357,6 +374,10 @@ main(int argc, char * argv[])
         return SMP_LIB_FILE_ERROR;
 
     sg_put_unaligned_be16((uint16_t)expected_cc, smp_req + 4);
+    if (do_itdefoi) {
+        smp_req[8] |= 0x80;
+        smp_req[9] = itdefoi_val;
+    }
     if (do_connect) {
         smp_req[8] |= 0x2;
         sg_put_unaligned_be16((uint16_t)connect_val, smp_req + 12);

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,19 +53,19 @@
  * outputs its response.
  */
 
-static const char * version_str = "1.12 20171004";
+static const char * version_str = "1.13 20171017";
 
 #define SMP_FN_REPORT_MANUFACTURER_RESP_LEN 64
 
 static struct option long_options[] = {
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
-    {"zero", 0, 0, 'z'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
+    {"zero", no_argument, 0, 'z'},
     {0, 0, 0, 0},
 };
 
@@ -131,24 +132,25 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
-    int res, c, k, len, sas1_1, sas2, act_resplen;
+    bool do_raw = false;
+    bool do_zero = false;
+    bool sas1_1, sas2;
+    int res, c, k, len, act_resplen;
     int do_hex = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
-    int do_zero = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ,
                                SMP_FN_REPORT_MANUFACTURER, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_FN_REPORT_MANUFACTURER_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -172,7 +174,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -189,7 +191,7 @@ main(int argc, char * argv[])
             pr2serr("version: %s\n", version_str);
             return 0;
         case 'z':
-            ++do_zero;
+            do_zero = true;
             break;
         default:
             pr2serr("unrecognised switch code 0x%x ??\n", c);
@@ -341,7 +343,7 @@ main(int argc, char * argv[])
         ret = smp_resp[2];
         goto err_out;
     }
-    sas1_1 = smp_resp[8] & 1;
+    sas1_1 = !! (smp_resp[8] & 1);
     sas2 = !! (smp_resp[3]);
 
     printf("Report manufacturer response:\n");
@@ -350,7 +352,7 @@ main(int argc, char * argv[])
         if (verbose || res)
             printf("  Expander change count: %d\n", res);
     }
-    printf("  SAS-1.1 format: %d\n", sas1_1);
+    printf("  SAS-1.1 format: %d\n", (int)sas1_1);
     printf("  vendor identification: %.8s\n", smp_resp + 12);
     printf("  product identification: %.16s\n", smp_resp + 20);
     printf("  product revision level: %.4s\n", smp_resp + 36);
