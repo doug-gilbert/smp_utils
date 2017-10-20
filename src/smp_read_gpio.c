@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -57,23 +58,23 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static const char * version_str = "1.12 20171004";
+static const char * version_str = "1.13 20171017";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
 static struct option long_options[] = {
-    {"count", 1, 0, 'c'},
-    {"enhanced", 0, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"index", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"type", 0, 0, 't'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"count", required_argument, 0, 'c'},
+    {"enhanced", no_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"type", no_argument, 0, 't'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -146,28 +147,28 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
+    bool enhanced = false;
     int res, c, k, len, off, decoded, act_resplen;
-    int rcount = 1;
-    int enhanced = 0;
     int do_hex = 0;
-    int rindex = 0;
     int phy_id = 0;
-    int do_raw = 0;
+    int rcount = 1;
+    int ret = 0;
+    int rindex = 0;
     int rtype = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_READ_GPIO_REG,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_MAX_RESP_LEN];
+    char b[128];
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
-    char b[128];
 
     memset(device_name, 0, sizeof device_name);
     memset(i_params, 0, sizeof i_params);
@@ -188,7 +189,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'E':
-            ++enhanced;
+            enhanced = true;
             break;
         case 'h':
         case '?':
@@ -219,7 +220,7 @@ main(int argc, char * argv[])
                 pr2serr("'--phy=<n>' option not needed so ignored\n");
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);

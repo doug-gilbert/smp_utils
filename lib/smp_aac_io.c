@@ -7,7 +7,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/sysmacros.h>
+#ifndef major
 #include <sys/types.h>
+#endif
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <string.h>

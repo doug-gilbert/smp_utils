@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -54,7 +55,7 @@
  * its response.
  */
 
-static const char * version_str = "1.13 20171003";    /* sync with sas2r15 */
+static const char * version_str = "1.14 20171017";
 
 
 static struct option long_options[] = {
@@ -64,23 +65,22 @@ static struct option long_options[] = {
     {"index", required_argument, 0, 'i'},
     {"interface", required_argument, 0, 'I'},
     {"num", required_argument, 0, 'n'},
-    {"phy", 1, 0, 'p'},
-    {"sa", 1, 0, 's'},
-    {"raw", 0, 0, 'r'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"phy", required_argument, 0, 'p'},
+    {"sa", required_argument, 0, 's'},
+    {"raw", no_argument, 0, 'r'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
 struct opts_t {
-    int do_brief;
+    bool do_brief;
+    bool do_raw;
     int do_hex;
     int start_rsa_index;
     int do_num;
     int phy_id;
-    int do_raw;
     int verbose;
-    int sa_given;
     uint64_t sa;
 };
 
@@ -160,15 +160,15 @@ static int
 do_rep_exp_rou_tbl(struct smp_target_obj * top, unsigned char * resp,
                    int max_resp_len, struct opts_t * optsp)
 {
+    int len, res, k, dword_resp_len, act_resplen;
+    char * cp;
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ,
                                SMP_FN_REPORT_EXP_ROUTE_TBL_LIST, 0, 6,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, };
-    struct smp_req_resp smp_rr;
     char b[256];
-    char * cp;
-    int len, res, k, dword_resp_len, act_resplen;
+    struct smp_req_resp smp_rr;
 
     dword_resp_len = (max_resp_len - 8) / 4;
     smp_req[2] = (dword_resp_len < 0x100) ? dword_resp_len : 0xff;
@@ -264,14 +264,14 @@ main(int argc, char * argv[])
 {
     int res, c, len, exp_cc, sphy_id, num_desc, desc_len;
     int k, j, off, exp_rtcc;
+    int ret = 0;
+    int subvalue = 0;
     int64_t sa_ll;
+    char * cp;
     char i_params[256];
     char device_name[512];
     unsigned char resp[1020 + 8];
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
     struct opts_t opts;
 
     memset(&opts, 0, sizeof(opts));
@@ -287,7 +287,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'b':
-            ++opts.do_brief;
+            opts.do_brief = true;
             break;
         case 'h':
         case '?':
@@ -323,7 +323,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'r':
-            ++opts.do_raw;
+            opts.do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -332,8 +332,6 @@ main(int argc, char * argv[])
                 return SMP_LIB_SYNTAX_ERROR;
             }
             opts.sa = (uint64_t)sa_ll;
-            if (opts.sa > 0)
-                ++opts.sa_given;
             break;
         case 'v':
             ++opts.verbose;
