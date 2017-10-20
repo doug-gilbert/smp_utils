@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,20 +53,20 @@
  * response.
  */
 
-static const char * version_str = "1.16 20171004";
+static const char * version_str = "1.17 20171017";
 
 #define SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN 32
 
 static struct option long_options[] = {
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
-    {"zero", 0, 0, 'z'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
+    {"zero", no_argument, 0, 'z'},
     {0, 0, 0, 0},
 };
 
@@ -133,26 +134,26 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
+    bool do_zero = false;
+    bool phy_id_given = false;
     int res, c, k, len, act_resplen;
     int do_hex = 0;
     int phy_id = 0;
-    int phy_id_given = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
-    int do_zero = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_ERR_LOG,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_FN_REPORT_PHY_ERR_LOG_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -182,10 +183,10 @@ main(int argc, char * argv[])
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++phy_id_given;
+            phy_id_given = true;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -202,7 +203,7 @@ main(int argc, char * argv[])
             pr2serr("version: %s\n", version_str);
             return 0;
         case 'z':
-            ++do_zero;
+            do_zero = true;
             break;
         default:
             pr2serr("unrecognised switch code 0x%x ??\n", c);

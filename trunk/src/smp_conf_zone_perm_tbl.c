@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
@@ -53,30 +54,30 @@
  * its response.
  */
 
-static const char * version_str = "1.07 20171003";
+static const char * version_str = "1.08 20171016";
 
 /* Permission table big enough for 256 source zone groups (rows) and
  * 256 destination zone groups (columns). Each element is a single bit,
  * written in the drafts as ZP[s,d] . */
 static unsigned char full_perm_tbl[32 * 256];
 
+static bool sszg_given = false;
 static int sszg = 0;
-static int sszg_given = 0;
 
 static struct option long_options[] = {
-    {"deduce", 0, 0, 'd'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"numzg", 1, 0, 'n'},
-    {"permf", 1, 0, 'P'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"save", 1, 0, 'S'},
-    {"start", 1, 0, 'f'},   /* note the short option: 'f' */
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"deduce", no_argument, 0, 'd'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"numzg", required_argument, 0, 'n'},
+    {"permf", required_argument, 0, 'P'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"save", required_argument, 0, 'S'},
+    {"start", required_argument, 0, 'f'},   /* note the short option: 'f' */
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -157,24 +158,24 @@ usage(void)
  * length checked; if the length is 1 or 2 then bytes are expected to
  * be space, comma or tab separated; if the length is 3 or more then a
  * string of ACSII hex digits is expected, 2 per byte. If any lines
- * contain more that 16 bytes (numzg256p is non-NULL), then 1 is written
+ * contain more that 16 bytes (numzg256p is non-NULL), then true is written
  * to *numzg256p. Everything from and including a '#' and '-' on a line
  * is ignored. '#' is meant for comments. '-' is meant as a lead-in to an
  * option (e.g. "--start=8"); not yet implemented.
  * Returns 0 if ok, or 1 if error. */
 static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
-          int max_arr_len, int * numzg256p, int verbose)
+          int max_arr_len, bool * numzg256p, int verbose)
 {
+    bool checked_hexlen = false;
+    bool no_space = false;
+    bool numzg256 = false;
     int fn_len, in_len, k, j, m;
-    int no_space = 0;
-    int checked_hexlen = 0;
-    int numzg256 = 0;
+    int off = 0;
     unsigned int h;
     const char * lcp;
     FILE * fp;
     char line[512];
-    int off = 0;
 
     if ((NULL == fname) || (NULL == mp_arr) || (NULL == mp_arr_len))
         return 1;
@@ -230,10 +231,10 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
             continue;
         }
         if (! checked_hexlen) {
-            ++checked_hexlen;
+            checked_hexlen = true;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF");
             if (k > 2)
-                no_space = 1;
+                no_space = true;
         }
 
         k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
@@ -257,7 +258,7 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
                 mp_arr[off + k] = h;
             }
             if (k > 16)
-                ++numzg256;
+                numzg256 = true;
             off += k;
         } else {
             for (k = 0; k < 1024; ++k) {
@@ -290,14 +291,14 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
                 }
             }
             if (k > 15)
-                ++numzg256;
+                numzg256 = true;
             off += (k + 1);
         }
     }
     *mp_arr_len = off;
     fclose(fp);
     if (numzg256p)
-        *numzg256p = !! numzg256;
+        *numzg256p = numzg256;
     return 0;
 bad:
     fclose(fp);
@@ -317,19 +318,23 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
-    int res, c, k, j, len, num_desc, numd, desc_len, numzg256;
+    bool deduce = false;
+    bool do_raw = false;
+    bool numzg256;
+    bool num_zg_given = false;
+    int res, c, k, j, len, num_desc, numd, desc_len;
     int max_desc_per_req, act_resplen;
-    const char * permf = NULL;
-    int deduce = 0;
     int expected_cc = 0;
     int do_hex = 0;
-    int num_zg = 128;
-    int num_zg_given = 0;
-    int do_raw = 0;
     int do_save = 0;
+    int num_zg = 128;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    const char * permf = NULL;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -337,9 +342,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -352,7 +354,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'd':
-            ++deduce;
+            deduce = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -367,7 +369,7 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--start'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++sszg_given;
+            sszg_given = true;
             break;
         case 'h':
         case '?':
@@ -393,13 +395,13 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--numzg'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++num_zg_given;
+            num_zg_given = true;
             break;
         case 'P':
             permf = optarg;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);

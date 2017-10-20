@@ -388,6 +388,55 @@ smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
     return buff;
 }
 
+static const char * phy_pwr_cond_arr[4] = {
+    "active",
+    "partial",
+    "slumber",
+    "reserved",
+};
+
+/* Returns pointer to phy power condition string or "illegal" if the
+ * 'phy_pwr_cond' value is out of range. Pointer value returned is same
+ * as 'buff'. String placed in 'buff' is null terminated and its length
+ * (including terminator) does not exceed 'buff_len'. Does nothing if
+ *'buff' is NULL or 'buff_len' less than 1. If 'buff_len' is 1 then just
+ * puts null character in 'buff'. */
+char *
+smp_get_phy_pwr_cond_str(int phy_pwr_cond, int buff_len, char * buff)
+{
+    if ((NULL == buff) || (buff_len < 1))
+        return buff;
+    if ((phy_pwr_cond < 0) || (phy_pwr_cond > 3))
+        snprintf(buff, buff_len, "illegal");
+    else
+        snprintf(buff, buff_len, "%s", phy_pwr_cond_arr[phy_pwr_cond]);
+    return buff;
+}
+
+static const char * pwr_dis_signal_arr[4] = {
+    "not capable",
+    "reserved",
+    "negated",
+    "asserted",
+};
+
+/* Returns pointer to pwr_dis signal string or "illegal" if the
+ * 'pwr_dis_signal' value is out of range. Pointer value returned is same
+ * as 'buff'. String placed in 'buff' is null terminated and its length
+ * (including terminator) does not exceed 'buff_len'. Does nothing if
+ *'buff' is NULL or 'buff_len' less than 1. If 'buff_len' is 1 then just
+ * puts null character in 'buff'. */
+char *
+smp_get_pwr_dis_signal_str(int pwr_dis_signal, int buff_len, char * buff)
+{
+    if ((NULL == buff) || (buff_len < 1))
+        return buff;
+    if ((pwr_dis_signal < 0) || (pwr_dis_signal > 3))
+        snprintf(buff, buff_len, "illegal");
+    else
+        snprintf(buff, buff_len, "%s", pwr_dis_signal_arr[pwr_dis_signal]);
+    return buff;
+}
 
 /* safe_strerror() contributed by Clayton Weaver <cgweav at email dot com>
    Allows for situation in which strerror() is given a wild value (or the

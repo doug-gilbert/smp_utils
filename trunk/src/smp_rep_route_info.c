@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -54,23 +55,23 @@
  * response.
  */
 
-static const char * version_str = "1.13 20171004";
+static const char * version_str = "1.14 20171017";
 
 #define REP_ROUTE_INFO_RESP_LEN 44
 
 static struct option long_options[] = {
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"index", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"multiple", 0, 0, 'm'},
-    {"num", 1, 0, 'n'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
-    {"zero", 0, 0, 'z'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"multiple", no_argument, 0, 'm'},
+    {"num", required_argument, 0, 'n'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
+    {"zero", no_argument, 0, 'z'},
     {0, 0, 0, 0},
 };
 
@@ -148,14 +149,14 @@ dStrRaw(const char* str, int len)
 static int
 do_rep_route(struct smp_target_obj * top, int phy_id, int index,
              unsigned char * resp, int max_resp_len, int * resp_len,
-             int do_zero, int do_hex, int do_raw, int verbose)
+             bool do_zero, int do_hex, bool do_raw, int verbose)
 {
+    int len, res, k, act_resplen;
+    char * cp;
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_ROUTE_INFO,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    struct smp_req_resp smp_rr;
     char b[256];
-    char * cp;
-    int len, res, k, act_resplen;
+    struct smp_req_resp smp_rr;
 
     if (! do_zero) {     /* SAS-2 or later */
         len = (max_resp_len - 8) / 4;
@@ -254,11 +255,12 @@ do_rep_route(struct smp_target_obj * top, int phy_id, int index,
 
 static int
 do_multiple(struct smp_target_obj * top, int phy_id, int index, int num_ind,
-            int do_zero, int do_hex, int do_raw, int verbose)
+            bool do_zero, int do_hex, bool do_raw, int verbose)
 {
+    bool disabled;
+    bool first = true;
+    int res, len, k, num, adj_dis;
     unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
-    int res, len, k, num, disabled, adj_dis;
-    int first = 1;
 
     num = num_ind ? (index + num_ind) : MAX_NUM_INDEXES;
     for (adj_dis = 0, k = index; k < num; ++k) {
@@ -269,7 +271,7 @@ do_multiple(struct smp_target_obj * top, int phy_id, int index, int num_ind,
         if (res)
             return res;
         if (first && (! do_raw)) {
-            first = 0;
+            first = false;
             printf("Route table for phy_id: %d\n", phy_id);
         }
         if (do_hex || do_raw)
@@ -293,11 +295,11 @@ do_multiple(struct smp_target_obj * top, int phy_id, int index, int num_ind,
 }
 
 static int
-do_single(struct smp_target_obj * top, int phy_id, int index, int do_zero,
-          int do_hex, int do_raw, int verbose)
+do_single(struct smp_target_obj * top, int phy_id, int index, bool do_zero,
+          int do_hex, bool do_raw, int verbose)
 {
-    unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
     int res, len;
+    unsigned char smp_resp[REP_ROUTE_INFO_RESP_LEN];
 
     res = do_rep_route(top, phy_id, index, smp_resp, sizeof(smp_resp),
                        &len, do_zero, do_hex, do_raw, verbose);
@@ -325,24 +327,24 @@ do_single(struct smp_target_obj * top, int phy_id, int index, int do_zero,
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
+    bool do_zero = false;
+    bool multiple = false;
     int res, c;
     int do_hex = 0;
-    int er_ind = 0;
-    int multiple = 0;
     int do_num = 0;
+    int er_ind = 0;
     int phy_id = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
-    int do_zero = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -374,7 +376,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'm':
-            ++multiple;
+            multiple = true;
             break;
         case 'n':
            do_num = smp_get_num(optarg);
@@ -393,7 +395,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -410,7 +412,7 @@ main(int argc, char * argv[])
             pr2serr("version: %s\n", version_str);
             return 0;
         case 'z':
-            ++do_zero;
+            do_zero = true;
             break;
         default:
             pr2serr("unrecognised switch code 0x%x ??\n", c);

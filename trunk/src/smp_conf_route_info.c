@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,21 +53,21 @@
  * response.
  */
 
-static const char * version_str = "1.11 20171003";
+static const char * version_str = "1.12 20171019";
 
 static struct option long_options[] = {
-    {"disable", 0, 0, 'd'},
-    {"expected", 1, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"index", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"routed", 1, 0, 'R'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"disable", no_argument, 0, 'd'},
+    {"expected", required_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"routed", required_argument, 0, 'R'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -140,17 +141,20 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_disable = false;
+    bool do_raw = false;
     int res, c, k, len, act_resplen;
-    int do_disable = 0;
     int expected_cc = 0;
     int do_hex = 0;
     int er_ind = 0;
     int phy_id = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
     uint64_t routed = 0;
+    char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
@@ -161,9 +165,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[8];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -176,7 +177,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'd':
-            do_disable = 1;
+            do_disable = true;
             break;
         case 'E':
             expected_cc = smp_get_num(optarg);
@@ -212,7 +213,7 @@ main(int argc, char * argv[])
             }
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 'R':
             sa_ll = smp_get_llnum_nomult(optarg);

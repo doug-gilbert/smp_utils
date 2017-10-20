@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,22 +53,22 @@
  * outputs its response.
  */
 
-static const char * version_str = "1.06 20171004";
+static const char * version_str = "1.07 20171017";
 
 #define SMP_FN_REPORT_SELF_CONFIG_RESP_LEN (1020 + 4 + 4)
 
 static struct option long_options[] = {
-    {"brief", 0, 0, 'b'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"index", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"last", 0, 0, 'l'},
-    {"one", 0, 0, 'o'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"brief", no_argument, 0, 'b'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"last", no_argument, 0, 'l'},
+    {"one", no_argument, 0, 'o'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -198,30 +199,30 @@ find_status_description(int status, char * buff, int buff_len)
 int
 main(int argc, char * argv[])
 {
+    bool do_brief = false;
+    bool do_last = false;
+    bool do_one = false;
+    bool do_raw = false;
     int res, c, k, j, len, sscsd_ind, last_scsd_ind, scsd_len, num_scsd;
     int tot_num_scsd, ind, status, act_resplen;
-    int do_brief = 0;
     int do_hex = 0;
     int index = 1;
-    int do_last = 0;
-    int do_one = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
+    const char * last_recp;
+    unsigned char * scsdp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_SELF_CONFIG,
                                0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_FN_REPORT_SELF_CONFIG_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    const char * last_recp;
-    unsigned char * scsdp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -234,7 +235,7 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'b':
-            ++do_brief;
+            do_brief = true;
             break;
         case 'h':
         case '?':
@@ -256,13 +257,13 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-            ++do_last;
+            do_last = true;
             break;
         case 'o':
-            ++do_one;
+            do_one = true;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -431,8 +432,8 @@ last_again:
     }
 
     last_scsd_ind = sg_get_unaligned_be16(smp_resp + 10);
-    if ((do_last > 0) && (last_scsd_ind > 0) && (index != last_scsd_ind)) {
-        --do_last;
+    if (do_last && (last_scsd_ind > 0) && (index != last_scsd_ind)) {
+        do_last = false;
         memset(smp_req, 0, sizeof(smp_req));
         smp_req[0] = SMP_FRAME_TYPE_REQ;
         smp_req[1] = SMP_FN_REPORT_SELF_CONFIG;
@@ -445,20 +446,20 @@ last_again:
     if (verbose || res)
         printf("  Expander change count: %d\n", res);
     sscsd_ind = sg_get_unaligned_be16(smp_resp + 6);
-    if (0 == do_brief)
+    if (! do_brief)
         printf("  starting self-configuration status descriptor index: %d\n",
                sscsd_ind);
     tot_num_scsd = sg_get_unaligned_be16(smp_resp + 8);
     printf("  total number of self-configuration status descriptors: %d\n",
            tot_num_scsd);
-    if (0 == do_brief) {
+    if (! do_brief) {
         printf("  last self-configuration status descriptor index: %d\n",
                last_scsd_ind);
         printf("  self-configuration status descriptor length: %d dwords\n",
                smp_resp[12]);
     }
     if (16 == smp_resp[12]) {
-        if (0 == do_brief)
+        if (! do_brief)
             printf("      <<assume that value is not dwords but bytes>>\n");
         scsd_len = smp_resp[12];
     } else

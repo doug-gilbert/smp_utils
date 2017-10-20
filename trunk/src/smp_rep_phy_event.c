@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -53,7 +54,7 @@
  * response.
  */
 
-static const char * version_str = "1.11 20171004";
+static const char * version_str = "1.12 20171017";
 
 #define SMP_FN_REPORT_PHY_EVENT_RESP_LEN (1020 + 4 + 4)
 
@@ -63,17 +64,17 @@ struct pes_name_t {
 };
 
 static struct option long_options[] = {
-    {"desc", 0, 0, 'd'},
-    {"enumerate", 0, 0, 'e'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"long", 0, 0, 'l'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"desc", no_argument, 0, 'd'},
+    {"enumerate", no_argument, 0, 'e'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"long", no_argument, 0, 'l'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -216,7 +217,7 @@ get_pes_name(int pes, char * b, int blen)
 /* from sas2r15 */
 static void
 show_phy_event_info(int pes, unsigned int val, unsigned int thresh_val,
-                    int do_long)
+                    bool do_long)
 {
     unsigned int u;
     char str[32];
@@ -307,31 +308,31 @@ show_phy_event_info(int pes, unsigned int val, unsigned int thresh_val,
 int
 main(int argc, char * argv[])
 {
+    bool do_desc = false;
+    bool do_enumerate = false;
+    bool do_long = false;
+    bool phy_id_given = false;
+    bool do_raw = false;
     int res, c, k, len, ped_len, num_ped, pes, act_resplen;
-    int do_desc = 0;
-    int do_enumerate = 0;
     int do_hex = 0;
-    int do_long = 0;
     int phy_id = 0;
-    int phy_id_given = 0;
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
+    unsigned int pe_val, pvdt;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
+    unsigned char * pedp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_EVENT,
                                0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_FN_REPORT_PHY_EVENT_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
     const struct pes_name_t * pnp;
-    int subvalue = 0;
-    unsigned int pe_val, pvdt;
-    char * cp;
-    unsigned char * pedp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     while (1) {
@@ -344,10 +345,10 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'd':
-            ++do_desc;
+            do_desc = true;
             break;
         case 'e':
-            ++do_enumerate;
+            do_enumerate = true;
             break;
         case 'h':
         case '?':
@@ -361,7 +362,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'l':
-            ++do_long;
+            do_long = true;
             break;
         case 'p':
            phy_id = smp_get_num(optarg);
@@ -370,10 +371,10 @@ main(int argc, char * argv[])
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            ++phy_id_given;
+            phy_id_given = true;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -58,24 +59,24 @@
  * The remaining write data (first..last register) is not moved.
  */
 
-static const char * version_str = "1.12 20171004";
+static const char * version_str = "1.13 20171017";
 
 #define SMP_MAX_REQ_LEN (1020 + 4 + 4)
 
 static struct option long_options[] = {
-    {"count", 1, 0, 'c'},
-    {"data", 1, 0, 'd'},
-    {"enhanced", 0, 0, 'E'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"index", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"phy", 1, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"type", 0, 0, 't'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"count", required_argument, 0, 'c'},
+    {"data", required_argument, 0, 'd'},
+    {"enhanced", no_argument, 0, 'E'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"index", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"phy", required_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"type", no_argument, 0, 't'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -247,18 +248,23 @@ read_hex(const char * inp, unsigned char * arr, int * arr_len)
 int
 main(int argc, char * argv[])
 {
+    bool do_data = false;
+    bool enhanced = false;
+    bool do_raw = false;
     int res, c, k, len, act_resplen, off;
-    int rcount = 1;
-    int do_data = 0;
-    int enhanced = 0;
+    int arr_len = 0;
     int do_hex = 0;
     int rindex = 0;
     int phy_id = 0;
-    int do_raw = 0;
+    int rcount = 1;
+    int ret = 0;
     int rtype = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
+    char * cp;
+    char b[128];
     char i_params[256];
     char device_name[512];
     unsigned char smp_req[SMP_MAX_REQ_LEN];
@@ -266,11 +272,6 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
     unsigned char data_arr[1024];
-    int arr_len = 0;
-    int subvalue = 0;
-    char * cp;
-    char b[128];
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     memset(i_params, 0, sizeof i_params);
@@ -299,10 +300,10 @@ main(int argc, char * argv[])
                 pr2serr("bad argument to '--data'\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
-            do_data = 1;
+            do_data = true;
             break;
         case 'E':
-            ++enhanced;
+            enhanced = true;
             break;
         case 'h':
         case '?':
@@ -333,7 +334,7 @@ main(int argc, char * argv[])
                 pr2serr("'--phy=<n>' option not needed so ignored\n");
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -375,7 +376,7 @@ main(int argc, char * argv[])
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
-    if ((0 == do_data) || (arr_len < 1)) {
+    if ((! do_data) || (arr_len < 1)) {
         pr2serr("need to supply data to write, see '--data=' option\n");
         usage();
         return SMP_LIB_SYNTAX_ERROR;

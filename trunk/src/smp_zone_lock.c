@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -52,20 +53,20 @@
  * This utility issues a ZONE LOCK function and outputs its response.
  */
 
-static const char * version_str = "1.06 20171004";
+static const char * version_str = "1.07 20171017";
 
 static struct option long_options[] = {
-    {"expected", 1, 0, 'E'},
-    {"fpass", 1, 0, 'F'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"inactivity", 1, 0, 'i'},
-    {"interface", 1, 0, 'I'},
-    {"password", 1, 0, 'P'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"expected", required_argument, 0, 'E'},
+    {"fpass", required_argument, 0, 'F'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"inactivity", required_argument, 0, 'i'},
+    {"interface", required_argument, 0, 'I'},
+    {"password", required_argument, 0, 'P'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -144,15 +145,15 @@ static int
 f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
           int max_arr_len)
 {
+    bool no_space = false;
+    bool checked_hexlen = false;
     int fn_len, in_len, k, j, m;
-    int no_space = 0;
-    int checked_hexlen = 0;
+    int off = 0;
     unsigned int h;
     const char * lcp;
     const char * ccp;
     FILE * fp;
     char line[512];
-    int off = 0;
 
     if ((NULL == fname) || (NULL == mp_arr) || (NULL == mp_arr_len))
         return 1;
@@ -194,10 +195,10 @@ f2hex_arr(const char * fname, unsigned char * mp_arr, int * mp_arr_len,
         if (('-' == *lcp) && ('1' == *(lcp + 1)))
             goto minus1;
         if (! checked_hexlen) {
-            ++checked_hexlen;
+            checked_hexlen = true;
             k = strspn(lcp, "0123456789aAbBcCdDeEfF");
             if (k > 2)
-                no_space = 1;
+                no_space = true;
         }
 
         k = strspn(lcp, "0123456789aAbBcCdDeEfF ,\t");
@@ -300,19 +301,23 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
+    bool do_raw = false;
     int res, c, k, len, act_resplen;
     int expected_cc = 0;
-    const char * fpass = NULL;
     int do_hex = 0;
     int inact_tl = 0;
-    unsigned char password[32];
-    int do_raw = 0;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    char i_params[256];
-    char device_name[512];
+    const char * ccp;
+    char * cp;
+    const char * fpass = NULL;
     char b[256];
+    char device_name[512];
+    char i_params[256];
+    unsigned char password[32];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_ZONE_LOCK,
                                0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -320,10 +325,6 @@ main(int argc, char * argv[])
     unsigned char smp_resp[20];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
-    int subvalue = 0;
-    char * cp;
-    const char * ccp;
-    int ret = 0;
 
     memset(password, 0, sizeof password);
     memset(device_name, 0, sizeof device_name);
@@ -375,7 +376,7 @@ main(int argc, char * argv[])
             memcpy(password , optarg, len);
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
             sa_ll = smp_get_llnum_nomult(optarg);

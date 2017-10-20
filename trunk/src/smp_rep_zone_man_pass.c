@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -52,21 +53,21 @@
  * response.
  */
 
-static const char * version_str = "1.05 20171004";
+static const char * version_str = "1.06 20171005";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 
 static struct option long_options[] = {
-    {"fpass", 1, 0, 'F'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"phex", 0, 0, 'p'},
-    {"raw", 0, 0, 'r'},
-    {"report", 1, 0, 'R'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
+    {"fpass", required_argument, 0, 'F'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"phex", no_argument, 0, 'p'},
+    {"raw", no_argument, 0, 'r'},
+    {"report", required_argument, 0, 'R'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0},
 };
 
@@ -141,10 +142,10 @@ main(int argc, char * argv[])
     int res, c, k, len, act_resplen;
     const char * fpass = NULL;
     int do_hex = 0;
-    int do_phex = 0;
-    int do_raw = 0;
     int rtype = 0;
     int verbose = 0;
+    bool do_phex = false;
+    bool do_raw = false;
     int64_t sa_ll;
     uint64_t sa = 0;
     char i_params[256];
@@ -186,10 +187,10 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'p':
-            ++do_phex;
+            do_phex = true;
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 'R':
            rtype = smp_get_num(optarg);

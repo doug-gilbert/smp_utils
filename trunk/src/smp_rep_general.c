@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -51,21 +52,21 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.30 20171004";    /* spl4r8b */
+static const char * version_str = "1.31 20171017";    /* spl4r8b */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
 static struct option long_options[] = {
-    {"brief", 0, 0, 'b'},
-    {"changecount", 0, 0, 'c'},
-    {"help", 0, 0, 'h'},
-    {"hex", 0, 0, 'H'},
-    {"interface", 1, 0, 'I'},
-    {"raw", 0, 0, 'r'},
-    {"sa", 1, 0, 's'},
-    {"verbose", 0, 0, 'v'},
-    {"version", 0, 0, 'V'},
-    {"zero", 0, 0, 'z'},
+    {"brief", no_argument, 0, 'b'},
+    {"changecount", no_argument, 0, 'c'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'H'},
+    {"interface", required_argument, 0, 'I'},
+    {"raw", no_argument, 0, 'r'},
+    {"sa", required_argument, 0, 's'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
+    {"zero", no_argument, 0, 'z'},
     {0, 0, 0, 0},
 };
 
@@ -136,28 +137,28 @@ dStrRaw(const char* str, int len)
 int
 main(int argc, char * argv[])
 {
-    int res, c, k, len, sas2, zsupp, psupp, act_resplen;
-    int do_brief = 0;
-    int do_ccount = 0;
-    int do_full = 1;
+    bool do_brief = false;
+    bool do_ccount = false;
+    bool do_full = true;
     int do_hex = 0;
-    int do_raw = 0;
+    bool do_raw = false;
+    bool do_zero = false;
+    int res, c, k, len, sas2, zsupp, psupp, act_resplen;
+    int ret = 0;
+    int subvalue = 0;
     int verbose = 0;
-    int do_zero = 0;
+    unsigned int u;
     int64_t sa_ll;
     uint64_t sa = 0;
-    unsigned int u;
-    char i_params[256];
-    char device_name[512];
+    char * cp;
     char b[256];
+    char device_name[512];
+    char i_params[256];
     unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
                                0, 0, 0, 0, 0, 0};
     unsigned char smp_resp[SMP_FN_REPORT_GENERAL_RESP_LEN];
     struct smp_target_obj tobj;
     struct smp_req_resp smp_rr;
-    int subvalue = 0;
-    char * cp;
-    int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
     memset(i_params, 0, sizeof i_params);
@@ -171,11 +172,11 @@ main(int argc, char * argv[])
 
         switch (c) {
         case 'b':
-            ++do_brief;
-            do_full = 0;
+            do_brief = true;
+            do_full = false;
             break;
         case 'c':
-            ++do_ccount;
+            do_ccount = true;
             break;
         case 'h':
         case '?':
@@ -189,7 +190,7 @@ main(int argc, char * argv[])
             i_params[sizeof(i_params) - 1] = '\0';
             break;
         case 'r':
-            ++do_raw;
+            do_raw = true;
             break;
         case 's':
            sa_ll = smp_get_llnum_nomult(optarg);
@@ -206,7 +207,7 @@ main(int argc, char * argv[])
             pr2serr("version: %s\n", version_str);
             return 0;
         case 'z':
-            ++do_zero;
+            do_zero = true;
             break;
         default:
             pr2serr("unrecognised switch code 0x%x ??\n", c);
