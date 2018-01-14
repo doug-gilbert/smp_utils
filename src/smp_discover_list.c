@@ -54,10 +54,10 @@
  * This utility issues a DISCOVER LIST function and outputs its response.
  *
  * First defined in SAS-2. From and including SAS-2.1 this function is
- * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
+ * defined in the SPL series. The most recent SPL-5 draft is spl5r02.pdf .
  */
 
-static const char * version_str = "1.43 20171019";    /* spl4r12 */
+static const char * version_str = "1.45 20171203";    /* spl5r02 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -356,7 +356,9 @@ smp_get_reason(int val, int b_len, char * b)
     case 3: snprintf(b, b_len, "SMP phy control requested");
          break;
     case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
-    case 5: snprintf(b, b_len, "error in multiplexing (MUX) sequence"); break;
+    case 5:     /* hardware muxing made obsolete in spl5r01 */
+        snprintf(b, b_len, "error in multiplexing (MUX) sequence");
+        break;
     case 6: snprintf(b, b_len, "I_T nexus loss timeout STP/SATA"); break;
     case 7: snprintf(b, b_len, "break timeout timer expired"); break;
     case 8: snprintf(b, b_len, "phy test function stopped"); break;
@@ -510,6 +512,9 @@ static const char * g_name_long[] =
         {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)",
          "G5 (22.5 Gbps)"};
 
+/* Taken from spl5r02 SNW-3 table 70 on page 199. Note that the "Requested
+ * logical link rate" field became obsolete in spl5r01 when multiplexing
+ * was removed. */
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
@@ -518,9 +523,10 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     unsigned int g15_val, g;
     const char * cp;
 
-    printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
-           ((p_cap >> 30) & 0x1), (p_cap >> 24) & 0xf);
-    prev_nl = 1;
+    printf("    Tx SSC type: %d, Requested interleaved SPL: %d, [Req logical "
+           "lr: 0x%x]\n", ((p_cap >> 30) & 0x1), (p_cap >> 28) & 0x3,
+           (p_cap >> 24) & 0xf);
+    prev_nl = true;
     g15_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
         cp = op->verbose ? g_name_long[4 - k] : g_name[4 - k];
@@ -558,6 +564,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     }
     if (! prev_nl)
         printf("\n");
+    printf("    Extended coefficient settings: %d\n", (p_cap >> 1) & 0x1);
 }
 
 /* long format: as described in (full, single) DISCOVER response
@@ -707,6 +714,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
         printf("  optical mode enabled: %d\n", !!(rp[95] & 0x4));
         printf("  negotiated SSC: %d\n", !!(rp[95] & 0x2));
+        /* hardware muxing made obsolete in spl5r01 */
         printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
     }
     if (len > 107) {
@@ -1443,3 +1451,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

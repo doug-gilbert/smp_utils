@@ -2,21 +2,26 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20171020] [svn:r162]
+Changelog for smp_utils-0.99 [20171203] [svn:r163]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
     - attached SAS device type, word SAS added (spl4r01)
     - add SAS connector types, shared with NVMe (ses3r8)
     - add buffered phy burst size field (spl4r07)
     - add attached apta capable field
- - smp_phy_test: change default linkrate from 3 to 6 Gbps
-   which is value 0xa
- - add G5 (22.5 Gbps for SAS-4) settings [spl4r06]
- - convert many two valued ints to bools
- - smp_lib:
-   - add smp_get_connector_type_str(), smp_get_num_nomult()
-     and smp_get_llnum_nomult()
- - sync with spl4r11
+    - update phy capabilities decode (spl5r02)
+  - smp_rep_general: add extended fairness field
+    - add initial time to delay expander forward open
+      indication field
+    - add external port field (spl5r02)
+  - smp_phy_test: change default linkrate from 3 to 6 Gbps
+    which is value 0xa
+  - add G5 (22.5 Gbps for SAS-4) settings [spl4r06]
+  - convert many two valued ints to bools
+  - smp_lib:
+    - add smp_get_connector_type_str(), smp_get_num_nomult()
+      and smp_get_llnum_nomult()
+  - sync with spl5r02
 
 Changelog for smp_utils-0.98 [20140526] [svn:r138]
   - add Linux aacraid support, interface name : aac
@@ -149,3 +154,5 @@ Changelog for smp_utils-0.90 [20060611]
   - add smp_write_gpio (WRITE GPIO REGISTER)
   - add debian build infrastructure
   - add smp_utils.html to doc subdirectory
+
+

@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.56 20171019";    /* spl4r12 */
+static const char * version_str = "1.58 20171203";    /* spl5r02 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -345,7 +345,9 @@ smp_get_reason(int val, int b_len, char * b)
     case 3: snprintf(b, b_len, "SMP phy control requested");
          break;
     case 4: snprintf(b, b_len, "loss of dword synchronization"); break;
-    case 5: snprintf(b, b_len, "error in multiplexing (MUX) sequence"); break;
+    case 5:     /* hardware muxing made obsolete in spl5r01 */
+        snprintf(b, b_len, "error in multiplexing (MUX) sequence");
+        break;
     case 6: snprintf(b, b_len, "I_T nexus loss timeout STP/SATA"); break;
     case 7: snprintf(b, b_len, "break timeout timer expired"); break;
     case 8: snprintf(b, b_len, "phy test function stopped"); break;
@@ -549,7 +551,7 @@ print_single_list(const unsigned char * rp, int len, bool show_exp_cc,
     if (! do_brief) {
         printf("  hw_max_p_lrate=%d\n", (0xf & rp[41]));
         printf("  hw_min_p_lrate=%d\n", (0xf & rp[40]));
-        if (len > 95)
+        if (len > 95)   /* muxing obsolete spl5r01 */
             printf("  hw_mux_sup=%d\n", (!! (rp[95] & 0x1)));
     }
 
@@ -609,6 +611,9 @@ static const char * g_name_long[] =
         {"G1 (1.5 Gbps)", "G2 (3 Gbps)", "G3 (6 Gbps)", "G4 (12 Gbps)",
          "G5 (22.5 Gbps)"};
 
+/* Taken from spl5r02 SNW-3 table 70 on page 199. Note that the "Requested
+ * logical link rate" field became obsolete in spl5r01 when multiplexing
+ * was removed. */
 static void
 decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
@@ -617,8 +622,9 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     unsigned int g15_val, g;
     const char * cp;
 
-    printf("    Tx SSC type: %d, Requested logical link rate: 0x%x\n",
-           ((p_cap >> 30) & 0x1), (p_cap >> 24) & 0xf);
+    printf("    Tx SSC type: %d, Requested interleaved SPL: %d, [Req logical "
+           "lr: 0x%x]\n", ((p_cap >> 30) & 0x1), (p_cap >> 28) & 0x3,
+           (p_cap >> 24) & 0xf);
     prev_nl = true;
     g15_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
@@ -657,6 +663,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     }
     if (! prev_nl)
         printf("\n");
+    printf("    Extended coefficient settings: %d\n", (p_cap >> 1) & 0x1);
 }
 
 static int
@@ -811,6 +818,7 @@ print_single(const unsigned char * rp, int len, bool just1,
                smp_get_neg_xxx_link_rate(0xf & rp[94], sizeof(b), b));
         printf("  optical mode enabled: %d\n", !!(rp[95] & 0x4));
         printf("  negotiated SSC: %d\n", !!(rp[95] & 0x2));
+        /* hardware muxing obsolete spl5r01 */
         printf("  hardware muxing supported: %d\n", !!(rp[95] & 0x1));
     }
     if (len > 107) {
@@ -1336,3 +1344,5 @@ main(int argc, char * argv[])
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

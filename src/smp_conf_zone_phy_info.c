@@ -54,7 +54,7 @@
  * its response.
  */
 
-static const char * version_str = "1.07 20171016";
+static const char * version_str = "1.08 20171107";
 
 static struct option long_options[] = {
     {"expected", required_argument, 0, 'E'},
@@ -379,7 +379,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            pr2serr("expected number after seperator in SMP_DEVICE name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -527,3 +527,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

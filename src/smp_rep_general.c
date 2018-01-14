@@ -52,7 +52,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.31 20171017";    /* spl4r8b */
+static const char * version_str = "1.32 20171201";    /* spl5r02 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -483,8 +483,12 @@ main(int argc, char * argv[])
     }
     if (len < 60)
         goto err_out;
-    if (do_full || (smp_resp[56] & 0x80))
-        printf("  reduced functionality: %d\n", !!(smp_resp[56] & 0x80));
+    if (do_full) {
+        if (smp_resp[56] & 0x80)
+            printf("  reduced functionality: %d\n", !!(smp_resp[56] & 0x80));
+        if (smp_resp[56] & 0x40)
+            printf("  external port: %d\n", !!(smp_resp[56] & 0x40));
+    }
     if (do_brief)
         goto err_out;
     printf("  time to reduced functionality: %d (unit: 100ms)\n",
@@ -518,3 +522,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

@@ -54,7 +54,7 @@
  * its response.
  */
 
-static const char * version_str = "1.04 20171003";
+static const char * version_str = "1.05 20171007";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -614,7 +614,7 @@ main(int argc, char * argv[])
     if ((cp = strchr(device_name, SMP_SUBVALUE_SEPARATOR))) {
         *cp = '\0';
         if (1 != sscanf(cp + 1, "%d", &subvalue)) {
-            pr2serr("expected number after seperator in SMP_DEVICE name\n");
+            pr2serr("expected number after separator in SMP_DEVICE name\n");
             return SMP_LIB_SYNTAX_ERROR;
         }
     }
@@ -788,3 +788,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+
