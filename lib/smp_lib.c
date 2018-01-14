@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #define __STDC_FORMAT_MACROS 1
@@ -37,7 +38,7 @@
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.22 20160420";    /* spl-4 rev 2 */
+static const char * version_str = "1.23 20171229";    /* spl-5 rev 2 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -97,6 +98,55 @@ struct smp_func_def_rrlen smp_def_rrlen_arr[] = {
     {SMP_FN_CONFIG_PHY_EVENT, -2, 0},      /* variable length request */
     {-1, -1, -1},
 };
+
+#if defined(__GNUC__) || defined(__clang__)
+static int scnpr(char * cp, int cp_max_len, const char * fmt, ...)
+                 __attribute__ ((format (printf, 3, 4)));
+#else
+static int scnpr(char * cp, int cp_max_len, const char * fmt, ...);
+#endif
+
+/* Want safe, 'n += snprintf(b + n, blen - n, ...)' style sequence of
+ * functions. Returns number of chars placed in cp excluding the
+ * trailing null char. So for cp_max_len > 0 the return value is always
+  * < cp_max_len; for cp_max_len <= 1 the return value is 0 and no chars are
+ * written to cp. Note this means that when cp_max_len = 1, this function
+ * assumes that cp[0] is the null character and does nothing (and returns
+ * 0). Linux kernel has a similar function called  scnprintf().  */
+static int
+scnpr(char * cp, int cp_max_len, const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    if (cp_max_len < 2)
+        return 0;
+    va_start(args, fmt);
+    n = vsnprintf(cp, cp_max_len, fmt, args);
+    va_end(args);
+    return (n < cp_max_len) ? n : (cp_max_len - 1);
+}
+
+/* Simple ASCII printable (does not use locale), includes space and excludes
+ * DEL (0x7f). */
+static inline int my_isprint(int ch)
+{
+    return ((ch >= ' ') && (ch < 0x7f));
+}
+
+static void
+trimTrailingSpaces(char * b)
+{
+    int k;
+
+    for (k = ((int)strlen(b) - 1); k >= 0; --k) {
+        if (' ' != b[k])
+            break;
+    }
+    if ('\0' != b[k + 1])
+        b[k + 1] = '\0';
+}
+
 
 int
 smp_get_func_def_req_len(int func_code)
@@ -464,48 +514,63 @@ safe_strerror(int errnum)
     return errstr;
 }
 
-/* Note the ASCII-hex output goes to stdout.
-   'no_ascii' allows for 3 output types:
-       > 0     each line has address then up to 16 ASCII-hex bytes
-       = 0     in addition, the bytes are listed in ASCII to the right
-       < 0     only the ASCII-hex bytes are listed (i.e. without address) */
-void
-dStrHex(const char* str, int len, int no_ascii)
+/* Note the ASCII-hex output goes to stream identified by 'fp'. This usually
+ * be either stdout or stderr.
+ * 'no_ascii' allows for 3 output types:
+ *     > 0     each line has address then up to 16 ASCII-hex bytes
+ *     = 0     in addition, the bytes are listed in ASCII to the right
+ *     < 0     only the ASCII-hex bytes are listed (i.e. without address) */
+static void
+dStrHexFp(const char* str, int len, int no_ascii, FILE * fp)
 {
-    const char* p = str;
+    const char * p = str;
+    const char * formatstr;
     unsigned char c;
     char buff[82];
     int a = 0;
-    const int bpstart = 5;
+    int bpstart = 5;
     const int cpstart = 60;
     int cpos = cpstart;
     int bpos = bpstart;
-    int i, k;
+    int i, k, blen;
 
     if (len <= 0)
         return;
+    blen = (int)sizeof(buff);
+    if (0 == no_ascii)  /* address at left and ASCII at right */
+        formatstr = "%.76s\n";
+    else if (no_ascii > 0)
+        formatstr = "%s\n";     /* was: "%.58s\n" */
+    else /* negative: no address at left and no ASCII at right */
+        formatstr = "%s\n";     /* was: "%.48s\n"; */
     memset(buff, ' ', 80);
     buff[80] = '\0';
     if (no_ascii < 0) {
+        bpstart = 0;
+        bpos = bpstart;
         for (k = 0; k < len; k++) {
             c = *p++;
-            bpos += 3;
-            if (bpos == (bpstart + (9 * 3)))
+            if (bpos == (bpstart + (8 * 3)))
                 bpos++;
-            sprintf(&buff[bpos], "%.2x", (int)(unsigned char)c);
+            scnpr(&buff[bpos], blen - bpos, "%.2x", (int)(unsigned char)c);
             buff[bpos + 2] = ' ';
             if ((k > 0) && (0 == ((k + 1) % 16))) {
-                printf("%.60s\n", buff);
+                trimTrailingSpaces(buff);
+                fprintf(fp, formatstr, buff);
                 bpos = bpstart;
                 memset(buff, ' ', 80);
-            }
+            } else
+                bpos += 3;
         }
-        if (bpos > bpstart)
-            printf("%.60s\n", buff);
+        if (bpos > bpstart) {
+            buff[bpos + 2] = '\0';
+            trimTrailingSpaces(buff);
+            fprintf(fp, "%s\n", buff);
+        }
         return;
     }
     /* no_ascii>=0, start each line with address (offset) */
-    k = sprintf(buff + 1, "%.2x", a);
+    k = scnpr(buff + 1, blen - 1, "%.2x", a);
     buff[k + 1] = ' ';
 
     for (i = 0; i < len; i++) {
@@ -513,27 +578,169 @@ dStrHex(const char* str, int len, int no_ascii)
         bpos += 3;
         if (bpos == (bpstart + (9 * 3)))
             bpos++;
-        sprintf(&buff[bpos], "%.2x", (int)(unsigned char)c);
+        scnpr(&buff[bpos], blen - bpos, "%.2x", (int)(unsigned char)c);
         buff[bpos + 2] = ' ';
         if (no_ascii)
             buff[cpos++] = ' ';
         else {
-            if ((c < ' ') || (c >= 0x7f))
+            if (! my_isprint(c))
                 c = '.';
             buff[cpos++] = c;
         }
         if (cpos > (cpstart + 15)) {
-            printf("%.76s\n", buff);
+            if (no_ascii)
+                trimTrailingSpaces(buff);
+            fprintf(fp, formatstr, buff);
             bpos = bpstart;
             cpos = cpstart;
             a += 16;
             memset(buff, ' ', 80);
-            k = sprintf(buff + 1, "%.2x", a);
+            k = scnpr(buff + 1, blen - 1, "%.2x", a);
             buff[k + 1] = ' ';
         }
     }
-    if (cpos > cpstart)
-        printf("%.76s\n", buff);
+    if (cpos > cpstart) {
+        buff[cpos] = '\0';
+        if (no_ascii)
+            trimTrailingSpaces(buff);
+        fprintf(fp, "%s\n", buff);
+    }
+}
+
+void
+dStrHex(const char* str, int len, int no_ascii)
+{
+    dStrHexFp(str, len, no_ascii, stdout);
+}
+
+void
+dStrHexErr(const char* str, int len, int no_ascii)
+{
+    dStrHexFp(str, len, no_ascii, stderr);
+}
+
+#define DSHS_LINE_BLEN 160
+#define DSHS_BPL 16
+
+/* Read 'len' bytes from 'str' and output as ASCII-Hex bytes (space
+ * separated) to 'b' not to exceed 'b_len' characters. Each line
+ * starts with 'leadin' (NULL for no leadin) and there are 16 bytes
+ * per line with an extra space between the 8th and 9th bytes. 'format'
+ * is 0 for repeat in printable ASCII ('.' for non printable) to
+ * right of each line; 1 don't (so just output ASCII hex). Returns
+ * number of bytes written to 'b' excluding the trailing '\0'. */
+int
+dStrHexStr(const char * str, int len, const char * leadin, int format,
+           int b_len, char * b)
+{
+    unsigned char c;
+    int bpstart, bpos, k, n, prior_ascii_len;
+    bool want_ascii;
+    char buff[DSHS_LINE_BLEN + 2];
+    char a[DSHS_BPL + 1];
+    const char * p = str;
+
+    if (len <= 0) {
+        if (b_len > 0)
+            b[0] = '\0';
+        return 0;
+    }
+    if (b_len <= 0)
+        return 0;
+    want_ascii = !format;
+    if (want_ascii) {
+        memset(a, ' ', DSHS_BPL);
+        a[DSHS_BPL] = '\0';
+    }
+    if (leadin) {
+        bpstart = strlen(leadin);
+        /* Cap leadin at (DSHS_LINE_BLEN - 70) characters */
+        if (bpstart > (DSHS_LINE_BLEN - 70))
+            bpstart = DSHS_LINE_BLEN - 70;
+    } else
+        bpstart = 0;
+    bpos = bpstart;
+    prior_ascii_len = bpstart + (DSHS_BPL * 3) + 1;
+    n = 0;
+    memset(buff, ' ', DSHS_LINE_BLEN);
+    buff[DSHS_LINE_BLEN] = '\0';
+    if (bpstart > 0)
+        memcpy(buff, leadin, bpstart);
+    for (k = 0; k < len; k++) {
+        c = *p++;
+        if (bpos == (bpstart + ((DSHS_BPL / 2) * 3)))
+            bpos++;     /* for extra space in middle of each line's hex */
+        scnpr(buff + bpos, (int)sizeof(buff) - bpos, "%.2x",
+              (int)(unsigned char)c);
+        buff[bpos + 2] = ' ';
+        if (want_ascii)
+            a[k % DSHS_BPL] = my_isprint(c) ? c : '.';
+        if ((k > 0) && (0 == ((k + 1) % DSHS_BPL))) {
+            trimTrailingSpaces(buff);
+            if (want_ascii) {
+                n += scnpr(b + n, b_len - n, "%-*s   %s\n", prior_ascii_len,
+                           buff, a);
+                memset(a, ' ', DSHS_BPL);
+            } else
+                n += scnpr(b + n, b_len - n, "%s\n", buff);
+            if (n >= (b_len - 1))
+                return n;
+            memset(buff, ' ', DSHS_LINE_BLEN);
+            bpos = bpstart;
+            if (bpstart > 0)
+                memcpy(buff, leadin, bpstart);
+        } else
+            bpos += 3;
+    }
+    if (bpos > bpstart) {
+        trimTrailingSpaces(buff);
+        if (want_ascii)
+            n += scnpr(b + n, b_len - n, "%-*s   %s\n", prior_ascii_len,
+                       buff, a);
+        else
+            n += scnpr(b + n, b_len - n, "%s\n", buff);
+    }
+    return n;
+}
+
+/* Returns true when executed on big endian machine; else returns false.
+ * Useful for displaying ATA identify words (which need swapping on a
+ * big endian machine). */
+bool
+smp_is_big_endian()
+{
+    union u_t {
+        uint16_t s;
+        unsigned char c[sizeof(uint16_t)];
+    } u;
+
+    u.s = 0x0102;
+    return (u.c[0] == 0x01);     /* The lowest address contains
+                                    the most significant byte */
+}
+
+bool
+smp_all_zeros(const uint8_t * bp, int b_len)
+{
+    if ((NULL == bp) || (b_len <= 0))
+        return false;
+    for (--b_len; b_len >= 0; --b_len) {
+        if (0x0 != bp[b_len])
+            return false;
+    }
+    return true;
+}
+
+bool
+smp_all_ffs(const uint8_t * bp, int b_len)
+{
+    if ((NULL == bp) || (b_len <= 0))
+        return false;
+    for (--b_len; b_len >= 0; --b_len) {
+        if (0xff != bp[b_len])
+            return false;
+    }
+    return true;
 }
 
 /* If the number in 'buf' can be decoded or the multiplier is unknown
@@ -806,3 +1013,5 @@ smp_lib_version()
 {
         return version_str;
 }
+
+

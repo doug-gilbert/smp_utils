@@ -254,6 +254,33 @@ char * safe_strerror(int errnum);
 */
 void dStrHex(const char* str, int len, int no_ascii);
 
+/* Print (to stderr) 'str' of bytes in hex, 16 bytes per line optionally
+ * followed at right by its ASCII interpretation. Same logic as dStrHex()
+ * with different output stream (i.e. stderr). */
+void dStrHexErr(const char * str, int len, int no_ascii);
+
+/* Read 'len' bytes from 'str' and output as ASCII-Hex bytes (space
+ * separated) to 'b' not to exceed 'b_len' characters. Each line
+ * starts with 'leadin' (NULL for no leadin) and there are 16 bytes
+ * per line with an extra space between the 8th and 9th bytes. 'format'
+ * is 0 for repeat in printable ASCII ('.' for non printable chars) to
+ * right of each line; 1 don't (so just output ASCII hex). Returns
+ * number of bytes written to 'b' excluding the trailing '\0'. */
+int dStrHexStr(const char * str, int len, const char * leadin, int format,
+               int b_len, char * b);
+
+/* Returns true when executed on big endian machine; else returns false.
+ * Useful for displaying ATA identify words (which need swapping on a
+ * big endian machine).
+ */
+bool smp_is_big_endian();
+
+/* Returns true if byte sequence starting at bp with a length of b_len is
+ * all zeros (for smp_all_zeros()) or all 0xff_s (for smp_all_ffs());
+ * otherwise returns false. If bp is NULL ir b_len <= 0 returns false. */
+bool smp_all_zeros(const uint8_t * bp, int b_len);
+bool smp_all_ffs(const uint8_t * bp, int b_len);
+
 /* If the number in 'buf' can not be decoded or the multiplier is unknown
    then -1 is returned. Accepts a hex prefix (0x or 0X) or a 'h' (or 'H')
    suffix. Otherwise a decimal multiplier suffix may be given. Recognised
@@ -295,3 +322,5 @@ int smp_get_dhnum(const char * buf);
 #endif
 
 #endif
+
+

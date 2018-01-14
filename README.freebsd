@@ -32,5 +32,14 @@ This also assumes that the SAS expander is connected to a SAS HBA that
 supports the CAM SAS SMP pass-through.
 
 
+References
+----------
+Alexander Motin has a useful presentation online about Enclosure Management
+and how it is reflected in FreeBSD devices and user space tools. See:
+https://people.freebsd.org/~mav/Enclosure_Management_en.pdf
+
+
 Douglas Gilbert
-19th September 2013
+29th December 2017
+
+

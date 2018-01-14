@@ -53,7 +53,7 @@
  * This utility issues a PHY CONTROL function and outputs its response.
  */
 
-static const char * version_str = "1.22 20171017";
+static const char * version_str = "1.23 20171203";
 
 static struct option long_options[] = {
     {"attached", required_argument, 0, 'a'},
@@ -155,7 +155,7 @@ usage(void)
             "    --sas_pa=CO|-q CO        Enable SAS Partial field; CO: "
             "0->leave (def)\n"
             "                             1->manage (enable), 2->disable\n"
-            "    --sas_sl=CO|-l CO        Enable Slumber Partial field\n"
+            "    --sas_sl=CO|-l CO        Enable SAS Slumber field\n"
             "    --sata_pa=CO|-Q CO       Enable SATA Partial field\n"
             "    --sata_sl=CO|-L CO       Enable SATA Slumber field\n"
             "    --verbose|-v             increase verbosity\n"
@@ -574,3 +574,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

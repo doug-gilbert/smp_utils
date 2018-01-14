@@ -80,8 +80,8 @@ fi
 
 
 %changelog
-* Mon Feb 29 2016 - dgilbert at interlog dot com
-- move toward G5 (22.5 Gbps)
+* Sat Jan 13 2018 - dgilbert at interlog dot com
+- add support for G5 (22.5 Gbps, SAS-4, SPL-5)
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com
 - put execs back in /usr/bin, add aac interface
@@ -110,3 +110,5 @@ fi
 * Sun Jun 11 2006 - dgilbert at interlog dot com
 - add smp_read_gpio, smp_conf_route_info and smp_write_gpio
   * smp_utils-0.90
+
+

@@ -45,16 +45,16 @@ endif
 ## CC = clang++
 
 # -std=<s> can be c99, c11, gnu11, etc. Default is gnu89 (gnu90 is the same)
-AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W
-## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c11
-## AM_CFLAGS = -I ../include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -W -pedantic -std=c++14
+AM_CPPFLAGS = -iquote ${top_srcdir}/include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+AM_CFLAGS = -Wall -W
+## AM_CFLAGS = -Wall -W -pedantic -std=c11
+## AM_CFLAGS = -Wall -W -pedantic -std=c++14
 
 lib_LTLIBRARIES = libsmputils1.la
 
 libsmputils1_la_LDFLAGS = -version-info 1:0:0
 
-libsmputils1_la_LIBADD = @os_libs@
+## libsmputils1_la_LIBADD =
 
-## libsmputils1_la_LIBADD = @GETOPT_O_FILES@ @os_libs@
-## libsmputi1s1_la_DEPENDENCIES = @GETOPT_O_FILES@
+
 

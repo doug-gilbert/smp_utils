@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20171203] [svn:r163]
+Changelog for smp_utils-0.99 [20180113] [svn:r164]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
     - attached SAS device type, word SAS added (spl4r01)
@@ -21,7 +21,11 @@ Changelog for smp_utils-0.99 [20171203] [svn:r163]
   - smp_lib:
     - add smp_get_connector_type_str(), smp_get_num_nomult()
       and smp_get_llnum_nomult()
+    - add dStrHexErr() and dStrHexStr()
+    - add smp_is_big_endian(), smp_all_zeros() and
+      smp_all_ffs()
   - sync with spl5r02
+  - cleanup configure.ac + Makefile.am
 
 Changelog for smp_utils-0.98 [20140526] [svn:r138]
   - add Linux aacraid support, interface name : aac

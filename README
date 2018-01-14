@@ -1,8 +1,8 @@
-This is a package of utilities. Each utility sends a Serial Attached
-SCSI (SAS) Serial Management Protocol (SMP) request to an SMP target.
-If the request fails then the error is decoded. If the request succeeds
-then the response is either decoded, printed out in hexadecimal or
-output in binary. This package was written using the linux 2.6 and
+This is a package of command line utilities. Each utility sends a Serial
+Attached SCSI (SAS) Serial Management Protocol (SMP) request to an SMP
+target. If the request fails then the error is decoded. If the request
+succeeds then the response is either decoded, printed out in hexadecimal
+or output in binary. This package was written using the linux 2.6 and
 3 series; it has been ported to FreeBSD and Solaris.
 
 For specific information about Linux see README.linux; for FreeBSD see
@@ -23,15 +23,23 @@ directory.
 
 
 The reference documents are:
-  sas-r05.pdf      www.t10.org   draft prior to original SAS spec
-  sas1r10.pdf      www.t10.org   draft prior to SAS 1.1 spec
-  sas2r16.pdf      www.t10.org   draft prior to SAS-2
+  sas-r05.pdf      www.t10.org   draft prior to original SAS spec:
+                                 SAS ANSI INCITS 376-2003
+  sas1r10.pdf      www.t10.org   draft prior to SAS 1.1 spec:
+                                 SAS-1.1 ANSI INCITS 417-2006
+  sas2r16.pdf      www.t10.org   draft prior to SAS-2:
+                                 SAS-2 ANSI INCITS 457-2010,
+                                 SAS-2.1 ANSI INCITS 478-2011
   sas3r06.pdf      www.t10.org   draft prior to SAS-3
+                                 SAS-3 ANSI INCITS 519-2014
   sas4r09.pdf      www.t10.org   current draft
   spl-r07.pdf      www.t10.org   draft prior to SPL ANSI INCITS 476-2011
-  spl2r04c.pdf     www.t10.org   draft prior to SPL-2
+  spl2r04c.pdf     www.t10.org   draft prior to SPL-2:
+                                 SPL-2 ANSI INCITS 505-2013
   spl3r07.pdf      www.t10.org   draft prior to SPL-3
-  spl4r11.pdf      www.t10.org   current draft
+                                 SPL-3 ANSI INCITS 492-2015
+  spl4r13.pdf      www.t10.org   draft prior to SPL-4
+  spl5r02.pdf      www.t10.org   current draft
   SFF_8485.PDF     www.sffcommittee.com   SGPIO revision 0.7
 
 In SAS-2.1 the physical layer was put into a document of that name
@@ -40,4 +48,6 @@ the SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-4th March 2017
+8th December 2017
+
+

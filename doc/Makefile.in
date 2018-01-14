@@ -255,8 +255,6 @@ localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-os_deps = @os_deps@
-os_libs = @os_libs@
 pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
@@ -527,3 +525,5 @@ uninstall-man: uninstall-man8
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
+
+

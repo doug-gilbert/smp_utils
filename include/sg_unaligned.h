@@ -2,7 +2,7 @@
 #define SG_UNALIGNED_H
 
 /*
- * Copyright (c) 2014-2016 Douglas Gilbert.
+ * Copyright (c) 2014-2017 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
@@ -74,9 +74,10 @@ static inline uint16_t sg_get_unaligned_be16(const void *p)
         return __get_unaligned_be16((const uint8_t *)p);
 }
 
-static inline uint32_t sg_get_unaligned_be24(const uint8_t *p)
+static inline uint32_t sg_get_unaligned_be24(const void *p)
 {
-        return p[0] << 16 | p[1] << 8 | p[2];
+        return ((const uint8_t *)p)[0] << 16 | ((const uint8_t *)p)[1] << 8 |
+               ((const uint8_t *)p)[2];
 }
 
 static inline uint32_t sg_get_unaligned_be32(const void *p)
@@ -97,7 +98,7 @@ static inline uint64_t sg_get_unaligned_be64(const void *p)
 
 /* Returns 0 if 'num_bytes' is less than or equal to 0 or greater than
  * 8 (i.e. sizeof(uint64_t)). Else returns result in uint64_t which is
- * an 8 bytes unsigned integer. */
+ * an 8 byte unsigned integer. */
 static inline uint64_t sg_get_unaligned_be(int num_bytes, const void *p)
 {
         if ((num_bytes <= 0) || (num_bytes > (int)sizeof(uint64_t)))
@@ -172,7 +173,7 @@ static inline void sg_nz_put_unaligned_be64(uint64_t val, void *p)
 
 
 /* Below are the little endian equivalents of the big endian functions
- * above. Little endian is used by ATA, networking and PCI.
+ * above. Little endian is used by ATA, PCI and NVMe.
  */
 
 static inline uint16_t __get_unaligned_le16(const uint8_t *p)
@@ -239,7 +240,7 @@ static inline uint64_t sg_get_unaligned_le64(const void *p)
 
 /* Returns 0 if 'num_bytes' is less than or equal to 0 or greater than
  * 8 (i.e. sizeof(uint64_t)). Else returns result in uint64_t which is
- * an 8 bytes unsigned integer. */
+ * an 8 byte unsigned integer. */
 static inline uint64_t sg_get_unaligned_le(int num_bytes, const void *p)
 {
         if ((num_bytes <= 0) || (num_bytes > (int)sizeof(uint64_t)))
@@ -322,3 +323,5 @@ static inline void sg_nz_put_unaligned_le64(uint64_t val, void *p)
 #endif
 
 #endif /* SG_UNALIGNED_H */
+
+

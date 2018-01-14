@@ -1,8 +1,8 @@
 smp-utils (0.99-0.1) unstable; urgency=low
 
-  * move toward G5 (22.5 Gbps)
+  * add support for G5 (22.5 Gbps, SAS-4, SPL-5)
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 29 Feb 2016 19:00:00 -0500
+ -- Douglas Gilbert <dgilbert@interlog.com>  Sat, 13 Jan 2018 13:00:00 -0500
 
 smp-utils (0.98-0.1) unstable; urgency=low
 
@@ -57,4 +57,6 @@ smp-utils (0.90-0.1) unstable; urgency=low
   * Initial release
 
  -- Douglas Gilbert <dgilbert@interlog.com>  Mon, 10 Jun 2006 19:00:00 -0400
+
+
 

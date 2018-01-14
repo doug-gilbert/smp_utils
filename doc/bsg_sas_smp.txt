@@ -20,7 +20,7 @@ to access expanders.
 
 The SAS-2 standard outlines two ways to control expanders:
   a) via SMP from an SMP initiator which is found in most SAS HBAs and
-     and RAID controllers
+     RAID controllers
   b) an Out of Band communication method which SAS-2 does not define
      but nominates ethernet as an example
 
@@ -219,3 +219,5 @@ signals may be controlled by the SMP READ GPIO and WRITE GPIO functions.
 
 
 Douglas Gilbert 20140515
+
+
