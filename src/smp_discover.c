@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2017 Douglas Gilbert.
+ * Copyright (c) 2006-2018 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.58 20171203";    /* spl5r02 */
+static const char * version_str = "1.59 20180212";    /* spl5r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -194,7 +194,7 @@ usage(void)
 }
 
 static void
-dStrRaw(const char* str, int len)
+dStrRaw(const uint8_t * str, int len)
 {
     int k;
 
@@ -202,17 +202,21 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-/* Returns true if 'Table to Table Supported' bit set on REPORT GENERAL
- * respone. Returns false otherwise. */
-static bool
-has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
+/* Returns the number of phys (from REPORT GENERAL response) and if
+ * t2t_routingp is non-NULL places 'Table to Table Supported' bit where it
+ * points. Returns -3 (or less) -> SMP_LIB errors negated (-4 - smp_err),
+ * -1 for other errors. */
+static int
+get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
+             bool * t2t_routingp)
 {
+    bool t2t;
     int len, res, k, act_resplen;
     char * cp;
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
-                               0, 0, 0, 0, 0, 0};
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL, 0, 0,
+                         0, 0, 0, 0};
     struct smp_req_resp smp_rr;
-    unsigned char rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
+    uint8_t rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
     char b[256];
 
     memset(rp, 0, sizeof(rp));
@@ -233,17 +237,17 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
         pr2serr("RG smp_send_req failed, res=%d\n", res);
         if (0 == op->verbose)
             pr2serr("    try adding '-v' option for more debug\n");
-        return 0;
+        return -1;
     }
     if (smp_rr.transport_err) {
         pr2serr("RG smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
-        return 0;
+        return -1;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
         pr2serr("RG response too short, len=%d\n", act_resplen);
-        return 0;
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     len = rp[3];
     if ((0 == len) && (0 == rp[2])) {
@@ -265,21 +269,27 @@ has_table2table_routing(struct smp_target_obj * top, const struct opts_t * op)
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
         pr2serr("RG expected SMP frame response type, got=0x%x\n",
                 rp[0]);
-        return 0;
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (rp[1] != smp_req[1]) {
         pr2serr("RG Expected function code=0x%x, got=0x%x\n",
                 smp_req[1], rp[1]);
-        return 0;
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (rp[2]) {
         if (op->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
             pr2serr("Report General result: %s\n", cp);
         }
-        return 0;
+        return -4 - rp[2];
     }
-    return (len > 10) ? !!(0x80 & rp[10]) : 0;
+    t2t = (len > 10) ? !!(0x80 & rp[10]) : false;
+    if (t2t_routingp)
+        *t2t_routingp = t2t;
+    if (op->verbose > 2)
+        pr2serr("%s: len=%d, number of phys: %u, t2t=%d\n", __func__, len,
+                rp[9], (int)t2t);
+    return (len > 9) ? rp[9] : 0;
 }
 
 /* Since spl4r01 these are 'attached SAS device type's */
@@ -382,17 +392,17 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
 }
 
 /* Returns length of response in bytes, excluding the CRC on success,
-   -3 (or less) -> SMP_LIB errors negated ('-4 - smp_err),
+   -3 (or less) -> SMP_LIB errors negated (-4 - smp_err),
    -1 for other errors */
 static int
 do_discover(struct smp_target_obj * top, int disc_phy_id,
-            unsigned char * resp, int max_resp_len,
+            uint8_t * resp, int max_resp_len,
             bool silence_err_report, const struct opts_t * op)
 {
     int len, res, k, act_resplen;
     char * cp;
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER, 0, 0,
+                         0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0};
     char b[256];
     struct smp_req_resp smp_rr;
 
@@ -452,9 +462,9 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
     }
     if (op->do_hex || op->do_raw) {
         if (op->do_hex)
-            dStrHex((const char *)resp, len, 1);
+            hex2stdout(resp, len, 1);
         else
-            dStrRaw((const char *)resp, len);
+            dStrRaw(resp, len);
         if (SMP_FRAME_TYPE_RESP != resp[0])
             return -4 - SMP_LIB_CAT_MALFORMED;
         if (resp[1] != smp_req[1])
@@ -489,7 +499,7 @@ do_discover(struct smp_target_obj * top, int disc_phy_id,
 /* Note that the inner attributes are output in alphabetical order. */
 /* N.B. This function has not been kept up to date. */
 static int
-print_single_list(const unsigned char * rp, int len, bool show_exp_cc,
+print_single_list(const uint8_t * rp, int len, bool show_exp_cc,
                   int do_brief)
 {
     bool sas2;
@@ -667,7 +677,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 }
 
 static int
-print_single(const unsigned char * rp, int len, bool just1,
+print_single(const uint8_t * rp, int len, bool just1,
              const struct opts_t * op)
 {
     bool sas2;
@@ -860,7 +870,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
 {
     int len, ret;
     uint64_t ull;
-    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
+    uint8_t rp[SMP_FN_DISCOVER_RESP_LEN];
 
     /* If do_discover() works, returns response length (less CRC bytes) */
     len = do_discover(top, op->phy_id, rp, sizeof(rp), false, op);
@@ -899,7 +909,6 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
 static int
 do_multiple(struct smp_target_obj * top, const struct opts_t * op)
 {
-    bool checked_rg = false;
     bool first = true;
     bool has_t2t = false;
     bool plus;
@@ -908,10 +917,22 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
     const char * cp;
     char b[256];
     char dsn[10] = "";
-    unsigned char rp[SMP_FN_DISCOVER_RESP_LEN];
+    uint8_t rp[SMP_FN_DISCOVER_RESP_LEN];
 
     expander_sa = 0;
-    num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
+    num = get_num_phys(top, op, &has_t2t);
+    if (num <= 0)
+        num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
+    else {
+        if (op->phy_id >= num) {
+            printf("Given phy_id=%d at or beyond number of phys (%d)\n",
+                   op->phy_id, num);
+            return 0;   /* nothing to do */
+        }
+        num -= op->phy_id;
+        if (op->do_num)
+            num = (num > op->do_num) ? op->do_num : num;
+    }
     for (k = op->phy_id; k < num; ++k) {
         len = do_discover(top, k, rp, sizeof(rp), true, op);
         if (len < 0)
@@ -977,10 +998,6 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             cp = "S";
             break;
         case 2:
-            if (! checked_rg) {
-                checked_rg = true;
-                has_t2t = has_table2table_routing(top, op);
-            }
             /* table routing phy when expander does t2t is Universal */
             cp = has_t2t ? "U" : "T";
             break;
@@ -1272,7 +1289,7 @@ main(int argc, char * argv[])
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
             pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+                    "environment variable SMP_UTILS_DEVICE instead]\n\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }

@@ -80,7 +80,7 @@ fi
 
 
 %changelog
-* Sat Jan 13 2018 - dgilbert at interlog dot com
+* Mon Feb 12 2018 - dgilbert at interlog dot com
 - add support for G5 (22.5 Gbps, SAS-4, SPL-5)
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com

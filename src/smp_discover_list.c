@@ -1,30 +1,27 @@
 /*
- * Copyright (c) 2006-2017 Douglas Gilbert.
+ * Copyright (c) 2006-2018, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <unistd.h>
@@ -57,7 +54,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r02.pdf .
  */
 
-static const char * version_str = "1.45 20171203";    /* spl5r02 */
+static const char * version_str = "1.46 20180212";    /* spl5r02 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -163,7 +160,7 @@ usage(void)
             "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
             "expander\n"
             "                         attached; 2 -> expander "
-            "or SAS SATA"
+            "or SAS SATA\n"
             "                         device; 3 -> SAS SATA (end) device\n"
             "    --help|-h            print out usage message\n"
             "    --hex|-H             print response in hexadecimal\n"
@@ -204,7 +201,7 @@ usage(void)
 }
 
 static void
-dStrRaw(const char* str, int len)
+dStrRaw(const uint8_t * str, int len)
 {
     int k;
 
@@ -212,22 +209,24 @@ dStrRaw(const char* str, int len)
         printf("%c", str[k]);
 }
 
-/* Returns true if 'Table to Table Supported' bit set on REPORT GENERAL
- * respone. Returns false otherwise. */
-static bool
-has_table2table_routing(struct smp_target_obj * top,
-                        const struct opts_t * optsp)
+/* Returns the number of phys (from REPORT GENERAL response) and if
+ * t2t_routingp is non-NULL places 'Table to Table Supported' bit where it
+ * points. Returns -3 (or less) -> SMP_LIB errors negated (-4 - smp_err),
+ * -1 for other errors. */
+static int
+get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
+             bool * t2t_routingp)
 {
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL,
-                               0, 0, 0, 0, 0, 0};
-    struct smp_req_resp smp_rr;
-    unsigned char rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
-    char b[256];
-    char * cp;
     int len, res, k, act_resplen;
+    char * cp;
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL, 0, 0,
+                         0, 0, 0, 0};
+    struct smp_req_resp smp_rr;
+    uint8_t rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
+    char b[256];
 
     memset(rp, 0, sizeof(rp));
-    if (optsp->verbose) {
+    if (op->verbose) {
         pr2serr("    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
             pr2serr("%02x ", smp_req[k]);
@@ -238,60 +237,62 @@ has_table2table_routing(struct smp_target_obj * top,
     smp_rr.request = smp_req;
     smp_rr.max_response_len = sizeof(rp);
     smp_rr.response = rp;
-    res = smp_send_req(top, &smp_rr, optsp->verbose);
+    res = smp_send_req(top, &smp_rr, op->verbose);
 
     if (res) {
         pr2serr("RG smp_send_req failed, res=%d\n", res);
-        if (0 == optsp->verbose)
+        if (0 == op->verbose)
             pr2serr("    try adding '-v' option for more debug\n");
-        return 0;
+        return -1;
     }
     if (smp_rr.transport_err) {
         pr2serr("RG smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
-        return 0;
+        return -1;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
         pr2serr("RG response too short, len=%d\n", act_resplen);
-        return 0;
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     len = rp[3];
     if ((0 == len) && (0 == rp[2])) {
         len = smp_get_func_def_resp_len(rp[1]);
         if (len < 0) {
             len = 0;
-            if (optsp->verbose > 1)
+            if (op->verbose > 1)
                 pr2serr("unable to determine RG response length\n");
         }
     }
     len = 4 + (len * 4);        /* length in bytes, excluding 4 byte CRC */
     if ((act_resplen >= 0) && (len > act_resplen)) {
-        if (optsp->verbose)
+        if (op->verbose)
             pr2serr("actual RG response length [%d] less than deduced "
                     "length [%d]\n", act_resplen, len);
         len = act_resplen;
     }
     /* ignore --hex and --raw */
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
-        pr2serr("RG expected SMP frame response type, got=0x%x\n", rp[0]);
-        return 0;
+        pr2serr("RG expected SMP frame response type, got=0x%x\n",
+                rp[0]);
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (rp[1] != smp_req[1]) {
-        pr2serr("RG Expected function code=0x%x, got=0x%x\n", smp_req[1],
-                rp[1]);
-        return 0;
+        pr2serr("RG Expected function code=0x%x, got=0x%x\n",
+                smp_req[1], rp[1]);
+        return -4 - SMP_LIB_CAT_MALFORMED;
     }
     if (rp[2]) {
-        if (optsp->verbose > 1) {
+        if (op->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
             pr2serr("Report General result: %s\n", cp);
         }
-        return 0;
+        return -4 - rp[2];
     }
-    return (len > 10) ? !!(0x80 & rp[10]) : 0;
+    if (t2t_routingp)
+        *t2t_routingp = (len > 10) ? !!(0x80 & rp[10]) : false;
+    return (len > 9) ? rp[9] : 0;
 }
-
 
 /* Since spl4r01 these are 'attached SAS device type's */
 static const char * smp_attached_device_type[] = {
@@ -396,13 +397,13 @@ smp_get_neg_xxx_link_rate(int val, int b_len, char * b)
    for other error categories. */
 static int
 do_discover_list(struct smp_target_obj * top, int sphy_id,
-                 unsigned char * resp, int max_resp_len,
+                 uint8_t * resp, int max_resp_len,
                  struct opts_t * op)
 {
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER_LIST, 0, 6,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, };
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_DISCOVER_LIST, 0, 6,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, };
     struct smp_req_resp smp_rr;
     char b[256];
     char * cp;
@@ -473,9 +474,9 @@ do_discover_list(struct smp_target_obj * top, int sphy_id,
     }
     if (op->do_hex || op->do_raw) {
         if (op->do_hex)
-            dStrHex((const char *)resp, len, 1);
+            hex2stdout(resp, len, 1);
         else
-            dStrRaw((const char *)resp, len);
+            dStrRaw(resp, len);
         if (SMP_FRAME_TYPE_RESP != resp[0])
             return SMP_LIB_CAT_MALFORMED;
         if (resp[1] != smp_req[1])
@@ -570,8 +571,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 /* long format: as described in (full, single) DISCOVER response
  * Returns 0 for okay, else -1 . */
 static int
-decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
-                       struct opts_t * op)
+decode_desc0_multiline(const uint8_t * rp, int hdr_ecc, struct opts_t * op)
 {
     unsigned int ui;
     int func_res, phy_id, ecc, adt, route_attr, len;
@@ -751,8 +751,7 @@ decode_desc0_multiline(const unsigned char * rp, int hdr_ecc,
 /* short format: only DISCOVER LIST has this abridged 24 byte descriptor.
  * Returns 0 for okay, else -1 . */
 static int
-decode_desc1_multiline(const unsigned char * rp, bool z_enabled,
-                       struct opts_t * op)
+decode_desc1_multiline(const uint8_t * rp, bool z_enabled, struct opts_t * op)
 {
     int func_res, phy_id, adt, route_attr;
     char b[256];
@@ -825,8 +824,8 @@ decode_desc1_multiline(const unsigned char * rp, bool z_enabled,
  * "per phy" function. Returns 0 for ok, 1 for ok plus zoning enabled and
   * seen ZG other than 1, else -1 (for problem) . */
 static int
-decode_1line(const unsigned char * rp, int len, int desc,
-             bool z_enabled, int has_t2t, struct opts_t * op)
+decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
+             int has_t2t, struct opts_t * op)
 {
     bool plus;
     bool zg_not1 = true;
@@ -1051,7 +1050,7 @@ decode_1line(const unsigned char * rp, int len, int desc,
 }
 
 static void
-output_header_info(const unsigned char * rp, struct opts_t * op)
+output_header_info(const uint8_t * rp, struct opts_t * op)
 {
     bool z_enabled;
     int hdr_ecc, sphy_id;
@@ -1104,13 +1103,12 @@ output_header_info(const unsigned char * rp, struct opts_t * op)
 int
 main(int argc, char * argv[])
 {
-    bool checked_rg = false;
     bool has_t2t = false;
     bool no_more;
     bool z_enabled = false;
     bool zg_not1 = false;
     int res, c, len, hdr_ecc, num_desc, resp_filter, resp_desc_type;
-    int desc_len, k, j, err, off, adt, fresult;
+    int desc_len, k, j, err, off, adt, fresult, num;
     int ret = 0;
     int subvalue = 0;
     int64_t sa_ll;
@@ -1118,7 +1116,7 @@ main(int argc, char * argv[])
     struct opts_t * op;
     char i_params[256];
     char device_name[512];
-    unsigned char resp[1020 + 8];
+    uint8_t resp[1020 + 8];
     struct smp_target_obj tobj;
     struct opts_t opts;
 
@@ -1193,7 +1191,7 @@ main(int argc, char * argv[])
         case 'p':
            op->phy_id = smp_get_num(optarg);
            if ((op->phy_id < 0) || (op->phy_id > 254)) {
-                pr2serr("bad argument to '--phy', expect value from 0 to "
+                pr2serr("bad argument to '--phy=', expect value from 0 to "
                         "254\n");
                 return SMP_LIB_SYNTAX_ERROR;
             }
@@ -1247,7 +1245,7 @@ main(int argc, char * argv[])
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
             pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+                    "environment variable SMP_UTILS_DEVICE instead]\n\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -1349,9 +1347,21 @@ main(int argc, char * argv[])
             }
         }
     }
-
+    num = get_num_phys(&tobj, op, &has_t2t);
+    if (num <= 0)
+        num = op->do_num;
+    else {
+        if (op->phy_id >= num) {
+            printf("Given phy_id=%d equals or exceeds number of phys (%d)\n",
+                   op->phy_id, num);
+            ret = 0;    /* could treat as error */
+            goto err_out;
+        }
+        num -= op->phy_id;
+        num = (num < op->do_num) ? num : op->do_num;
+    }
     no_more = false;
-    for (j = 0; (j < op->do_num) && (! no_more); j += num_desc) {
+    for (j = 0; (j < num) && (! no_more); j += num_desc) {
         memset(resp, 0, sizeof(resp));
         if ((op->phy_id + j) > 254) {
             ret = 0;    /* off the end so not error */
@@ -1396,10 +1406,6 @@ main(int argc, char * argv[])
         for (k = 0, err = 0; k < num_desc; ++k) {
             off = 48 + (k * desc_len);
             if (op->do_1line) {
-                if (! checked_rg) {
-                    checked_rg = true;
-                    has_t2t = has_table2table_routing(&tobj, op);
-                }
                 res = decode_1line(resp + off, desc_len, resp_desc_type,
                                    z_enabled, has_t2t, op);
                 if (res < 0)

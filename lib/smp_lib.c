@@ -1,30 +1,27 @@
 /*
- * Copyright (c) 2006-2016 Douglas Gilbert.
+ * Copyright (c) 2006-2018, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdio.h>
@@ -38,7 +35,7 @@
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.23 20171229";    /* spl-5 rev 2 */
+static const char * version_str = "1.25 20180212";    /* spl-5 rev 3 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -701,6 +698,115 @@ dStrHexStr(const char * str, int len, const char * leadin, int format,
             n += scnpr(b + n, b_len - n, "%s\n", buff);
     }
     return n;
+}
+
+void
+hex2stdout(const uint8_t * b_str, int len, int no_ascii)
+{
+    dStrHex((const char *)b_str, len, no_ascii);
+}
+
+void
+hex2stderr(const uint8_t * b_str, int len, int no_ascii)
+{
+    dStrHexErr((const char *)b_str, len, no_ascii);
+}
+
+int
+hex2str(const uint8_t * b_str, int len, const char * leadin, int format,
+        int b_len, char * b)
+{
+    return dStrHexStr((const char *)b_str, len, leadin, format, b_len, b);
+}
+
+uint32_t
+smp_get_page_size(void)
+{
+#if defined(HAVE_SYSCONF) && defined(_SC_PAGESIZE)
+    return sysconf(_SC_PAGESIZE); /* POSIX.1 (was getpagesize()) */
+#elif defined(SG_LIB_WIN32)
+    if (! got_page_size) {
+        SYSTEM_INFO si;
+
+        GetSystemInfo(&si);
+        win_page_size = si.dwPageSize;
+        got_page_size = true;
+    }
+    return win_page_size;
+#elif defined(SG_LIB_FREEBSD)
+    return PAGE_SIZE;
+#else
+    return 4096;     /* give up, pick likely figure */
+#endif
+}
+
+/* Returns pointer to heap (or NULL) that is aligned to a align_to byte
+ * boundary. Sends back *buff_to_free pointer in third argument that may be
+ * different from the return value. If it is different then the *buff_to_free
+ * pointer should be freed (rather than the returned value) when the heap is
+ * no longer needed. If align_to is 0 then aligns to OS's page size. Sets all
+ * returned heap to zeros. If num_bytes is 0 then set to page size. */
+uint8_t *
+smp_memalign(uint32_t num_bytes, uint32_t align_to, uint8_t ** buff_to_free,
+             bool vb)
+{
+    size_t psz;
+    uint8_t * res;
+
+    if (buff_to_free)   /* make sure buff_to_free is NULL if alloc fails */
+        *buff_to_free = NULL;
+    psz = (align_to > 0) ? align_to : smp_get_page_size();
+    if (0 == num_bytes)
+        num_bytes = psz;        /* ugly to handle otherwise */
+
+#ifdef HAVE_POSIX_MEMALIGN
+    {
+        int err;
+        void * wp = NULL;
+
+        err = posix_memalign(&wp, psz, num_bytes);
+        if (err || (NULL == wp)) {
+            fprintf(stderr, "%s: posix_memalign: error [%d], out of "
+                    "memory?\n", __func__, err);
+            return NULL;
+        }
+        memset(wp, 0, num_bytes);
+        if (buff_to_free)
+            *buff_to_free = (uint8_t *)wp;
+        res = (uint8_t *)wp;
+        if (vb) {
+            fprintf(stderr, "%s: posix_ma, len=%d, ", __func__, num_bytes);
+            if (buff_to_free)
+                fprintf(stderr, "wrkBuffp=%p, ", (void *)res);
+            fprintf(stderr, "psz=%u, rp=%p\n", (unsigned int)psz,
+                    (void *)res);
+        }
+        return res;
+    }
+#else
+    {
+        void * wrkBuff;
+        smp_uintptr_t align_1 = psz - 1;
+
+        wrkBuff = (uint8_t *)calloc(num_bytes + psz, 1);
+        if (NULL == wrkBuff) {
+            if (buff_to_free)
+                *buff_to_free = NULL;
+            return NULL;
+        } else if (buff_to_free)
+            *buff_to_free = (uint8_t *)wrkBuff;
+        res = (uint8_t *)(void *)
+            (((smp_uintptr_t)wrkBuff + align_1) & (~align_1));
+        if (vb) {
+            fprintf(stderr, "%s: hack, len=%d, ", __func__, num_bytes);
+            if (buff_to_free)
+                fprintf(stderr, "buff_to_free=%p, ", wrkBuff);
+            fprintf(stderr, "align_1=%lu, rp=%p\n", (unsigned long)align_1,
+                    (void *)res);
+        }
+        return res;
+    }
+#endif
 }
 
 /* Returns true when executed on big endian machine; else returns false.

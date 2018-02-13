@@ -17,6 +17,9 @@ AC_PROG_LIBTOOL
 # check for headers
 AC_HEADER_STDC
 
+# check for functions
+AC_CHECK_FUNCS(posix_memalign)
+
 AC_CANONICAL_HOST
 
 AC_DEFINE_UNQUOTED(SMP_UTILS_BUILD_HOST, "${host}", [smp_utils Build Host])
