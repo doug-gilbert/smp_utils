@@ -50,7 +50,7 @@
  * response.
  */
 
-static const char * version_str = "1.13 20180212";
+static const char * version_str = "1.14 20180217";
 
 #define SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN (1020 + 4 + 4)
 
@@ -341,7 +341,8 @@ main(int argc, char * argv[])
     char b[256];
     uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_EVENT_LIST,
                          0, 1,  0, 0, 0, 0,  0, 0, 0, 0};
-    uint8_t smp_resp[SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN];
+    uint8_t * smp_resp = NULL;
+    uint8_t * free_smp_resp = NULL;
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
 
@@ -478,7 +479,16 @@ main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
-    len = (sizeof(smp_resp) - 8) / 4;
+    /* Align SMP response buffer to a page boundary */
+    smp_resp = smp_memalign(SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN, 0,
+                            &free_smp_resp, false);
+    if (NULL == smp_resp) {
+        pr2serr("Unable to allocated %u bytes on the heap\n",
+                SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN);
+        ret = SMP_LIB_RESOURCE_ERROR;
+        goto err_out;
+    }
+    len = (SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN - 8) / 4;
     smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
     sg_put_unaligned_be16(starting_index, smp_req + 6);
     if (verbose) {
@@ -490,7 +500,7 @@ main(int argc, char * argv[])
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(smp_resp);
+    smp_rr.max_response_len = SMP_FN_REPORT_PHY_EVENT_LIST_RESP_LEN;
     smp_rr.response = smp_resp;
     res = smp_send_req(&tobj, &smp_rr, verbose);
 
@@ -601,6 +611,8 @@ main(int argc, char * argv[])
         printf("Start next invocation at '--index=%u'\n", first_di + k);
 
 err_out:
+    if (free_smp_resp)
+        free(free_smp_resp);
     res = smp_initiator_close(&tobj);
     if (res < 0) {
         pr2serr("close error: %s\n", safe_strerror(errno));

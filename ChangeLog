@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20180212] [svn:r165]
+Changelog for smp_utils-0.99 [20180222] [svn:r166]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
     - attached SAS device type, word SAS added (spl4r01)
@@ -18,6 +18,7 @@ Changelog for smp_utils-0.99 [20180212] [svn:r165]
     - add external port field (spl5r02)
   - smp_phy_test: change default linkrate from 3 to 6 Gbps
     which is value 0xa
+  - smp_conf_phy_event: fix file pointer leak
   - add G5 (22.5 Gbps for SAS-4) settings [spl4r06]
   - convert many two valued ints to bools
   - smp_lib:

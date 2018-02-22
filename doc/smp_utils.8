@@ -117,7 +117,7 @@ between an expander phy and a SES array element. Newer expanders (e.g. SAS\-3)
 support dsn_s in the DISCOVER (and DISCOVER LIST) functions. These can be
 shown, if available, with the \-\-dsn option to smp_discover and
 smp_discover_list utilities.. To ease typing that option often, the
-SMP_UTILS_DSN environment variableriable, if present, has the same effect.
+SMP_UTILS_DSN environment variable, if present, has the same effect.
 .PP
 If both an environment variable and the corresponding command line option is
 given and contradict, then the command line options take precedence.
@@ -196,6 +196,10 @@ a combination of options that is not permitted.
 the utility is unable to open, close or use the given \fISMP_DEVICE\fR.
 The given file name could be incorrect or there may be file permission
 problems. Adding the \fI\-\-verbose\fR option may give more information.
+.TP
+.B 93
+the utility has a resource problem. Typically this means an attempt to
+allocate memory (ram) has failed.
 .TP
 .B 97
 the response to an SMP function failed sanity checks.

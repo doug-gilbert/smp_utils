@@ -57,7 +57,7 @@
  * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
  */
 
-static const char * version_str = "1.59 20180212";    /* spl5r03 */
+static const char * version_str = "1.60 20180217";    /* spl5r03 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -212,14 +212,20 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
 {
     bool t2t;
     int len, res, k, act_resplen;
+    int ret = 0;
     char * cp;
     uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL, 0, 0,
                          0, 0, 0, 0};
     struct smp_req_resp smp_rr;
-    uint8_t rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
+    uint8_t * rp = NULL;
+    uint8_t * free_rp = NULL;
     char b[256];
 
-    memset(rp, 0, sizeof(rp));
+    rp = smp_memalign(SMP_FN_REPORT_GENERAL_RESP_LEN, 0, &free_rp, false);
+    if (NULL == rp) {
+        pr2serr("%s: heap allocation problem\n", __func__);
+        return SMP_LIB_RESOURCE_ERROR;
+    }
     if (op->verbose) {
         pr2serr("    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
@@ -229,7 +235,7 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(rp);
+    smp_rr.max_response_len = SMP_FN_REPORT_GENERAL_RESP_LEN;
     smp_rr.response = rp;
     res = smp_send_req(top, &smp_rr, op->verbose);
 
@@ -237,17 +243,20 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
         pr2serr("RG smp_send_req failed, res=%d\n", res);
         if (0 == op->verbose)
             pr2serr("    try adding '-v' option for more debug\n");
-        return -1;
+        ret = -1;
+        goto fini;
     }
     if (smp_rr.transport_err) {
         pr2serr("RG smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
-        return -1;
+        ret = -1;
+        goto fini;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
         pr2serr("RG response too short, len=%d\n", act_resplen);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     len = rp[3];
     if ((0 == len) && (0 == rp[2])) {
@@ -269,19 +278,22 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
         pr2serr("RG expected SMP frame response type, got=0x%x\n",
                 rp[0]);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     if (rp[1] != smp_req[1]) {
         pr2serr("RG Expected function code=0x%x, got=0x%x\n",
                 smp_req[1], rp[1]);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     if (rp[2]) {
         if (op->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
             pr2serr("Report General result: %s\n", cp);
         }
-        return -4 - rp[2];
+        ret = -4 - rp[2];
+        goto fini;
     }
     t2t = (len > 10) ? !!(0x80 & rp[10]) : false;
     if (t2t_routingp)
@@ -289,7 +301,11 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
     if (op->verbose > 2)
         pr2serr("%s: len=%d, number of phys: %u, t2t=%d\n", __func__, len,
                 rp[9], (int)t2t);
-    return (len > 9) ? rp[9] : 0;
+    ret = (len > 9) ? rp[9] : 0;
+fini:
+    if (free_rp)
+        free(free_rp);
+    return ret;
 }
 
 /* Since spl4r01 these are 'attached SAS device type's */
@@ -870,36 +886,47 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
 {
     int len, ret;
     uint64_t ull;
-    uint8_t rp[SMP_FN_DISCOVER_RESP_LEN];
+    uint8_t * rp = NULL;
+    uint8_t * free_rp = NULL;
+
+    rp = smp_memalign(SMP_FN_DISCOVER_RESP_LEN, 0, &free_rp, false);
+    if (NULL == rp) {
+        pr2serr("%s: heap allocation problem\n", __func__);
+        return SMP_LIB_RESOURCE_ERROR;
+    }
 
     /* If do_discover() works, returns response length (less CRC bytes) */
-    len = do_discover(top, op->phy_id, rp, sizeof(rp), false, op);
+    len = do_discover(top, op->phy_id, rp, SMP_FN_DISCOVER_RESP_LEN, false,
+                      op);
     if (len < 0)
         ret = (len < -2) ? (-4 - len) : len;
     else
         ret = 0;
     if (op->do_hex || op->do_raw)
-        return ret;
+        goto fini;
     ull = 0;
     if (len > 23)   /* fetch my (expander's) SAS addrss */
         ull = sg_get_unaligned_be64(rp + 16);
     if (op->do_my) {
         printf("0x%" PRIx64 "\n", ull);
         if ((ull > 0) && (SMP_FRES_PHY_VACANT == ret))
-            return 0;
-        else
-            return ret;
+            ret = 0;
+        goto fini;
     }
     if (ret) {
         if (SMP_FRES_PHY_VACANT == ret)
             printf("  phy identifier: %d  inaccessible (phy vacant)\n",
                    op->phy_id);
-        return ret;
+        goto fini;
     }
     if (op->do_list)
-        return print_single_list(rp, len, true, op->do_brief);
+        ret = print_single_list(rp, len, true, op->do_brief);
     else
-        return print_single(rp, len, true, op);
+        ret = print_single(rp, len, true, op);
+fini:
+    if (free_rp)
+        free(free_rp);
+    return ret;
 }
 
 #define MAX_PHY_ID 254
@@ -912,13 +939,20 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
     bool first = true;
     bool has_t2t = false;
     bool plus;
-    int ret, len, k, num, off, negot, adt, zg;
+    int len, k, num, off, negot, adt, zg;
+    int ret = 0;
     uint64_t ull, adn, expander_sa;
     const char * cp;
     char b[256];
     char dsn[10] = "";
-    uint8_t rp[SMP_FN_DISCOVER_RESP_LEN];
+    uint8_t * rp = NULL;
+    uint8_t * free_rp = NULL;
 
+    rp = smp_memalign(SMP_FN_DISCOVER_RESP_LEN, 0, &free_rp, false);
+    if (NULL == rp) {
+        pr2serr("%s: heap allocation problem\n", __func__);
+        return SMP_LIB_RESOURCE_ERROR;
+    }
     expander_sa = 0;
     num = get_num_phys(top, op, &has_t2t);
     if (num <= 0)
@@ -927,25 +961,27 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
         if (op->phy_id >= num) {
             printf("Given phy_id=%d at or beyond number of phys (%d)\n",
                    op->phy_id, num);
-            return 0;   /* nothing to do */
+            ret = 0;   /* nothing to do */
+            goto fini;
         }
         num -= op->phy_id;
         if (op->do_num)
             num = (num > op->do_num) ? op->do_num : num;
     }
     for (k = op->phy_id; k < num; ++k) {
-        len = do_discover(top, k, rp, sizeof(rp), true, op);
+        len = do_discover(top, k, rp, SMP_FN_DISCOVER_RESP_LEN, true, op);
         if (len < 0)
             ret = (len < -2) ? (-4 - len) : len;
         else
             ret = 0;
-        if (SMP_FRES_NO_PHY == ret)
-            return 0;   /* expected, end condition */
-        else if (SMP_FRES_PHY_VACANT == ret) {
+        if (SMP_FRES_NO_PHY == ret) {
+            ret = 0;   /* expected, end condition */
+            goto fini;
+        } else if (SMP_FRES_PHY_VACANT == ret) {
             printf("  phy %3d: inaccessible (phy vacant)\n", k);
             continue;
         } else if (ret)
-            return ret;
+            goto fini;
         ull = sg_get_unaligned_be64(rp + 16);
         if (0 == expander_sa)
             expander_sa = ull;
@@ -1157,7 +1193,10 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             printf("%s", dsn);
         printf("\n");
     }
-    return 0;
+fini:
+    if (free_rp)
+        free(free_rp);
+    return ret;
 }
 
 
