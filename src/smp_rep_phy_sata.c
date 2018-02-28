@@ -52,7 +52,7 @@
  * response.
  */
 
-static const char * version_str = "1.18 20180212";
+static const char * version_str = "1.19 20180217";
 
 #define SMP_FN_REPORT_PHY_SATA_RESP_LEN 72
 
@@ -154,9 +154,10 @@ main(int argc, char * argv[])
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_SATA,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[SMP_FN_REPORT_PHY_SATA_RESP_LEN];
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_PHY_SATA, 0, 0,
+                         0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t * smp_resp = NULL;
+    uint8_t * free_smp_resp = NULL;
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
 
@@ -282,8 +283,17 @@ main(int argc, char * argv[])
     if (res < 0)
         return SMP_LIB_FILE_ERROR;
 
+    /* Align SMP response buffer to a page boundary */
+    smp_resp = smp_memalign(SMP_FN_REPORT_PHY_SATA_RESP_LEN, 0,
+                            &free_smp_resp, false);
+    if (NULL == smp_resp) {
+        pr2serr("Unable to allocated %u bytes on the heap\n",
+                SMP_FN_REPORT_PHY_SATA_RESP_LEN);
+        ret = SMP_LIB_RESOURCE_ERROR;
+        goto err_out;
+    }
     if (! do_zero) {     /* SAS-2 or later */
-        len = (sizeof(smp_resp) - 8) / 4;
+        len = (SMP_FN_REPORT_PHY_SATA_RESP_LEN - 8) / 4;
         smp_req[2] = (len < 0x100) ? len : 0xff; /* Allocated Response Len */
         smp_req[3] = 2; /* Request Length: in dwords */
     }
@@ -298,7 +308,7 @@ main(int argc, char * argv[])
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(smp_resp);
+    smp_rr.max_response_len = SMP_FN_REPORT_PHY_SATA_RESP_LEN;
     smp_rr.response = smp_resp;
     res = smp_send_req(&tobj, &smp_rr, verbose);
 

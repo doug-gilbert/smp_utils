@@ -35,7 +35,7 @@
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.25 20180212";    /* spl-5 rev 3 */
+static const char * version_str = "1.26 20180222";    /* spl-5 rev 3 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -807,6 +807,14 @@ smp_memalign(uint32_t num_bytes, uint32_t align_to, uint8_t ** buff_to_free,
         return res;
     }
 #endif
+}
+
+bool
+smp_is_aligned(const void * pointer, int byte_count)
+{
+    return 0 == ((smp_uintptr_t)pointer %
+                 ((byte_count > 0) ? (uint32_t)byte_count :
+                                     smp_get_page_size()));
 }
 
 /* Returns true when executed on big endian machine; else returns false.

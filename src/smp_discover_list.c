@@ -54,7 +54,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r02.pdf .
  */
 
-static const char * version_str = "1.46 20180212";    /* spl5r02 */
+static const char * version_str = "1.47 20180217";    /* spl5r02 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -153,8 +153,6 @@ usage(void)
             "    --descriptor=TY|-d TY    descriptor type:\n"
             "                         0 -> long (as in DISCOVER); 1 -> "
             "short (24 byte)\n"
-            "                         default is 1 if --brief given, "
-            "else default is 0\n"
             "    --dsn|-D             show device slot number in 1 line\n"
             "                         per phy output, if available\n"
             "    --filter=FI|-f FI    phy filter: 0 -> all (def); 1 -> "
@@ -218,14 +216,20 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
              bool * t2t_routingp)
 {
     int len, res, k, act_resplen;
+    int ret = 0;
     char * cp;
     uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_GENERAL, 0, 0,
                          0, 0, 0, 0};
     struct smp_req_resp smp_rr;
-    uint8_t rp[SMP_FN_REPORT_GENERAL_RESP_LEN];
+    uint8_t * rp = NULL;
+    uint8_t * free_rp = NULL;
     char b[256];
 
-    memset(rp, 0, sizeof(rp));
+    rp = smp_memalign(SMP_FN_REPORT_GENERAL_RESP_LEN, 0, &free_rp, false);
+    if (NULL == rp) {
+        pr2serr("%s: heap allocation problem\n", __func__);
+        return SMP_LIB_RESOURCE_ERROR;
+    }
     if (op->verbose) {
         pr2serr("    Report general request: ");
         for (k = 0; k < (int)sizeof(smp_req); ++k)
@@ -235,7 +239,7 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
     memset(&smp_rr, 0, sizeof(smp_rr));
     smp_rr.request_len = sizeof(smp_req);
     smp_rr.request = smp_req;
-    smp_rr.max_response_len = sizeof(rp);
+    smp_rr.max_response_len = SMP_FN_REPORT_GENERAL_RESP_LEN;
     smp_rr.response = rp;
     res = smp_send_req(top, &smp_rr, op->verbose);
 
@@ -243,17 +247,20 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
         pr2serr("RG smp_send_req failed, res=%d\n", res);
         if (0 == op->verbose)
             pr2serr("    try adding '-v' option for more debug\n");
-        return -1;
+        ret = -1;
+        goto fini;
     }
     if (smp_rr.transport_err) {
         pr2serr("RG smp_send_req transport_error=%d\n",
                 smp_rr.transport_err);
-        return -1;
+        ret = -1;
+        goto fini;
     }
     act_resplen = smp_rr.act_response_len;
     if ((act_resplen >= 0) && (act_resplen < 4)) {
         pr2serr("RG response too short, len=%d\n", act_resplen);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     len = rp[3];
     if ((0 == len) && (0 == rp[2])) {
@@ -275,23 +282,30 @@ get_num_phys(struct smp_target_obj * top, const struct opts_t * op,
     if (SMP_FRAME_TYPE_RESP != rp[0]) {
         pr2serr("RG expected SMP frame response type, got=0x%x\n",
                 rp[0]);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     if (rp[1] != smp_req[1]) {
         pr2serr("RG Expected function code=0x%x, got=0x%x\n",
                 smp_req[1], rp[1]);
-        return -4 - SMP_LIB_CAT_MALFORMED;
+        ret = -4 - SMP_LIB_CAT_MALFORMED;
+        goto fini;
     }
     if (rp[2]) {
         if (op->verbose > 1) {
             cp = smp_get_func_res_str(rp[2], sizeof(b), b);
             pr2serr("Report General result: %s\n", cp);
         }
-        return -4 - rp[2];
+        ret = -4 - rp[2];
+        goto fini;
     }
     if (t2t_routingp)
         *t2t_routingp = (len > 10) ? !!(0x80 & rp[10]) : false;
-    return (len > 9) ? rp[9] : 0;
+    ret = (len > 9) ? rp[9] : 0;
+fini:
+    if (free_rp)
+        free(free_rp);
+    return ret;
 }
 
 /* Since spl4r01 these are 'attached SAS device type's */
@@ -1116,7 +1130,9 @@ main(int argc, char * argv[])
     struct opts_t * op;
     char i_params[256];
     char device_name[512];
-    uint8_t resp[1020 + 8];
+    const uint32_t resp_sz = 1020 + 8;
+    uint8_t * resp = NULL;
+    uint8_t * free_resp = NULL;
     struct smp_target_obj tobj;
     struct opts_t opts;
 
@@ -1328,11 +1344,18 @@ main(int argc, char * argv[])
                 "Ignoring --adn .\n");
         op->do_adn = false;
     }
+    resp = smp_memalign(resp_sz, 0, &free_resp, op->verbose > 3);
+    if (NULL == resp) {
+        pr2serr("Could not allocate %u bytes on heap\n", resp_sz);
+        return SMP_LIB_RESOURCE_ERROR;
+    }
 
     res = smp_initiator_open(device_name, subvalue, i_params, op->sa,
                              &tobj, op->verbose);
-    if (res < 0)
-        return SMP_LIB_FILE_ERROR;
+    if (res < 0) {
+        ret = SMP_LIB_FILE_ERROR;
+        goto err_out;
+    }
 
     if (op->zpi_fn) {
         if ((1 == strlen(op->zpi_fn)) && (0 == strcmp("-", op->zpi_fn)))
@@ -1362,12 +1385,12 @@ main(int argc, char * argv[])
     }
     no_more = false;
     for (j = 0; (j < num) && (! no_more); j += num_desc) {
-        memset(resp, 0, sizeof(resp));
+        memset(resp, 0, resp_sz);
         if ((op->phy_id + j) > 254) {
             ret = 0;    /* off the end so not error */
             break;
         }
-        ret = do_discover_list(&tobj, op->phy_id + j, resp, sizeof(resp), op);
+        ret = do_discover_list(&tobj, op->phy_id + j, resp, resp_sz, op);
         if (ret) {
             if (SMP_FRES_NO_PHY == ret)
                 ret = 0;    /* off the end so not error */
@@ -1444,6 +1467,8 @@ main(int argc, char * argv[])
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
 
 err_out:
+    if (free_resp)
+        free(free_resp);
     if (op->zpi_filep && (stdout != op->zpi_filep))
         fclose(op->zpi_filep);
     res = smp_initiator_close(&tobj);

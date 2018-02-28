@@ -360,6 +360,7 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
     bool bit0, err, have_stdin;
     int in_len, k, j, m, ind;
     int off = 0;
+    int ret = 0;
     unsigned int unum;
     char * lcp;
     FILE * fp;
@@ -400,7 +401,8 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
         if ((k < in_len) && ('#' != lcp[k])) {
             pr2serr("%s: syntax error at line %d, pos %d\n", __func__, j + 1,
                     m + k + 1);
-            return 1;
+            ret = 1;
+            goto fini;
         }
         for (k = 0; k < 1024; ++k) {
             unum = get_unum(lcp, &err);
@@ -409,14 +411,16 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
                 bit0 = !!(0x1 & (off + k));
                 if (ind >= max_arr_len) {
                     pr2serr("%s: array length exceeded\n", __func__);
-                    return 1;
+                    ret = 1;
+                    goto fini;
                 }
                 if (bit0)
                     thres_arr[ind] = unum;
                 else {
                     if (unum > 255) {
                         pr2serr("%s: pes (%u) too large\n", __func__, unum);
-                        return 1;
+                        ret = 1;
+                        goto fini;
                     }
                     pes_arr[ind] = (unsigned char)unum;
                 }
@@ -433,7 +437,8 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
                 }
                 pr2serr("%s: error in line %d, at pos %d\n", __func__, j + 1,
                         (int)(lcp - line + 1));
-                return 1;
+                ret = 1;
+                goto fini;
             }
         }
         off += (k + 1);
@@ -441,10 +446,14 @@ build_joint_arr(const char * file_name, unsigned char * pes_arr,
     if (0x1 & off) {
         pr2serr("%s: expect LBA,NUM pairs but decoded odd number\n"
                 "  from %s\n", __func__, have_stdin ? "stdin" : file_name);
-        return 1;
+        ret = 1;
+        goto fini;
     }
     *arr_len = off >> 1;
-    return 0;
+fini:
+    if (! have_stdin)
+        fclose(fp);
+    return ret;
 }
 
 static void

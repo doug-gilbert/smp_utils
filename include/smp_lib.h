@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2017 Douglas Gilbert.
+ * Copyright (c) 2006-2018 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -125,6 +125,7 @@ extern "C" {
    between 1 and 32 are reserved for SMP function result values */
 #define SMP_LIB_SYNTAX_ERROR 91
 #define SMP_LIB_FILE_ERROR 92
+#define SMP_LIB_RESOURCE_ERROR 93
 #define SMP_LIB_CAT_MALFORMED 97
 #define SMP_LIB_CAT_OTHER 99
 
@@ -296,6 +297,11 @@ uint8_t * smp_memalign(uint32_t num_bytes, uint32_t align_to,
 
 /* Returns OS page size in bytes. If uncertain returns 4096. */
 uint32_t smp_get_page_size(void);
+
+/* If byte_count is 0 or less then the OS page size is used. Returns true
+ * if the remainder of ((unsigned)pointer % byte_count) is 0, else returns
+ * false. */
+bool smp_is_aligned(const void * pointer, int byte_count);
 
 /* Returns true when executed on big endian machine; else returns false.
  * Useful for displaying ATA identify words (which need swapping on a
