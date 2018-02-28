@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2017 Douglas Gilbert.
+ * Copyright (c) 2006-2018 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  * response.
  */
 
-static const char * version_str = "1.12 20171019";
+static const char * version_str = "1.13 20180212";
 
 static struct option long_options[] = {
     {"disable", no_argument, 0, 'd'},
@@ -129,7 +129,7 @@ usage(void)
 }
 
 static void
-dStrRaw(const char* str, int len)
+dStrRaw(const uint8_t * str, int len)
 {
     int k;
 
@@ -262,7 +262,7 @@ main(int argc, char * argv[])
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
             pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+                    "environment variable SMP_UTILS_DEVICE instead]\n\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -373,9 +373,9 @@ main(int argc, char * argv[])
     }
     if (do_hex || do_raw) {
         if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
+            hex2stdout(smp_resp, len, 1);
         else
-            dStrRaw((const char *)smp_resp, len);
+            dStrRaw(smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
             ret = SMP_LIB_CAT_MALFORMED;
         else if (smp_resp[1] != smp_req[1])
@@ -418,3 +418,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+

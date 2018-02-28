@@ -163,6 +163,13 @@ struct smp_req_resp {
     int transport_err;          /* [o] 0 implies no error */
 };
 
+#if (__STDC_VERSION__ >= 199901L)  /* C99 or later */
+    typedef uintptr_t smp_uintptr_t;
+#else
+    typedef unsigned long smp_uintptr_t;
+#endif
+
+
 /* Open device_name (perhaps using associated subvalue, i_params, and sa
  * fields) and if successful places context information in the object pointed
  * to by tobj . Returns 0 on success, else -1 . */
@@ -268,6 +275,27 @@ void dStrHexErr(const char * str, int len, int no_ascii);
  * number of bytes written to 'b' excluding the trailing '\0'. */
 int dStrHexStr(const char * str, int len, const char * leadin, int format,
                int b_len, char * b);
+
+/* The following 3 functions are equivalent to dStrHex(), dStrHexErr() and
+ * dStrHexStr() respectively. The difference is the type of the first of
+ * argument: uint8_t instead of char. The name of the argument is changed
+ * to b_str to stress it is a pointer to the start of a binary string. */
+void hex2stdout(const uint8_t * b_str, int len, int no_ascii);
+void hex2stderr(const uint8_t * b_str, int len, int no_ascii);
+int hex2str(const uint8_t * b_str, int len, const char * leadin, int format,
+            int cb_len, char * cbp);
+
+/* Returns pointer to heap (or NULL) that is aligned to a align_to byte
+ * boundary. Sends back *buff_to_free pointer in third argument that may be
+ * different from the return value. If it is different then the *buff_to_free
+ * pointer should be freed (rather than the returned value) when the heap is
+ * no longer needed. If align_to is 0 then aligns to OS's page size. Sets all
+ * returned heap to zeros. If num_bytes is 0 then set to page size. */
+uint8_t * smp_memalign(uint32_t num_bytes, uint32_t align_to,
+                       uint8_t ** buff_to_free, bool vb);
+
+/* Returns OS page size in bytes. If uncertain returns 4096. */
+uint32_t smp_get_page_size(void);
 
 /* Returns true when executed on big endian machine; else returns false.
  * Useful for displaying ATA identify words (which need swapping on a

@@ -1,30 +1,27 @@
 /*
- * Copyright (c) 2011-2017 Douglas Gilbert.
+ * Copyright (c) 2011-2018, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <unistd.h>
@@ -52,7 +49,7 @@
  * This utility issues a REPORT BROADCAST function and outputs its response.
  */
 
-static const char * version_str = "1.07 20171017";
+static const char * version_str = "1.08 20180212";
 
 #define SMP_FN_REPORT_BROADCAST_RESP_LEN (1020 + 4 + 4)
 
@@ -131,7 +128,7 @@ usage(void)
 }
 
 static void
-dStrRaw(const char* str, int len)
+dStrRaw(const uint8_t * str, int len)
 {
     int k;
 
@@ -167,14 +164,14 @@ main(int argc, char * argv[])
     int verbose = 0;
     int64_t sa_ll;
     uint64_t sa = 0;
-    unsigned char * bdp;
+    uint8_t * bdp;
     char * cp;
     char i_params[256];
     char device_name[512];
     char b[256];
-    unsigned char smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_BROADCAST,
-                               0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned char smp_resp[SMP_FN_REPORT_BROADCAST_RESP_LEN];
+    uint8_t smp_req[] = {SMP_FRAME_TYPE_REQ, SMP_FN_REPORT_BROADCAST, 0, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t smp_resp[SMP_FN_REPORT_BROADCAST_RESP_LEN];
     struct smp_req_resp smp_rr;
     struct smp_target_obj tobj;
 
@@ -249,7 +246,7 @@ main(int argc, char * argv[])
             strncpy(device_name, cp, sizeof(device_name) - 1);
         else {
             pr2serr("missing device name on command line\n    [Could use "
-                    "environment variable SMP_UTILS_DEVICE instead]\n");
+                    "environment variable SMP_UTILS_DEVICE instead]\n\n");
             usage();
             return SMP_LIB_SYNTAX_ERROR;
         }
@@ -342,9 +339,9 @@ main(int argc, char * argv[])
     }
     if (do_hex || do_raw) {
         if (do_hex)
-            dStrHex((const char *)smp_resp, len, 1);
+            hex2stdout(smp_resp, len, 1);
         else
-            dStrRaw((const char *)smp_resp, len);
+            dStrRaw(smp_resp, len);
         if (SMP_FRAME_TYPE_RESP != smp_resp[0])
             ret = SMP_LIB_CAT_MALFORMED;
         if (smp_resp[1] != smp_req[1])
@@ -424,3 +421,5 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
+
+
