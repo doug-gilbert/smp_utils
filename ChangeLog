@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20180222] [svn:r166]
+Changelog for smp_utils-0.99 [20180227] [svn:r167]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
     - attached SAS device type, word SAS added (spl4r01)
@@ -32,6 +32,7 @@ Changelog for smp_utils-0.99 [20180222] [svn:r166]
   - cleanup configure.ac + Makefile.am
   - update BSD license from 3 to 2 clause aka FreeBSD
     license (without reference to FreeBSD project)
+  - debian: bump compat file contents from 7 to 10
 
 Changelog for smp_utils-0.98 [20140526] [svn:r138]
   - add Linux aacraid support, interface name : aac
