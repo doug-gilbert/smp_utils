@@ -35,7 +35,7 @@
 #include "smp_lib.h"
 
 
-static const char * version_str = "1.26 20180222";    /* spl-5 rev 3 */
+static const char * version_str = "1.27 20180403";    /* spl-5 rev 3 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -430,7 +430,7 @@ smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
     else if (pl_num < 2)
         snprintf(buff + n, buff_len - n, "(physical links: 1)");
     else
-        snprintf(buff + n, buff_len - n, "(maximu physical links: %d)",
+        snprintf(buff + n, buff_len - n, "(maximum physical links: %d)",
                  pl_num);
     return buff;
 }
