@@ -41,6 +41,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
+#include "sg_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -55,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static const char * version_str = "1.14 20180212";
+static const char * version_str = "1.15 20180725";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 
@@ -75,26 +76,6 @@ static struct option long_options[] = {
     {0, 0, 0, 0},
 };
 
-
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 static void
 usage(void)

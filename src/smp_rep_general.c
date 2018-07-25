@@ -42,6 +42,8 @@
 #endif
 #include "smp_lib.h"
 #include "sg_unaligned.h"
+#include "sg_pr2serr.h"
+
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -49,7 +51,7 @@
  * This utility issues a REPORT GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.35 20180217";    /* spl5r03 */
+static const char * version_str = "1.37 20180725";    /* spl5r05 */
 
 #define SMP_FN_REPORT_GENERAL_RESP_LEN 76
 
@@ -67,26 +69,6 @@ static struct option long_options[] = {
     {0, 0, 0, 0},
 };
 
-
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 static void
 usage(void)
@@ -400,7 +382,7 @@ main(int argc, char * argv[])
                !!(smp_resp[10] & 0x1));
         printf("  extended fairness: %d\n", !!(smp_resp[11] & 0x2));
         printf("  initiates SSP close: %d\n", !!(smp_resp[11] & 0x1));
-        if (smp_resp[12]) { /* assume naa-5 present */
+        if (! smp_all_zeros(smp_resp + 12, 8)) {
             /* not in SAS-1; in SAS-1.1 and SAS-2 */
             printf("  enclosure logical identifier (hex): ");
             for (k = 0; k < 8; ++k)
@@ -409,10 +391,9 @@ main(int argc, char * argv[])
         } else if (verbose)
             printf("  enclosure logical identifier <empty>\n");
         u = sg_get_unaligned_be16(smp_resp + 28);
-        if (0 == u) {
-            if (verbose)
-                printf("  SSP connect time unlimited\n");
-        } else
+        if (0 == u)
+            printf("  SSP connect time unlimited (0)\n");
+        else
             printf("  SSP connect time limit: %u (100 usec units)\n", u);
         if (len < 36)
             goto err_out;

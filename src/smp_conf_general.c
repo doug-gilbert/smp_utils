@@ -42,6 +42,7 @@
 #endif
 #include "smp_lib.h"
 #include "sg_unaligned.h"
+#include "sg_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -49,7 +50,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.14 20180209";    /* spl4r12 */
+static const char * version_str = "1.15 20180724";    /* spl4r12 */
 
 static struct option long_options[] = {
     {"connect", required_argument, 0, 'c'},
@@ -72,25 +73,6 @@ static struct option long_options[] = {
 };
 
 
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 static void
 usage(void)
@@ -355,9 +337,9 @@ main(int argc, char * argv[])
         }
     }
     if (sa > 0) {
-        if (! smp_is_naa5(sa)) {
-            pr2serr("SAS (target) address not in naa-5 format (may need "
-                    "leading '0x')\n");
+        if (! smp_is_sas_naa(sa)) {
+            pr2serr("SAS (target) address not in naa-5 nor naa-3 format (may "
+                    "need leading '0x')\n");
             if ('\0' == i_params[0]) {
                 pr2serr("    use '--interface=' to override\n");
                 return SMP_LIB_SYNTAX_ERROR;

@@ -33,9 +33,11 @@
 #include <inttypes.h>
 
 #include "smp_lib.h"
+#include "sg_unaligned.h"
+#include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.27 20180403";    /* spl-5 rev 3 */
+static const char * version_str = "1.29 20180724";    /* spl-5 rev 4 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -221,6 +223,17 @@ smp_get_func_res_str(int func_res, int buff_len, char * buff)
     return buff;
 }
 
+/* spl5r04.pdf says a valid SAS address can be NAA-5 or NAA-3 (locally
+ * assigned). It prefers NAA-5. */
+bool
+smp_is_sas_naa(uint64_t addr)
+{
+    uint8_t top_nibble = ((addr >> 60) & 0xf);
+
+    return ((0x5 == top_nibble) || (0x3 == top_nibble));
+}
+
+/* Better to use smp_is_sas_naa() to replace this one. */
 bool
 smp_is_naa5(uint64_t addr)
 {
@@ -1120,6 +1133,52 @@ smp_get_dhnum(const char * buf)
     }
     res = sscanf(buf, "%d", &n);
     return res ? n : -1;
+}
+
+/* Want safe, 'n += snprintf(b + n, blen - n, ...)' style sequence of
+ * functions. Returns number of chars placed in cp excluding the
+ * trailing null char. So for cp_max_len > 0 the return value is always
+ * < cp_max_len; for cp_max_len <= 1 the return value is 0 and no chars are
+ * written to cp. Note this means that when cp_max_len = 1, this function
+ * assumes that cp[0] is the null character and does nothing (and returns
+ * 0). Linux kernel has a similar function called  scnprintf(). Public
+ * declaration in sg_pr2serr.h header  */
+int
+sg_scnpr(char * cp, int cp_max_len, const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    if (cp_max_len < 2)
+        return 0;
+    va_start(args, fmt);
+    n = vsnprintf(cp, cp_max_len, fmt, args);
+    va_end(args);
+    return (n < cp_max_len) ? n : (cp_max_len - 1);
+}
+
+int
+pr2serr(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
+}
+
+int
+pr2ws(const char * fmt, ...)
+{
+    va_list args;
+    int n;
+
+    va_start(args, fmt);
+    n = vfprintf(stderr, fmt, args);
+    va_end(args);
+    return n;
 }
 
 const char *

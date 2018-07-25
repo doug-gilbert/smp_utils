@@ -208,8 +208,12 @@ int smp_get_func_def_req_len(int func_code);
  * REGISTER). */
 int smp_get_func_def_resp_len(int func_code);
 
+/* spl5r04.pdf says a valid SAS address can be NAA-5 or NAA-3 (locally
+ * assigned). It prefers NAA-5 . Returns true if is, else false. */
+bool smp_is_sas_naa(uint64_t addr);
+
 /* SAS addresses are NAA-5 and should have 5 in their most significant
- * nibbe. Returns 1 if NAA-5 format, else 0. */
+ * nibble. Returns true if NAA-5 format, else false. Use smp_is_sas_naa() */
 bool smp_is_naa5(uint64_t addr);
 
 /* Connector names are taken from the most recent SES draft; in this case
