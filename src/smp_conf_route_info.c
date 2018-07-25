@@ -45,6 +45,7 @@
 #endif
 #include "smp_lib.h"
 #include "sg_unaligned.h"
+#include "sg_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -53,7 +54,7 @@
  * response.
  */
 
-static const char * version_str = "1.13 20180212";
+static const char * version_str = "1.14 20180724";
 
 static struct option long_options[] = {
     {"disable", no_argument, 0, 'd'},
@@ -71,26 +72,6 @@ static struct option long_options[] = {
     {0, 0, 0, 0},
 };
 
-
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 static void
 usage(void)

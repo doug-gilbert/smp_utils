@@ -47,6 +47,7 @@
 #endif
 #include "smp_lib.h"
 #include "sg_unaligned.h"
+#include "sg_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -54,10 +55,10 @@
  * This utility issues a DISCOVER function and outputs its response.
  *
  * First defined in SAS-1. From and including SAS-2.1 this function is
- * defined in the SPL series. The most recent SPL-4 draft is spl4r07.pdf .
+ * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.60 20180217";    /* spl5r03 */
+static const char * version_str = "1.61 20180725";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -108,26 +109,6 @@ static struct option long_options[] = {
         {0, 0, 0, 0},
 };
 
-
-#ifdef __GNUC__
-static int pr2serr(const char * fmt, ...)
-        __attribute__ ((format (printf, 1, 2)));
-#else
-static int pr2serr(const char * fmt, ...);
-#endif
-
-
-static int
-pr2serr(const char * fmt, ...)
-{
-    va_list args;
-    int n;
-
-    va_start(args, fmt);
-    n = vfprintf(stderr, fmt, args);
-    va_end(args);
-    return n;
-}
 
 static void
 usage(void)
