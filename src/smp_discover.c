@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018 Douglas Gilbert.
+ * Copyright (c) 2006-2019 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.61 20180725";    /* spl5r05 */
+static const char * version_str = "1.62 20190124";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -848,7 +848,12 @@ print_single(const uint8_t * rp, int len, bool just1,
     }
     if (len > 109) {
         printf("  device slot number: %d\n", rp[108]);
-        printf("  device slot group number: %d\n", rp[109]);
+        ui = rp[109];
+        printf("  device slot group number: ");
+        if (255 == ui)
+            printf("not available\n");
+        else
+            printf("%d\n", ui);
     }
     if (len > 115)
         printf("  device slot group output connector: %.6s\n", rp + 110);

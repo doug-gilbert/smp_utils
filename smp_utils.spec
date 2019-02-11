@@ -11,7 +11,7 @@ Group:          Utilities/System
 URL:            http://sg.danny.cz/sg/smp_utils.html
 Source0:        http://sg.danny.cz/sg/p/%{name}-%{version}.tgz
 Provides:       smp_utils
-BuildRequires:  libtool
+# BuildRequires:  libtool
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
 Packager:       Douglas Gilbert <dgilbert at interlog dot com>
 
@@ -47,6 +47,8 @@ developing applications.
 
 %build
 %configure
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 %install
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
@@ -80,7 +82,7 @@ fi
 
 
 %changelog
-* Mon Feb 12 2018 - dgilbert at interlog dot com
+* Thu Jan 24 2019 - dgilbert at interlog dot com
 - add support for G5 (22.5 Gbps, SAS-4, SPL-5)
   * smp_utils-0.99
 * Mon May 26 2014 - dgilbert at interlog dot com

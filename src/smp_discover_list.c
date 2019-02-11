@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2019, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -732,7 +732,12 @@ decode_desc0_multiline(const uint8_t * rp, int hdr_ecc, struct opts_t * op)
     }
     if (len > 109) {
         printf("  device slot number: %d\n", rp[108]);
-        printf("  device slot group number: %d\n", rp[109]);
+        ui = rp[109];
+        printf("  device slot group number: ");
+        if (255 == ui)
+            printf("not available\n");
+        else
+            printf("%d\n", ui);
     }
     if (len > 115)
         printf("  device slot group output connector: %.6s\n", rp + 110);

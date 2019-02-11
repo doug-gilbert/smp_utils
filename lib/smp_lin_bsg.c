@@ -168,7 +168,7 @@ int
 open_lin_bsg_device(const char * dev_name, int verbose)
 {
     char buff[1024];
-    char sysfs_nm[1024];
+    char sysfs_nm[1024 + 8];
     int len, res, maj, min;
     int ret = -1;
     FILE * fp = NULL;
