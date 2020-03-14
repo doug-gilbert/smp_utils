@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2019, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.29 20180724";    /* spl-5 rev 4 */
+static const char * version_str = "1.30 20190710";    /* spl-5 rev 8 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -313,12 +313,12 @@ smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
         snprintf(buff, buff_len, "Mini SAS HD 16i receptacle (SFF-8643)");
         pl_num = 16;
         break;
-    case 0x15:
-        snprintf(buff, buff_len, "SAS Slimline 4i (SFF-8654)");
+    case 0x15:	/* was 'SAS SlimLine', changed ses4r03 */
+        snprintf(buff, buff_len, "SlimSAS 4i (SFF-8654)");
         pl_num = 4;
         break;
-    case 0x16:
-        snprintf(buff, buff_len, "SAS Slimline 8i (SFF-8654)");
+    case 0x16:	/* was 'SAS SlimLine', changed ses4r03 */
+        snprintf(buff, buff_len, "SlimSAS 8i (SFF-8654)");
         pl_num = 8;
         break;
     case 0x17:
