@@ -1,5 +1,5 @@
 %define name    smp_utils
-%define version 0.99
+%define version 1.00
 %define release 1
 
 Summary:        Utilities for SAS Serial Management Protocol (SMP)
@@ -82,6 +82,9 @@ fi
 
 
 %changelog
+* Sat Mar 14 2020 - dgilbert at interlog dot com
+- see ChangeLog
+  * smp_utils-1.00
 * Thu Mar 05 2020 - dgilbert at interlog dot com
 - add support for G5 (22.5 Gbps, SAS-4, SPL-5)
   * smp_utils-0.99
