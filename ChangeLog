@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-0.99 [20190210] [svn: r170]
+Changelog for smp_utils-0.99 [20200305] [svn: r171]
   - smp_discover(_list): add --dsn option to show
     device slot number in single line per phy summary
     - attached SAS device type, word SAS added (spl4r01)
@@ -29,7 +29,8 @@ Changelog for smp_utils-0.99 [20190210] [svn: r170]
     - add smp_is_big_endian(), smp_all_zeros() and
       smp_all_ffs()
     - add sg_unaligned.h and sg_pr2serr.h headers
-  - sync with spl5r06
+    - change connector name: 'SAS SlimLine' to 'SlimSAS'
+  - sync with spl5r08
   - cleanup configure.ac + Makefile.am
   - update BSD license from 3 to 2 clause aka FreeBSD
     license (without reference to FreeBSD project)
