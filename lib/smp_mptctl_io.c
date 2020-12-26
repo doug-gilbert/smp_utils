@@ -163,7 +163,7 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
                 /* Be smarter about dumping and using data.
                  * If SCSI IO, reply may be null and data xfer
                  * will be good. If a non-SCSI IO, if reply is
-                 * NULL data is definately garbage.
+                 * NULL data is definitely garbage.
                  *
                  */
                 pReply = (MPIDefaultReply_t *) mpiBlkPtr->replyFrameBufPtr;

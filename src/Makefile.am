@@ -127,3 +127,6 @@ smp_zone_lock_LDADD = ../lib/libsmputils1.la
 smp_zone_unlock_SOURCES = smp_zone_unlock.c
 smp_zone_unlock_LDADD = ../lib/libsmputils1.la
 
+
+distclean-local:
+	rm -rf .deps
