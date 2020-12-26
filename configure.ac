@@ -1,4 +1,4 @@
-AC_INIT(smp_utils, 0.99, dgilbert@interlog.com)
+AC_INIT(smp_utils, 1.00, dgilbert@interlog.com)
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_MAINTAINER_MODE
@@ -59,5 +59,3 @@ AC_SUBST(SMPUTILS_LIBS)
 AM_CONDITIONAL(HAVE_SMPUTILS, test x"$have_smputils" = xyes)
 
 AC_OUTPUT(Makefile include/Makefile lib/Makefile src/Makefile doc/Makefile)
-
-

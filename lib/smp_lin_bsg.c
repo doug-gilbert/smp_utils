@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Douglas Gilbert
+ * Copyright (c) 2011-2020, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ chk_lin_bsg_device(const char * dev_name, int verbose)
     return 0;
 }
 
-/* Returns open file desriptor to dev_name bsg device or -1 */
+/* Returns open file descriptor to dev_name bsg device or -1 */
 int
 open_lin_bsg_device(const char * dev_name, int verbose)
 {
@@ -163,7 +163,7 @@ chk_lin_bsg_device(const char * dev_name, int verbose)
     return 0;
 }
 
-/* Returns open file desriptor to dev_name bsg device or -1 */
+/* Returns open file descriptor to dev_name bsg device or -1 */
 int
 open_lin_bsg_device(const char * dev_name, int verbose)
 {
@@ -335,5 +335,3 @@ send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
 }
 
 #endif
-
-

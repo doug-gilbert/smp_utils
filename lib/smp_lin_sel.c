@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2020, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,12 +51,14 @@ smp_initiator_open(const char * device_name, int subvalue,
 {
     int force = 0;
     int res;
+    int len = device_name ? (strlen(device_name) + 1) : 0;
     char * cp;
 
     if ((NULL == tobj) || (NULL == device_name))
         return -1;
     memset(tobj, 0, sizeof(struct smp_target_obj));
-    strncpy(tobj->device_name, device_name, SMP_MAX_DEVICE_NAME);
+    memcpy(tobj->device_name, device_name,
+	   ((len > SMP_MAX_DEVICE_NAME) ? SMP_MAX_DEVICE_NAME : len));
     if (sa)
         sg_put_unaligned_be64(sa, tobj->sas_addr + 0);
     if (i_params[0]) {
@@ -190,5 +192,3 @@ smp_initiator_close(struct smp_target_obj * tobj)
     tobj->opened = 0;
     return 0;
 }
-
-

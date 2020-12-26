@@ -137,5 +137,3 @@ smp_initiator_close(struct smp_target_obj * tobj)
     tobj->opened = 0;
     return 0;
 }
-
-

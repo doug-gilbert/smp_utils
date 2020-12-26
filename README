@@ -2,7 +2,7 @@ This is a package of command line utilities. Each utility sends a Serial
 Attached SCSI (SAS) Serial Management Protocol (SMP) request to an SMP
 target. If the request fails then the error is decoded. If the request
 succeeds then the response is either decoded, printed out in hexadecimal
-or output in binary. This package was written using the linux 2.6 and
+or output in binary. This package was written using the Linux 2.6 and
 3 series; it has been ported to FreeBSD and Solaris.
 
 For specific information about Linux see README.linux; for FreeBSD see
@@ -49,5 +49,3 @@ the SAS Protocol Layer (SPL).
 
 Doug Gilbert
 8th December 2017
-
-

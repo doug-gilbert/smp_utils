@@ -1186,5 +1186,3 @@ smp_lib_version()
 {
         return version_str;
 }
-
-

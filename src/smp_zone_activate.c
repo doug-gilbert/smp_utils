@@ -333,5 +333,3 @@ err_out:
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
-
-

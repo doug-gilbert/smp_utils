@@ -487,5 +487,3 @@ main(int argc, char * argv[])
         pr2serr("Exit status %d indicates error detected\n", ret);
     return ret;
 }
-
-

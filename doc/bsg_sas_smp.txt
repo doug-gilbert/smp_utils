@@ -219,5 +219,3 @@ signals may be controlled by the SMP READ GPIO and WRITE GPIO functions.
 
 
 Douglas Gilbert 20140515
-
-

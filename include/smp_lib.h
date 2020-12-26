@@ -360,5 +360,3 @@ int smp_get_dhnum(const char * buf);
 #endif
 
 #endif
-
-

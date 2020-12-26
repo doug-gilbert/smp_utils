@@ -487,5 +487,3 @@ static inline void sg_nz_put_unaligned_le64(uint64_t val, void *p)
 #endif
 
 #endif /* SG_UNALIGNED_H */
-
-

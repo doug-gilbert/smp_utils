@@ -56,5 +56,6 @@ libsmputils1_la_LDFLAGS = -version-info 1:0:0
 
 ## libsmputils1_la_LIBADD =
 
-
+distclean-local:
+	rm -rf .deps
 
