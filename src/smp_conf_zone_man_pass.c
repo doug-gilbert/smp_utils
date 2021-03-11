@@ -327,6 +327,7 @@ main(int argc, char * argv[])
     memset(password, 0, sizeof password);
     memset(npassword, 0, sizeof npassword);
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

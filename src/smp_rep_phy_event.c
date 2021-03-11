@@ -314,6 +314,7 @@ main(int argc, char * argv[])
     const struct pes_name_t * pnp;
 
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 
