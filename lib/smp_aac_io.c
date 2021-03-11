@@ -275,7 +275,7 @@ if((aSmpResult->header.status != SMP_PASS_THRU_SUCCESS)
     }
 
 
-    memcpy(rresp->response + aSmpCmdRespOff ,&aFib->data[sizeof(SmpPassThruHeader)],aSmpResult->header.dataReceiveLength);
+    memcpy(rresp->response + aSmpCmdRespOff ,&aFib->data[sizeof(SmpPassThruHeader)],bytesToSave);
 
     aSmpCmdRespOff += bytesToSave;
     aSmpCmdRespLen -= bytesToSave;
