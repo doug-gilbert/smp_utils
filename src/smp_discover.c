@@ -1203,6 +1203,7 @@ main(int argc, char * argv[])
     op = &opts;
     memset(op, 0, sizeof(opts));
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

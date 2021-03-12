@@ -270,6 +270,7 @@ main(int argc, char * argv[])
     smp_req[0] = SMP_FRAME_TYPE_REQ;
     smp_req[1] = SMP_FN_CONFIG_ZONE_PHY_INFO;
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

@@ -140,6 +140,7 @@ main(int argc, char * argv[])
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

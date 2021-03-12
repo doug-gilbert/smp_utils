@@ -253,6 +253,7 @@ main(int argc, char * argv[])
     memset(&opts, 0, sizeof(opts));
     opts.do_num = 62;   /* maximum fitting in one response */
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

@@ -195,6 +195,7 @@ main(int argc, char * argv[])
 
     memset(device_name, 0, sizeof device_name);
     memset(smp_resp, 0, sizeof smp_resp);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 
