@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Douglas Gilbert
+ * Copyright (c) 2011-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * response.
  */
 
-static const char * version_str = "1.07 20180725";
+static const char * version_str = "1.08 20210615";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 
@@ -140,6 +140,7 @@ main(int argc, char * argv[])
     int ret = 0;
 
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018 Douglas Gilbert.
+ * Copyright (c) 2006-2021 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@
  * response.
  */
 
-static const char * version_str = "1.14 20180724";
+static const char * version_str = "1.15 20210615";
 
 static struct option long_options[] = {
     {"disable", no_argument, 0, 'd'},
@@ -148,6 +148,7 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
 
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 
