@@ -2,7 +2,12 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for smp_utils-1.00 [20201225] [svn: r175]
+Changelog for pre-release smp_utils-1.00 [20210615] [svn: r177]
+  - all utilities that use the --interface=PARAMS option:
+    pre-fill the i_params array with zeros
+  - lib/smp_aac_io.c (aac interface): fix bounds error
+    causing all > 512 byte responses to crash the request
+    and hang the aac interface
   - fix gcc 10 compile warnings
   - start using autoconf 2.7
 

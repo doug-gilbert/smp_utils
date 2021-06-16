@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Douglas Gilbert
+ * Copyright (c) 2011-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.07 20180724";
+static const char * version_str = "1.08 20210615";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -480,6 +480,7 @@ main(int argc, char * argv[])
     memset(smp_req, 0, sizeof(smp_req));
     memset(pes_arr, 0, sizeof(pes_arr));
     memset(thres_arr, 0, sizeof(thres_arr));
+    memset(i_params, 0, sizeof i_params);
     smp_req[0] = SMP_FRAME_TYPE_REQ;
     smp_req[1] = SMP_FN_CONFIG_PHY_EVENT;
     memset(device_name, 0, sizeof device_name);

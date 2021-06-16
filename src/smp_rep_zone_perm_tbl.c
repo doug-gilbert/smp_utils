@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Douglas Gilbert
+ * Copyright (c) 2011-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * its response.
  */
 
-static const char * version_str = "1.11 20180725";
+static const char * version_str = "1.12 20210615";
 
 #define SMP_FN_REPORT_ZONE_PERMISSION_TBL_RESP_LEN (1020 + 4 + 4)
 #define DEF_MAX_NUM_DESC 63
@@ -195,6 +195,7 @@ main(int argc, char * argv[])
 
     memset(device_name, 0, sizeof device_name);
     memset(smp_resp, 0, sizeof smp_resp);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.15 20180724";    /* spl4r12 */
+static const char * version_str = "1.16 20210615";    /* spl4r12 */
 
 static struct option long_options[] = {
     {"connect", required_argument, 0, 'c'},
@@ -173,6 +173,7 @@ main(int argc, char * argv[])
     struct smp_target_obj tobj;
 
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

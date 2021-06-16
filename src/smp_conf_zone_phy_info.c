@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Douglas Gilbert
+ * Copyright (c) 2011-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.11 20180724";
+static const char * version_str = "1.12 20210615";
 
 static struct option long_options[] = {
     {"expected", required_argument, 0, 'E'},
@@ -270,6 +270,7 @@ main(int argc, char * argv[])
     smp_req[0] = SMP_FRAME_TYPE_REQ;
     smp_req[1] = SMP_FN_CONFIG_ZONE_PHY_INFO;
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

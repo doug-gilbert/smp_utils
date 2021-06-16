@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2018, Douglas Gilbert
+ * Copyright (c) 2007-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
  * its response.
  */
 
-static const char * version_str = "1.16 20180725";
+static const char * version_str = "1.17 20210615";
 
 
 static struct option long_options[] = {
@@ -251,6 +251,7 @@ main(int argc, char * argv[])
     struct opts_t opts;
 
     memset(&opts, 0, sizeof(opts));
+    memset(i_params, 0, sizeof i_params);
     opts.do_num = 62;   /* maximum fitting in one response */
     memset(device_name, 0, sizeof device_name);
     while (1) {

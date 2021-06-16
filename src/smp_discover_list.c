@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019, Douglas Gilbert
+ * Copyright (c) 2006-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.48 20180725";    /* spl5r05 */
+static const char * version_str = "1.49 20210615";    /* spl5r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -1125,6 +1125,7 @@ main(int argc, char * argv[])
     op = &opts;
     memset(op, 0, sizeof(opts));
     memset(device_name, 0, sizeof device_name);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

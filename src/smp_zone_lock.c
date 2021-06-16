@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018, Douglas Gilbert
+ * Copyright (c) 2005-2021, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
  * This utility issues a ZONE LOCK function and outputs its response.
  */
 
-static const char * version_str = "1.09 20180725";
+static const char * version_str = "1.10 20210615";
 
 static struct option long_options[] = {
     {"expected", required_argument, 0, 'E'},
@@ -307,6 +307,7 @@ main(int argc, char * argv[])
     memset(password, 0, sizeof password);
     memset(device_name, 0, sizeof device_name);
     memset(smp_resp, 0, sizeof smp_resp);
+    memset(i_params, 0, sizeof i_params);
     while (1) {
         int option_index = 0;
 

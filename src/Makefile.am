@@ -39,6 +39,7 @@ AM_CFLAGS = -Wall -W
 ## AM_CFLAGS = -Wall -W -pedantic -std=c11
 ## AM_CFLAGS = -Wall -W -pedantic -std=c++14
 ## AM_CFLAGS = -Wall -W -pedantic -std=gnu++1z
+## AM_CFLAGS = -Wall -W -pedantic -std=c++20
 
 smp_conf_general_SOURCES =	smp_conf_general.c
 smp_conf_general_LDADD = ../lib/libsmputils1.la

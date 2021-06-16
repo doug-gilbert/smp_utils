@@ -4,12 +4,16 @@ have made contributions:
 Eric Moore <Eric dot Moore at lsi dot com> help with mptctl
         interface [20061129]
 
+FUJITA Tomonori <fujita dot tomonori at lab dot ntt dot co dot jp>
+	implementing sgv4 with working examples [20071220]
+
 Hannes Reinecke <hare at suse dot de>
 	mpt3sas support [20130925]
 
 Luben Tuikov <ltuikov at yahoo dot com> 'smp_discover --multiple' format
 	and various other suggestions and testing [20060801]
 
-FUJITA Tomonori <fujita dot tomonori at lab dot ntt dot co dot jp>
-	implementing sgv4 with working examples [20071220]
+Monty Montgomery <xiphmont>
+	Fix memory overwrite in smp_acc_io.c	[both 20210311]
+	Initialize i_params to avoid decisions based on stack garbage
 

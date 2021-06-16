@@ -49,6 +49,7 @@ AM_CPPFLAGS = -iquote ${top_srcdir}/include -D_LARGEFILE64_SOURCE -D_FILE_OFFSET
 AM_CFLAGS = -Wall -W
 ## AM_CFLAGS = -Wall -W -pedantic -std=c11
 ## AM_CFLAGS = -Wall -W -pedantic -std=c++14
+## AM_CFLAGS = -Wall -W -pedantic -std=c++20
 
 lib_LTLIBRARIES = libsmputils1.la
 
