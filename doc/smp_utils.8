@@ -1,4 +1,4 @@
-.TH SMP_UTILS "8" "June 2021" "smp_utils\-1.00" SMP_UTILS
+.TH SMP_UTILS "8" "October 2021" "smp_utils\-1.00" SMP_UTILS
 .SH NAME
 smp_* \- invoke a SAS Serial Management Protocol (SMP) function
 .SH SYNOPSIS
@@ -283,6 +283,25 @@ ports are not available, an expander interconnect should be between an
 port and an
 .B out
 port.
+.SH G5 22.5 Gbps or 24G
+The so\-called fifth generation (G5) of SAS doubles the data rate of the
+previous generation (G4) which ran at 12 Gbps (which is known as its
+physical link rate). That means G5 should run at 24 Gbps, yes? No! G1, G2,
+G3 and G4 of SAS used 8b10b coding which uses 10 bits (of the physical link
+rate) to encode each 8 bits of user data (i.e. 1 byte). This is done in
+the "phy" layer. The new "packet mode" in G5 uses 128b150b coding. That is
+16 data bytes in 150 bits of G5 (while earlier generations would need 160
+bits to hold 16 data bytes). Hence G5 is more (user data) dense. Rather than
+have a 106% higher user data rate in G5 over G4, the SAS designers decided
+to drop the physical link rate by 6% to 22.5 Gbps so that the (logical) data
+rate was exactly doubled from G4.
+.PP
+So where does the term 24G come from? It is a marketing term. These
+utilities will use G5 or 22.5 Gbps and avoid the 24G term.
+.PP
+Why do "coding"? Apart from moving user data, modern protocols want extra
+control characters (e.g. start of packet). G5 also injects bits for forward
+error correction (FEC). So\-called out-of-band data may also be sent.
 .SH EXAMPLES
 See "Examples" section in http://sg.danny.cz/sg/smp_utils.html .
 .SH CONFORMING TO

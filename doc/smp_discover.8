@@ -1,4 +1,4 @@
-.TH SMP_DISCOVER "8" "February 2018" "smp_utils\-0.99" SMP_UTILS
+.TH SMP_DISCOVER "8" "October 2021" "smp_utils\-1.00" SMP_UTILS
 .SH NAME
 smp_discover \- invoke DISCOVER SMP function
 .SH SYNOPSIS
@@ -54,6 +54,13 @@ the \fI\-\-brief\fR option is given or implied. Of the three the attached
 phy capability field is probably the most interesting. If the
 \fI\-\-verbose\fR option is given, then the various "G" identifiers are
 expanded (e.g. instead of "G4:" it prints "G4 (12 Gbps):").
+.br
+When this option is used with single line per phy output, then the speed
+capabilities of each attached phy is checked. If the speed capabilities
+of an attached phy is greater than that of the expander phy, then that is
+noted. For example if a G5 (22.5 Gbps) HBA is attached to a G4 (12 Gbps) 
+expander then lines in the expander's discovery output associated with the
+attached HBA will have "[att: 22.5 G capable]" appended to them. 
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 output the usage message then exit.

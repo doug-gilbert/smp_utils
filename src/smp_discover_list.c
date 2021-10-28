@@ -55,7 +55,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.49 20210615";    /* spl5r05 */
+static const char * version_str = "1.50 20211024";    /* spl5r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -86,13 +86,13 @@ static struct option long_options[] = {
 };
 
 struct opts_t {
-    bool do_adn;
-    bool do_cap_phy;
-    bool do_dsn;
+    bool do_adn;                /* -A option */
+    bool do_cap_phy;            /* -c option */
+    bool do_dsn;                /* -D option */
     bool desc_type_given;
-    bool ign_zp;
+    bool ign_zp;                /* -i option */
     bool num_given;
-    bool do_1line;
+    bool do_1line;              /* -o option, often implicit */
     bool phy_id_given;
     bool do_raw;
     bool do_summary;
@@ -101,7 +101,7 @@ struct opts_t {
     int filter;
     int do_hex;
     int do_num;
-    int phy_id;
+    int phy_id;                 /* -p <ID> option */
     int verbose;
     uint64_t sa;
     const char * zpi_fn;
@@ -540,7 +540,7 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             prev_nl = false;
             break;
         case 3:
-            printf("    %s: with+without SSC", cp);
+            printf("    %s: with/without SSC", cp);
             prev_nl = false;
             break;
         default:
@@ -561,6 +561,29 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     if (! prev_nl)
         printf("\n");
     printf("    Extended coefficient settings: %d\n", (p_cap >> 1) & 0x1);
+}
+
+/* Returns 0 if att_cap is not more capable (speed-wise) than my_cap. If
+ * att_cap can do G5 (22.5 Gbps) and my_cap can't, returns 12 (0xc). If
+ * att_cap can do G4 (12 Gbps) and my_cap can't, returns 11 (0xb). If
+ * att_cap can do G3 (6 Gbps) and my_cap can't, returns 10 (0xa). Stops
+ * at this point and returns 0. */
+static int
+attached_phy_more_capable(unsigned int my_cap, unsigned int att_cap)
+{
+    int k;
+    unsigned int my_g1_g5_val, att_g1_g5_val, my_g, att_g;
+    unsigned int g_res = 0xc;
+
+    my_g1_g5_val = (my_cap >> 14) & 0x3ff;
+    att_g1_g5_val = (att_cap >> 14) & 0x3ff;
+    for (k = 0; k < 3; ++k, --g_res) {
+        my_g = (my_g1_g5_val >> (k * 2)) & 0x3;
+        att_g = (att_g1_g5_val >> (k * 2)) & 0x3;
+        if (att_g && (0 == my_g))
+            return g_res;
+    }
+    return 0;
 }
 
 /* long format: as described in (full, single) DISCOVER response
@@ -827,10 +850,11 @@ static int
 decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
              int has_t2t, struct opts_t * op)
 {
-    bool plus;
+    bool plus, virt;
     bool zg_not1 = true;
-    int phy_id, off, negot, adt, route_attr, vp, asa_off;
+    int phy_id, off, negot, adt, route_attr, asa_off;
     int func_res, aphy_id, a_init, a_target, z_group, iz_mask;
+    unsigned int my_cap, att_cap;
     uint64_t ull, adn;
     const char * cp;
     char b[256];
@@ -843,7 +867,9 @@ decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
         adt = ((0x70 & rp[12]) >> 4);
         negot = rp[13] & 0xf;
         route_attr = rp[44] & 0xf;
-        vp = rp[43] & 0x80;
+        virt = !!(rp[43] & 0x80);
+        my_cap = sg_get_unaligned_be32(rp + 80);
+        att_cap = sg_get_unaligned_be32(rp + 84);
         asa_off = 24;
         aphy_id = rp[32];
         a_init = rp[14];
@@ -857,7 +883,9 @@ decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
         adt = ((0x70 & rp[2]) >> 4);
         negot = rp[3] & 0xf;
         route_attr = rp[6] & 0xf;
-        vp = !!(rp[6] & 0x80);
+        virt = !!(rp[6] & 0x80);
+        my_cap = 0;
+        att_cap = 0;
         asa_off = 12;
         aphy_id = rp[10];
         a_init = rp[4];
@@ -955,11 +983,11 @@ decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
         adn = sg_get_unaligned_be64(rp + 52);
         printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %016" PRIx64
                " %s%s", phy_id, cp, ull, aphy_id, adn,
-               smp_short_attached_device_type[adt], (vp ? " V" : ""));
+               smp_short_attached_device_type[adt], (virt ? " V" : ""));
     } else
         printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %s%s", phy_id, cp,
                ull, aphy_id, smp_short_attached_device_type[adt],
-               (vp ? " V" : ""));
+               (virt ? " V" : ""));
     if (a_init & 0xf) {
         off = 0;
         plus = false;
@@ -1038,6 +1066,15 @@ decode_1line(const uint8_t * rp, int len, int desc, bool z_enabled,
             break;
         }
         printf("%s", cp);
+        if (op->do_cap_phy && (0 == op->desc_type) && (! virt)) {
+            negot = attached_phy_more_capable(my_cap, att_cap);
+
+            if (negot > 9) {
+                const char * speed_s[] = {"6", "12", "22.5", "??"};
+
+                printf("  [att: %s G capable]", speed_s[negot - 10]);
+            }
+        }
         if (z_enabled && (1 != z_group)) {
             zg_not1 = true;
             printf("  ZG:%d", z_group);
@@ -1330,6 +1367,17 @@ main(int argc, char * argv[])
                 "'attached\ndevice name' field in the short format. "
                 "Ignoring --adn .\n");
         op->do_adn = false;
+    }
+    if (op->do_1line && op->do_cap_phy && (0 != op->desc_type)) {
+        if (op->desc_type_given)
+            pr2serr("In one line per phy mode: -c ignored when "
+                    "--desc_type=1\n");
+        else {
+            op->desc_type = 0;
+            if (op->verbose)
+                pr2serr("Since in one line per phy mode and -c given, "
+                        "override descriptor type to zero\n");
+        }
     }
     resp = smp_memalign(resp_sz, 0, &free_resp, op->verbose > 3);
     if (NULL == resp) {
