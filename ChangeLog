@@ -2,7 +2,10 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for pre-release smp_utils-1.00 [20210615] [svn: r177]
+Changelog for pre-release smp_utils-1.00 [20211028] [svn: r178]
+  - smp_discover, smp_discover_list: when -c is given in
+    single line per phy mode, report if attached phy's
+    speed capability is higher than each expander phy
   - all utilities that use the --interface=PARAMS option:
     pre-fill the i_params array with zeros
   - lib/smp_aac_io.c (aac interface): fix bounds error

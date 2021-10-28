@@ -58,7 +58,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.63 20210615";    /* spl5r05 */
+static const char * version_str = "1.63 20211022";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -66,21 +66,21 @@ static const char * version_str = "1.63 20210615";    /* spl5r05 */
 
 
 struct opts_t {
-    bool do_adn;
-    bool do_cap_phy;
-    bool do_dsn;
-    bool ign_zp;
-    bool do_list;
-    bool do_my;
+    bool do_adn;        /* -A option given */
+    bool do_cap_phy;    /* -c option given */
+    bool do_dsn;        /* -D option given */
+    bool ign_zp;        /* -i option given */
+    bool do_list;       /* -l option given */
+    bool do_my;         /* -M option given */
     bool phy_id_given;
-    bool do_raw;
-    bool do_summary;
-    bool do_zero;
+    bool do_raw;        /* -r option given */
+    bool do_summary;    /* -S option given */
+    bool do_zero;       /* -z option given */
     bool sa_given;
-    int do_brief;
-    int do_hex;
-    int multiple;
-    int do_num;
+    int do_brief;       /* -b option given */
+    int do_hex;         /* -H option given */
+    int multiple;       /* -m option given */
+    int do_num;         /* -n NUM option given */
     int phy_id;
     int verbose;
     uint64_t sa;
@@ -626,17 +626,17 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
 {
     bool prev_nl;
     int k, skip;
-    unsigned int g15_val, g;
+    unsigned int g1_g5_val, g;
     const char * cp;
 
     printf("    Tx SSC type: %d, Requested interleaved SPL: %d, [Req logical "
            "lr: 0x%x]\n", ((p_cap >> 30) & 0x1), (p_cap >> 28) & 0x3,
            (p_cap >> 24) & 0xf);
     prev_nl = true;
-    g15_val = (p_cap >> 14) & 0x3ff;
+    g1_g5_val = (p_cap >> 14) & 0x3ff;
     for (skip = 0, k = 4; k >= 0; --k) {
         cp = op->verbose ? g_name_long[4 - k] : g_name[4 - k];
-        g = (g15_val >> (k * 2)) & 0x3;
+        g = (g1_g5_val >> (k * 2)) & 0x3;
         switch (g) {
         case 0:
             ++skip;
@@ -650,11 +650,11 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
             prev_nl = false;
             break;
         case 3:
-            printf("    %s: with+without SSC", cp);
+            printf("    %s: with/without SSC", cp);
             prev_nl = false;
             break;
         default:
-            printf("    %s: g15_val=0x%x, k=%d", cp, g15_val, k);
+            printf("    %s: g1_g5_val=0x%x, k=%d", cp, g1_g5_val, k);
             prev_nl = false;
             break;
         }
@@ -671,6 +671,29 @@ decode_phy_cap(unsigned int p_cap, const struct opts_t * op)
     if (! prev_nl)
         printf("\n");
     printf("    Extended coefficient settings: %d\n", (p_cap >> 1) & 0x1);
+}
+
+/* Returns 0 if att_cap is not more capable (speed-wise) than my_cap. If
+ * att_cap can do G5 (22.5 Gbps) and my_cap can't, returns 12 (0xc). If
+ * att_cap can do G4 (12 Gbps) and my_cap can't, returns 11 (0xb). If
+ * att_cap can do G3 (6 Gbps) and my_cap can't, returns 10 (0xa). Stops
+ * at this point and returns 0. */
+static int
+attached_phy_more_capable(unsigned int my_cap, unsigned int att_cap)
+{
+    int k;
+    unsigned int my_g1_g5_val, att_g1_g5_val, my_g, att_g;
+    unsigned int g_res = 0xc;
+
+    my_g1_g5_val = (my_cap >> 14) & 0x3ff;
+    att_g1_g5_val = (att_cap >> 14) & 0x3ff;
+    for (k = 0; k < 3; ++k, --g_res) {
+        my_g = (my_g1_g5_val >> (k * 2)) & 0x3;
+        att_g = (att_g1_g5_val >> (k * 2)) & 0x3;
+        if (att_g && (0 == my_g))
+            return g_res;
+    }
+    return 0;
 }
 
 static int
@@ -924,7 +947,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
 {
     bool first = true;
     bool has_t2t = false;
-    bool plus;
+    bool plus, virt;
     int len, k, num, off, negot, adt, zg;
     int ret = 0;
     uint64_t ull, adn, expander_sa;
@@ -1076,16 +1099,16 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             printf("\n");
             continue;
         }
+        virt = !!(0x80 & rp[43]);
         if (op->do_adn && (len > 59)) {
             adn = sg_get_unaligned_be64(rp + 52);
             printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %016" PRIx64
                    " %s%s", k, cp, ull, rp[32], adn,
-                   smp_short_attached_device_type[adt],
-                   ((rp[43] & 0x80) ? " V" : ""));
+                   smp_short_attached_device_type[adt], (virt ? " V" : ""));
         } else
             printf("  phy %3d:%s:attached:[%016" PRIx64 ":%02d %s%s", k, cp,
                    ull, rp[32], smp_short_attached_device_type[adt],
-                   ((rp[43] & 0x80) ? " V" : ""));
+                   (virt ? " V" : ""));
         if (rp[14] & 0xf) {
             off = 0;
             plus = false;
@@ -1170,6 +1193,16 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             break;
         }
         printf("%s", cp);
+        if (op->do_cap_phy && (! virt)) {
+            negot = attached_phy_more_capable(sg_get_unaligned_be32(rp + 80),
+                                              sg_get_unaligned_be32(rp + 84));
+
+            if (negot > 9) {
+                const char * speed_s[] = {"6", "12", "22.5", "??"};
+
+                printf("  [att: %s G capable]", speed_s[negot - 10]);
+            }
+        }
         if (len > 63) {
             zg = rp[63];
             if ((rp[60] & 0x1) && (1 != zg))
