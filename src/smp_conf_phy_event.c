@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2021, Douglas Gilbert
+ * Copyright (c) 2011-2023, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.08 20210615";
+static const char * version_str = "1.09 20230201";
 
 #define MAX_PHY_EV_SRC 126      /* max in one request */
 
@@ -96,7 +96,7 @@ static struct pes_name_t pes_name_arr[] = {
     {0x22, "Received abandon-class OPEN_REJECT count"},
     {0x23, "Transmitted retry-class OPEN_REJECT count"},
     {0x24, "Received retry-class OPEN_REJECT count"},
-    {0x25, "Received AIP (WATING ON PARTIAL) count"},
+    {0x25, "Received AIP (WAITING ON PARTIAL) count"},
     {0x26, "Received AIP (WAITING ON CONNECTION) count"},
     {0x27, "Transmitted BREAK count"},
     {0x28, "Received BREAK count"},

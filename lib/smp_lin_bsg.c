@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2020, Douglas Gilbert
+ * Copyright (c) 2011-2023, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,14 +54,22 @@
 
 #include "smp_lin_bsg.h"
 
-#if defined(IGNORE_LINUX_BSG) || ! defined(HAVE_LINUX_BSG_H)
+#ifndef HAVE_LINUX_BSG_H
 
 /* Returns 1 if bsg dev_name else 0 . */
 int
 chk_lin_bsg_device(const char * dev_name, int verbose)
 {
-    dev_name = dev_name;
-    verbose = verbose;
+    static const char * dtpc =
+                 "as bsg device due to preprocessor conditional";
+
+    if (strstr(dev_name, "bsg")) {
+        if (verbose)
+            fprintf(stderr, "%s: suspicious >>> ignoring %s %s\n", __func__,
+                    dev_name, dtpc);
+
+    } else if (verbose > 2)
+        fprintf(stderr, "%s: ignoring %s %s\n", __func__, dev_name, dtpc);
     return 0;
 }
 
@@ -69,15 +77,16 @@ chk_lin_bsg_device(const char * dev_name, int verbose)
 int
 open_lin_bsg_device(const char * dev_name, int verbose)
 {
-    dev_name = dev_name;
-    verbose = verbose;
+    /* defeat warnings */
+    if (dev_name) { }
+    if (verbose) { }
     return -1;
 }
 
 int
 close_lin_bsg_device(int fd)
 {
-    fd = fd;
+    if (fd) { }
     return 0;
 }
 
@@ -86,13 +95,13 @@ int
 send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
                  int verbose)
 {
-    fd = fd;
-    subvalue = subvalue;
-    rresp = rresp;
-    verbose = verbose;
+    /* defeat warnings */
+    if (fd) { }
+    if (subvalue) { }
+    if (rresp) { }
+    if (verbose) { }
     return -1;
 }
-
 
 # else  /* have <linux/bsg.h> and want to use it */
 

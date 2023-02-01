@@ -2,7 +2,7 @@ smp-utils (1.00-0.1) unstable; urgency=low
 
   * ongoing support for G5 (22.5 Gbps, SAS-4, SPL-5)
 
- -- Douglas Gilbert <dgilbert@interlog.com>  Thu, 28 Oct 2021 15:00:00 -0400
+ -- Douglas Gilbert <dgilbert@interlog.com>  Wed, 01 Feb 2023 14:00:00 -0500
 
 smp-utils (0.99-0.1) unstable; urgency=low
 

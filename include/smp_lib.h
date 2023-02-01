@@ -2,7 +2,7 @@
 #define SMP_LIB_H
 
 /*
- * Copyright (c) 2006-2018 Douglas Gilbert.
+ * Copyright (c) 2006-2023 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -274,11 +274,11 @@ void dStrHexErr(const char * str, int len, int no_ascii);
 /* Read 'len' bytes from 'str' and output as ASCII-Hex bytes (space
  * separated) to 'b' not to exceed 'b_len' characters. Each line
  * starts with 'leadin' (NULL for no leadin) and there are 16 bytes
- * per line with an extra space between the 8th and 9th bytes. 'format'
- * is 0 for repeat in printable ASCII ('.' for non printable chars) to
+ * per line with an extra space between the 8th and 9th bytes. 'oformat'
+ * is 0 for rendering in printable ASCII ('.' for non printable chars) to
  * right of each line; 1 don't (so just output ASCII hex). Returns
  * number of bytes written to 'b' excluding the trailing '\0'. */
-int dStrHexStr(const char * str, int len, const char * leadin, int format,
+int dStrHexStr(const char * str, int len, const char * leadin, int oformat,
                int b_len, char * b);
 
 /* The following 3 functions are equivalent to dStrHex(), dStrHexErr() and
@@ -287,7 +287,7 @@ int dStrHexStr(const char * str, int len, const char * leadin, int format,
  * to b_str to stress it is a pointer to the start of a binary string. */
 void hex2stdout(const uint8_t * b_str, int len, int no_ascii);
 void hex2stderr(const uint8_t * b_str, int len, int no_ascii);
-int hex2str(const uint8_t * b_str, int len, const char * leadin, int format,
+int hex2str(const uint8_t * b_str, int len, const char * leadin, int oformat,
             int cb_len, char * cbp);
 
 /* Returns pointer to heap (or NULL) that is aligned to a align_to byte
