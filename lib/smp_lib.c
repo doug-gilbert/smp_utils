@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019, Douglas Gilbert
+ * Copyright (c) 2006-2023, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include "sg_pr2serr.h"
 
 
-static const char * version_str = "1.30 20190710";    /* spl-5 rev 8 */
+static const char * version_str = "1.31 20230201";    /* spl-5 rev 8 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -640,7 +640,7 @@ dStrHexErr(const char* str, int len, int no_ascii)
  * right of each line; 1 don't (so just output ASCII hex). Returns
  * number of bytes written to 'b' excluding the trailing '\0'. */
 int
-dStrHexStr(const char * str, int len, const char * leadin, int format,
+dStrHexStr(const char * str, int len, const char * leadin, int oformat,
            int b_len, char * b)
 {
     unsigned char c;
@@ -657,7 +657,7 @@ dStrHexStr(const char * str, int len, const char * leadin, int format,
     }
     if (b_len <= 0)
         return 0;
-    want_ascii = !format;
+    want_ascii = !oformat;
     if (want_ascii) {
         memset(a, ' ', DSHS_BPL);
         a[DSHS_BPL] = '\0';
@@ -726,10 +726,10 @@ hex2stderr(const uint8_t * b_str, int len, int no_ascii)
 }
 
 int
-hex2str(const uint8_t * b_str, int len, const char * leadin, int format,
+hex2str(const uint8_t * b_str, int len, const char * leadin, int oformat,
         int b_len, char * b)
 {
-    return dStrHexStr((const char *)b_str, len, leadin, format, b_len, b);
+    return dStrHexStr((const char *)b_str, len, leadin, oformat, b_len, b);
 }
 
 uint32_t

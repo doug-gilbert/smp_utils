@@ -50,7 +50,8 @@ typedef unsigned short  U16;
 
 
 typedef int32_t   S32;
-typedef u_int32_t U32;
+/* typedef u_int32_t U32; <--- originally, u_int* is non-standard from MS */
+typedef uint32_t U32;
 
 typedef struct _S64
 {

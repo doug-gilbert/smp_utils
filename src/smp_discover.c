@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021 Douglas Gilbert.
+ * Copyright (c) 2006-2023 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.63 20211022";    /* spl5r05 */
+static const char * version_str = "1.64 20230201";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -706,7 +706,7 @@ print_single(const uint8_t * rp, int len, bool just1,
     uint64_t ull = 0;
     char b[256];
 
-    if (len > 23) /* fetch my (expander's) SAS addrss */
+    if (len > 23) /* fetch my (expander's) SAS address */
         ull = sg_get_unaligned_be64(rp + 16);
     if (just1)
         printf("Discover response%s:\n", (op->do_brief ? " (brief)" : ""));
@@ -914,7 +914,7 @@ do_single(struct smp_target_obj * top, const struct opts_t * op)
     if (op->do_hex || op->do_raw)
         goto fini;
     ull = 0;
-    if (len > 23)   /* fetch my (expander's) SAS addrss */
+    if (len > 23)   /* fetch my (expander's) SAS address */
         ull = sg_get_unaligned_be64(rp + 16);
     if (op->do_my) {
         printf("0x%" PRIx64 "\n", ull);

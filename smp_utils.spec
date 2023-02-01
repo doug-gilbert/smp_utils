@@ -82,7 +82,7 @@ fi
 
 
 %changelog
-* Thu Oct 28 2021 - dgilbert at interlog dot com
+* Wed Feb 01 2023 - dgilbert at interlog dot com
 - see ChangeLog
   * smp_utils-1.00
 * Thu Mar 05 2020 - dgilbert at interlog dot com
