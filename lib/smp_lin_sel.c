@@ -59,8 +59,10 @@ smp_initiator_open(const char * device_name, int subvalue,
     memset(tobj, 0, sizeof(struct smp_target_obj));
     memcpy(tobj->device_name, device_name,
            ((len > SMP_MAX_DEVICE_NAME) ? SMP_MAX_DEVICE_NAME : len));
-    if (sa)
+    if (sa) {
+	tobj->sas_addr64 = sa;
         sg_put_unaligned_be64(sa, tobj->sas_addr + 0);
+    }
     if (i_params[0]) {
         if (0 == strncmp("aac", i_params, 3))
             tobj->interface_selector = I_AAC;
@@ -157,7 +159,7 @@ smp_send_req(const struct smp_target_obj * tobj,
     if (I_SGV4 == tobj->interface_selector)
         return send_req_lin_bsg(tobj->fd, tobj->subvalue, rresp, verbose);
     else if (I_MPT == tobj->interface_selector)
-        return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr,
+        return send_req_mpt(tobj->fd, tobj->subvalue, tobj->sas_addr64,
                             rresp, verbose);
     else if (I_AAC == tobj->interface_selector)
         return send_req_aac(tobj->fd, tobj->subvalue, tobj->sas_addr,

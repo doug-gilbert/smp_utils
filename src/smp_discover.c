@@ -1310,15 +1310,15 @@ main(int argc, char * argv[])
             if (op->sa > 0)
                 op->sa_given = true;
             break;
+        case 'S':
+            op->do_summary = true;
+            break;
         case 'v':
             ++op->verbose;
             break;
         case 'V':
             pr2serr("version: %s\n", version_str);
             return 0;
-        case 'S':
-            op->do_summary = true;
-            break;
         case 'z':
             op->do_zero = true;
             break;
