@@ -11,7 +11,7 @@ extern int open_mpt_device(const char * dev_name, int verbose);
 
 extern int close_mpt_device(int fd);
 
-extern int send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
+extern int send_req_mpt(int fd, int subvalue, uint64_t target_sa,
                         struct smp_req_resp * rresp, int verbose);
 
 #endif

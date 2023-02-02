@@ -144,6 +144,7 @@ struct smp_target_obj {
     char device_name[SMP_MAX_DEVICE_NAME];
     int subvalue;               /* adapter number (opt) */
     unsigned char sas_addr[8];  /* target SMP (opt) */
+    uint64_t sas_addr64;        /* target SMP (opt) */
     int interface_selector;
     int opened;
     int fd;

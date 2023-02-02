@@ -26,6 +26,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <inttypes.h>
 // #include <linux/major.h>
 
 
@@ -51,7 +52,6 @@ typedef struct mpt_ioctl_command mpiIoctlBlk_t;
 #define MPT2_DEV_MINOR 221
 #define MPT3_DEV_MINOR 222
 
-static const char null_sas_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0, };
 static int mptcommand = (int)MPTCOMMAND;
 
 
@@ -186,32 +186,28 @@ issueMptCommand(int fd, int ioc_num, mpiIoctlBlk_t *mpiBlkPtr)
 
 /* Part of interface to upper level. */
 int
-send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
+send_req_mpt(int fd, int subvalue, uint64_t target_sa,
              struct smp_req_resp * rresp, int verbose)
 {
         mpiIoctlBlk_t * mpiBlkPtr = NULL;
         pSmpPassthroughRequest_t smpReq;
         pSmpPassthroughReply_t smpReply;
         uint numBytes;
-        int  k, status;
+        int  status;
         char reply_m[1200];
         u16     ioc_stat;
-        unsigned char * ucp;
         int ret = -1;
 
-        if (verbose && (0 == memcmp(target_sa, null_sas_addr, 8))) {
+        if (verbose && (0 == target_sa)) {
                 fprintf(stderr, "The MPT interface typically needs SAS "
                         "address of target (e.g. expander).\n");
                 fprintf(stderr, "A '--sa=SAS_ADDR' command line option "
                         "may be required. See man page.\n");
         }
         if (verbose > 2) {
-                fprintf(stderr, "send_req_mpt: subvalue=%d  ", subvalue);
-                fprintf(stderr, "SAS address=0x");
-                for (k = 0; k < 8; ++k)
-                        fprintf(stderr, "%02x", target_sa[7 - k]);
-                fprintf(stderr, "\n");
-                if (verbose > 3)
+                fprintf(stderr, "%s: subvalue=%d  ", __func__, subvalue);
+                fprintf(stderr, "SAS address=0x%" PRIx64 "\n", target_sa);
+                if (verbose > 4)
                         fprintf(stderr, "    mptctl two scatter gather list "
                                 "interface\n");
         }
@@ -249,8 +245,7 @@ send_req_mpt(int fd, int subvalue, const unsigned char * target_sa,
 
         smpReq->RequestDataLength = rresp->request_len - 4; // <<<<<<<<<<<< ??
         smpReq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
-        ucp = (unsigned char *)&smpReq->SASAddress;
-        memcpy(ucp, target_sa, 8);
+	memcpy(&smpReq->SASAddress, &target_sa, 8);
 
         status = issueMptCommand(fd, subvalue, mpiBlkPtr);
 

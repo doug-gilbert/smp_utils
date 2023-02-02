@@ -2,7 +2,7 @@ Each utility has its own version number, date of last change and
 some description at the top of its ".c" file. All utilities in the main
 directory have their own "man" pages.
 
-Changelog for pre-release smp_utils-1.00 [20230201] [svn: r179]
+Changelog for pre-release smp_utils-1.00 [20230202] [svn: r180]
   - smp_discover, smp_discover_list: when -c is given in
     single line per phy mode, report if attached phy's
     speed capability is higher than each expander phy
@@ -13,6 +13,7 @@ Changelog for pre-release smp_utils-1.00 [20230201] [svn: r179]
     and hang the aac interface
   - warn if Linux bsg support compiled out but attempt to
     open device file name especially if fname contains "bsg"
+  - smp_lib: fix --interface=mpt reversing expander address
   - fix gcc 10 compile warnings
   - start using autoconf 2.7
 
