@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "./autogen.sh"
+./autogen.sh
+
 echo "chmod +x debian/rules"
 chmod +x debian/rules
 
