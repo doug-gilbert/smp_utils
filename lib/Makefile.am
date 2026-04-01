@@ -8,9 +8,6 @@ libsmputils1_la_SOURCES = \
 	smp_mptctl_io.c \
 	smp_aac_io.c
 
-EXTRA_libsmputils1_la_SOURCES = \
-	smp_dummy.c
-
 endif
 
 
@@ -19,9 +16,6 @@ if OS_FREEBSD
 libsmputils1_la_SOURCES = \
 	smp_lib.c \
 	smp_fre_cam.c
-
-EXTRA_libsmputils1_la_SOURCES = \
-	smp_dummy.c
 
 endif
 
@@ -32,11 +26,23 @@ libsmputils1_la_SOURCES = \
 	smp_lib.c \
 	smp_sol_usmp.c
 
+endif
+
 EXTRA_libsmputils1_la_SOURCES = \
 	smp_dummy.c
 
-endif
+# libsmputils1_ladir = .
 
+EXTRA_DIST = \
+	smp_lin_bsg.h \
+	aacraid.h \
+	mpi.h \
+	mpi_sas.h \
+	mpi_type.h \
+	mptctl.h \
+	smp_aac_io.h \
+	smp_mptctl_glue.h \
+	smp_mptctl_io.h
 
 # for testing with various compilers
 ## CC = gcc
@@ -58,5 +64,7 @@ libsmputils1_la_LDFLAGS = -version-info 1:0:0
 ## libsmputils1_la_LIBADD =
 
 distclean-local:
-	rm -rf .deps
+	rm -rf \
+	  .deps \
+	  Makefile.in
 

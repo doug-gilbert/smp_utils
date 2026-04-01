@@ -23,4 +23,7 @@ man_MANS = \
 
 ## endif
 
-
+distclean-local:
+	rm -rf \
+	  .deps \
+	  Makefile.in

@@ -2,7 +2,7 @@ AC_INIT(smp_utils, 1.00, dgilbert@interlog.com)
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC
 # AC_PROG_CXX
@@ -58,4 +58,10 @@ AC_CHECK_LIB(smputils1, smp_send_req,
 AC_SUBST(SMPUTILS_LIBS)
 AM_CONDITIONAL(HAVE_SMPUTILS, test x"$have_smputils" = xyes)
 
-AC_OUTPUT(Makefile include/Makefile lib/Makefile src/Makefile doc/Makefile)
+AC_CONFIG_FILES([Makefile
+        include/Makefile
+        lib/Makefile
+        src/Makefile
+        doc/Makefile
+])
+AC_OUTPUT

@@ -130,4 +130,6 @@ smp_zone_unlock_LDADD = ../lib/libsmputils1.la
 
 
 distclean-local:
-	rm -rf .deps
+	rm -rf \
+          .deps \
+          Makefile.in
