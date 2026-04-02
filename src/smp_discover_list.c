@@ -55,7 +55,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.51 20260401";    /* spl5r05 */
+static const char * version_str = "1.52 20260402";    /* spl5r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -1460,7 +1460,7 @@ main(int argc, char * argv[])
                 break;
             }
         }
-        for (k = 0, err = 0; k < num_desc; ++k) {
+        for (k = 0, err = 0; (k < num_desc) && (k + j < num); ++k) {
             off = 48 + (k * desc_len);
             if (op->do_1line) {
                 res = decode_1line(resp + off, desc_len, resp_desc_type,
@@ -1496,7 +1496,7 @@ main(int argc, char * argv[])
             if (0 == ret)
                 ret = SMP_LIB_CAT_OTHER;
         }
-    }
+    }   /* for loop over number of phys to list */
     if (zg_not1 && (0 == op->do_brief) && (NULL == op->zpi_fn))
         printf("Zoning %sabled\n", z_enabled ? "en" : "dis");
 
