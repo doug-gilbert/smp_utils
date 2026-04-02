@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Douglas Gilbert.
+ * Copyright (c) 2006-2026 Douglas Gilbert.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.64 20230201";    /* spl5r05 */
+static const char * version_str = "1.65 20260401";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
@@ -973,9 +973,7 @@ do_multiple(struct smp_target_obj * top, const struct opts_t * op)
             ret = 0;   /* nothing to do */
             goto fini;
         }
-        num -= op->phy_id;
-        if (op->do_num)
-            num = (num > op->do_num) ? op->do_num : num;
+        num = op->do_num ? (op->phy_id + op->do_num) : MAX_PHY_ID;
     }
     for (k = op->phy_id; k < num; ++k) {
         len = do_discover(top, k, rp, SMP_FN_DISCOVER_RESP_LEN, true, op);

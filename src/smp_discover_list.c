@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, Douglas Gilbert
+ * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.50 20211024";    /* spl5r05 */
+static const char * version_str = "1.51 20260401";    /* spl5r05 */
 
 #define MAX_DLIST_SHORT_DESCS 40
 #define MAX_DLIST_LONG_DESCS 8
@@ -1407,7 +1407,7 @@ main(int argc, char * argv[])
     }
     num = get_num_phys(&tobj, op, &has_t2t);
     if (num <= 0)
-        num = op->do_num;
+        num = (num > op->do_num) ? op->do_num : num;
     else {
         if (op->phy_id >= num) {
             printf("Given phy_id=%d equals or exceeds number of phys (%d)\n",
@@ -1415,8 +1415,7 @@ main(int argc, char * argv[])
             ret = 0;    /* could treat as error */
             goto err_out;
         }
-        num -= op->phy_id;
-        num = (num < op->do_num) ? num : op->do_num;
+        num = (num > op->do_num) ? op->do_num : num;
     }
     no_more = false;
     for (j = 0; (j < num) && (! no_more); j += num_desc) {
