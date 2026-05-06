@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2021, Douglas Gilbert
+ * Copyright (c) 2011-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,8 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
-#include "sg_pr2serr.h"
+#include "smp_unaligned.h"
+#include "smp_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -51,7 +51,7 @@
  * response.
  */
 
-static const char * version_str = "1.08 20210615";
+static const char * version_str = "1.09 20260501";
 
 #define SMP_FN_REPORT_ZONE_MAN_PASS_RESP_LEN (40 + 4)
 

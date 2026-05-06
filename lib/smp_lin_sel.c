@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023, Douglas Gilbert
+ * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
+#include "smp_unaligned.h"
 
 #include "smp_aac_io.h"
 #include "smp_mptctl_io.h"
@@ -60,7 +60,7 @@ smp_initiator_open(const char * device_name, int subvalue,
     memcpy(tobj->device_name, device_name,
            ((len > SMP_MAX_DEVICE_NAME) ? SMP_MAX_DEVICE_NAME : len));
     if (sa) {
-	tobj->sas_addr64 = sa;
+        tobj->sas_addr64 = sa;
         sg_put_unaligned_be64(sa, tobj->sas_addr + 0);
     }
     if (i_params[0]) {

@@ -2,36 +2,40 @@ Source: smp-utils
 Section: admin
 Priority: optional
 Maintainer: Douglas Gilbert <dgilbert@interlog.com>
-Build-Depends: debhelper (>= 7.0.50~)
-Standards-Version: 3.8.4
+Build-Depends: debhelper (>= 10), libtool, autoconf, libcam-dev [kfreebsd-i386 kfreebsd-amd64]
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
 Homepage: http://sg.danny.cz/sg/smp_utils.html
 
 Package: smp-utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: SAS Expander (SMP) utilities for SAS/SATA disk arrays
+Description: SAS management utilities for SAS/SATA disk arrays.
  Utilities that send Serial Attached SCSI (SAS) Serial Management
- Protocol (SMP) requests to a SMP target. If the request fails then
- the error is decoded. If the request succeeds then the response is
- either decoded, printed out in hexadecimal or output in binary.
- Support for SAS-2 features including phy based zoning.
+ Protocol (SMP) requests to a SMP target (e.g. a SAS expander). If
+ the request fails then the error is decoded. If the request succeeds
+ then the response is either decoded, printed out in hexadecimal or
+ output in binary.
 
 Package: libsmputils1-1
 Section: libs
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Architecture: any
+Multi-Arch: same
 Conflicts: libsmputils1
 Replaces: libsmputils1
 Suggests: smp-utils
-Description: utilities for SAS SMP control of expanders (shared libraries)
- Shared library used by the utilities in the smp-utils package.
+Description: Shared library used by most of the utilities in the smp-utils
+ package.
 
 Package: libsmputils1-dev
 Section: libdevel
 Architecture: any
-Depends: libsmputils1-1 (= ${binary:Version}), ${shlibs:Depends}, ${kfreebsd:Depends}
+Multi-Arch: same
+Depends: libsmputils1-1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, ${kfreebsd:Depends}
 Conflicts: libsmputils1-dev
 Suggests: smp-utils
 Description: utilities for SAS SMP control of expanders (developer files)
  Developer files (i.e. headers and a static library) which are associated with
  the utilities in the smp-utils package.
+

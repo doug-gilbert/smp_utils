@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2021, Douglas Gilbert
+ * Copyright (c) 2011-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
-#include "sg_pr2serr.h"
+#include "smp_unaligned.h"
+#include "smp_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -52,7 +52,7 @@
  * its response.
  */
 
-static const char * version_str = "1.11 20210615";
+static const char * version_str = "1.12 20260501";
 
 /* Permission table big enough for 256 source zone groups (rows) and
  * 256 destination zone groups (columns). Each element is a single bit,

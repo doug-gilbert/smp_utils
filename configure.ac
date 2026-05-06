@@ -12,9 +12,13 @@ AC_PROG_INSTALL
 ifdef([AM_PROG_AR], [AM_PROG_AR], [])
 
 # Adding libtools to the build seems to bring in C++ environment
-AC_PROG_LIBTOOL
+# autoupdate changed next line, was: AC_PROG_LIBTOOL
+LT_INIT
 
-# check for headers
+# check for headers; was: AC_HEADER_STDC
+# but autoupdate said that was obsolete and inserted the next line:
+# FreeBSD doesn't like that ... autoupdate is a croc
+## AC_CHECK_INCLUDES_DEFAULT
 AC_HEADER_STDC
 
 # check for functions

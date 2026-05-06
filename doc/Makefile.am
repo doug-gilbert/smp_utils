@@ -2,7 +2,7 @@
 ## Copied from sg3_utils. Some remnants left commented out as examples
 ## if OS_LINUX
 
-man_MANS = \
+dist_man_MANS = \
 	smp_conf_general.8 smp_conf_phy_event.8 smp_conf_route_info.8 \
 	smp_conf_zone_man_pass.8 smp_conf_zone_perm_tbl.8 \
 	smp_conf_zone_phy_info.8 smp_discover.8 smp_discover_list.8 \

@@ -1,11 +1,15 @@
-#ifndef SG_UNALIGNED_H
-#define SG_UNALIGNED_H
+#ifndef SMP_UNALIGNED_H
+#define SMP_UNALIGNED_H
 
 /*
- * Copyright (c) 2014-2018 Douglas Gilbert.
+ * Copyright (c) 2014-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
+ *
+ * This header is the same as sg_unaligned.h but if they have the
+ * same name it leads to a clash when the smp_utils and sg3_utils
+ * development libraries are installed on the same system.
  */
 
 #include <stdbool.h>
@@ -486,4 +490,4 @@ static inline void sg_nz_put_unaligned_le64(uint64_t val, void *p)
 }
 #endif
 
-#endif /* SG_UNALIGNED_H */
+#endif /* SMP_UNALIGNED_H */

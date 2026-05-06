@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023, Douglas Gilbert
+ * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,11 @@
 #include <inttypes.h>
 
 #include "smp_lib.h"
-#include "sg_unaligned.h"
-#include "sg_pr2serr.h"
+#include "smp_unaligned.h"
+#include "smp_pr2serr.h"
 
 
-static const char * version_str = "1.31 20230201";    /* spl-5 rev 8 */
+static const char * version_str = "1.31 20260501";    /* spl-5 rev 8 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -1142,7 +1142,7 @@ smp_get_dhnum(const char * buf)
  * written to cp. Note this means that when cp_max_len = 1, this function
  * assumes that cp[0] is the null character and does nothing (and returns
  * 0). Linux kernel has a similar function called  scnprintf(). Public
- * declaration in sg_pr2serr.h header  */
+ * declaration in smp_pr2serr.h header  */
 int
 sg_scnpr(char * cp, int cp_max_len, const char * fmt, ...)
 {

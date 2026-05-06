@@ -1,11 +1,15 @@
-#ifndef SG_PR2SERR_H
-#define SG_PR2SERR_H
+#ifndef SMP_PR2SERR_H
+#define SMP_PR2SERR_H
 
 /*
- * Copyright (c) 2004-2018 Douglas Gilbert.
+ * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the BSD_LICENSE file.
+ *
+ * This header is the same as sg_pr2serr.h but if they have the
+ * same name it leads to a clash when the smp_utils and sg3_utils
+ * development libraries are installed on the same system.
  */
 
 /* These are convenience functions that replace the somewhat long-winded
@@ -67,4 +71,4 @@ int sg_scnpr(char * cp, int cp_max_len, const char * fmt, ...);
 }
 #endif
 
-#endif
+#endif        /* SMP_PR2SERR_H */

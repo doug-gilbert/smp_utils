@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_pr2serr.h"
+#include "smp_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -56,7 +56,7 @@
  * the byte position by 2 of the register type, index and count fields.
  */
 
-static const char * version_str = "1.15 20180725";
+static const char * version_str = "1.16 20260501";
 
 #define SMP_MAX_RESP_LEN (1020 + 4 + 4)
 

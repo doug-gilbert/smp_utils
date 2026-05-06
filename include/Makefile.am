@@ -6,8 +6,8 @@ scsiincludedir      = $(includedir)/scsi
 
 scsiinclude_HEADERS = \
 	smp_lib.h \
-	sg_unaligned.h \
-	sg_pr2serr.h
+	smp_unaligned.h \
+	smp_pr2serr.h
 
 ## noinst_HEADERS = \
 ##         sg_pt_win32.h

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023, Douglas Gilbert
+ * Copyright (c) 2011-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -286,7 +286,7 @@ send_req_lin_bsg(int fd, int subvalue, struct smp_req_resp * rresp,
     unsigned char cmd[16];      /* unused */
     int res;
 
-    ++subvalue; /* suppress warning */
+    if (subvalue) { ; }         /* unused, suppress warning */
 
     memset(&hdr, 0, sizeof(hdr));
     memset(cmd, 0, sizeof(cmd));

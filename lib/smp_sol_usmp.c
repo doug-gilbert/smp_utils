@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, Douglas Gilbert
+ * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
+#include "smp_unaligned.h"
 
 #define I_USMP 1
 #define DEF_USMP_TIMEOUT 60 /* seconds  */

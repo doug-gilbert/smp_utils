@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, Douglas Gilbert
+ * Copyright (c) 2006-2022, Douglas Gilbert
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
-#include "sg_pr2serr.h"
+#include "smp_unaligned.h"
+#include "smp_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -51,7 +51,7 @@
  * This utility issues a PHY TEST FUNCTION function and outputs its response.
  */
 
-static const char * version_str = "1.20 20210615"; /* sync with spl5r05 */
+static const char * version_str = "1.21 20260501"; /* sync with spl5r05 */
 
 static struct option long_options[] = {
     {"control", required_argument, 0, 'c'},

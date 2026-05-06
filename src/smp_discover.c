@@ -46,8 +46,8 @@
 #include "config.h"
 #endif
 #include "smp_lib.h"
-#include "sg_unaligned.h"
-#include "sg_pr2serr.h"
+#include "smp_unaligned.h"
+#include "smp_pr2serr.h"
 
 /* This is a Serial Attached SCSI (SAS) Serial Management Protocol (SMP)
  * utility.
@@ -58,7 +58,7 @@
  * defined in the SPL series. The most recent SPL-5 draft is spl5r05.pdf .
  */
 
-static const char * version_str = "1.65 20260401";    /* spl5r05 */
+static const char * version_str = "1.66 20260501";    /* spl5r05 */
 
 
 #define SMP_FN_DISCOVER_RESP_LEN 124
