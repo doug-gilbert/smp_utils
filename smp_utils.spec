@@ -83,8 +83,8 @@ fi
 
 
 %changelog
-* Wed Feb 01 2023 - dgilbert at interlog dot com
-- see ChangeLog
+* Mon May 11 2026 - dgilbert at interlog dot com
+- see ChangeLog, still pre-release
   * smp_utils-1.00
 * Thu Mar 05 2020 - dgilbert at interlog dot com
 - add support for G5 (22.5 Gbps, SAS-4, SPL-5)

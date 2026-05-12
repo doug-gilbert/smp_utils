@@ -549,8 +549,10 @@ dStrHexFp(const char* str, int len, int no_ascii, FILE * fp)
     blen = (int)sizeof(buff);
     if (0 == no_ascii)  /* address at left and ASCII at right */
         formatstr = "%.76s\n";
+#if 0	/* compiler complains that < 0 and > 0 branches are the same */
     else if (no_ascii > 0)
         formatstr = "%s\n";     /* was: "%.58s\n" */
+#endif
     else /* negative: no address at left and no ASCII at right */
         formatstr = "%s\n";     /* was: "%.48s\n"; */
     memset(buff, ' ', 80);
