@@ -6,7 +6,9 @@ or output in binary. This package was written using the Linux 2.6 and
 3 series; it has been ported to FreeBSD and Solaris.
 
 For specific information about Linux see README.linux; for FreeBSD see
-README.freebsd and for Solaris see README.solaris .
+README.freebsd and for Solaris see README.solaris . For building and
+installation see the INSTALL file, the primary build system is GNU
+Autotools with an experimental cmake build.
 
 See COVERAGE file for more information about the coverage of various
 SMP functions.
@@ -48,4 +50,4 @@ the SAS Protocol Layer (SPL).
 
 
 Doug Gilbert
-8th December 2017
+13 May 2026

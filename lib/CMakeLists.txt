@@ -1,7 +1,5 @@
 
-# nothing yet
-
-MESSAGE( ">> Entering lib/CMakeLists.txt" )
+MESSAGE( STATUS ">> Entering lib/CMakeLists.txt" )
 
 set ( smputils1_lib_lin
 	smp_lib.c
@@ -11,10 +9,17 @@ set ( smputils1_lib_lin
         smp_aac_io.c
 )
 
-add_library(smputils1 SHARED ${smputils1_lib_lin} )
+if ( BUILD_SHARED_LIBS )
+    MESSAGE( STATUS ">> Build shared library(s) (default)" )
+    add_library(smputils1 SHARED ${smputils1_lib_lin} )
+else ( BUILD_SHARED_LIBS )
+    MESSAGE( STATUS ">> Build a static library" )
+    add_definitions ( -static )
+    add_library(smputils1 STATIC ${smputils1_lib_lin} )
+endif ( BUILD_SHARED_LIBS )
 
 if ( ENABLE_DEBUG )
-    MESSAGE( ">> Compile lib/ with DEBUG set" )
+    MESSAGE( STATUS ">> Compile lib/ with DEBUG set" )
 
     target_compile_definitions(smputils1 PRIVATE DEBUG)
     target_compile_options(smputils1 PRIVATE
@@ -50,36 +55,9 @@ install(TARGETS smputils1
     NAMELINK_COMPONENT development
 )
 
-#
-# Export targets
-#
-
-# install(EXPORT smputils1Targets
-#     FILE smputils1Targets.cmake
-#     # NAMESPACE mylib::
-#     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/smputils1
-#     COMPONENT development
-# )
-
-#
-# Package config
-#
-
-# configure_package_config_file(
-#     cmake/smputils1Config.cmake.in
-#     ${CMAKE_CURRENT_BINARY_DIR}/smputils1Config.cmake
-#     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/smputils1
-# )
-
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/smputils1ConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
-# install(FILES
-#     ${CMAKE_CURRENT_BINARY_DIR}/smputils1Config.cmake
-#     ${CMAKE_CURRENT_BINARY_DIR}/smputils1ConfigVersion.cmake
-#     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/smputils1
-#     COMPONENT development
-# )

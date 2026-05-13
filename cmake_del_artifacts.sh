@@ -12,6 +12,10 @@ cd src
 ./cmake_del_artifacts.sh
 cd ..
 
+cd doc
+./cmake_del_artifacts.sh
+cd ..
+
 rm -rf \
 	build \
 	CMakeCache.txt \
@@ -20,6 +24,7 @@ rm -rf \
 	CPackSourceConfig.cmake \
 	CMakeFiles \
 	cmake_install.cmake \
+	config.h \
 	install_manifest.txt \
 	_CPack_Packages \
 	CTestTestfile.cmake \

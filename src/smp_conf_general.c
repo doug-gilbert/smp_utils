@@ -38,7 +38,13 @@
 #include <sys/stat.h>
 
 #ifdef HAVE_CONFIG_H
+// #warning "FOUND config.h"
+// Following pragma is valid C99 and C++
+// _Pragma ("message(\"pragma: FOUND config.h\")");
 #include "config.h"
+#else
+// #warning "did NOT find config.h"
+// _Pragma ("message(\"pragma: did NOT find config.h\")");
 #endif
 #include "smp_lib.h"
 #include "smp_unaligned.h"
@@ -50,7 +56,7 @@
  * This utility issues a CONFIG GENERAL function and outputs its response.
  */
 
-static const char * version_str = "1.17 20260501";    /* spl4r12 */
+static const char * version_str = "1.18 20260513";    /* spl4r12 */
 
 static struct option long_options[] = {
     {"connect", required_argument, 0, 'c'},

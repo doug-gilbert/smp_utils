@@ -1,17 +1,17 @@
 
-MESSAGE( ">> Entering src/CMakeLists.txt" )
+MESSAGE(STATUS ">> Entering src/CMakeLists.txt" )
 
 if ( ENABLE_DEBUG )
-    MESSAGE( ">> Compile src/ with DEBUG set" )
+    MESSAGE( STATUS ">> Compile src/ with DEBUG set" )
 endif ( ENABLE_DEBUG )
 
-function(simple_exe arg1)
-    # message("arg1 = ${arg1}")
+if ( BUILD_SHARED_LIBS )
+    MESSAGE( STATUS ">> Build utilities based on smputils library (default)" )
+else ( BUILD_SHARED_LIBS )
+    MESSAGE( STATUS ">> Build static utilities" )
+    add_definitions ( -static )
+endif ( BUILD_SHARED_LIBS )
 
-    add_executable( "${arg1}" "${arg1}.c" )
-    target_include_directories(${arg1} PUBLIC ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries( ${arg1} smputils1 )
-endfunction()
 
 set(SMP_UTILS
 	smp_conf_general
@@ -48,6 +48,8 @@ set(SMP_UTILS
 foreach(util ${SMP_UTILS})
     add_executable( ${util} ${util}.c )
 
+    target_compile_definitions(${util} PRIVATE HAVE_CONFIG_H)
+
     if ( ENABLE_DEBUG )
         target_compile_definitions(${util} PRIVATE DEBUG)
         target_compile_options(${util} PRIVATE
@@ -56,7 +58,12 @@ foreach(util ${SMP_UTILS})
             -Wduplicated-branches -Wjump-misses-init -Wparentheses)
     endif ( ENABLE_DEBUG )
 
+    target_include_directories(${util} PRIVATE ${CMAKE_SOURCE_DIR})
     target_include_directories(${util} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+    if ( NOT BUILD_SHARED_LIBS )
+        target_link_options(${util} PRIVATE -static)
+    endif ( NOT BUILD_SHARED_LIBS )
 
     target_link_libraries( ${util} PRIVATE smputils1 )
 
@@ -68,33 +75,14 @@ foreach(util ${SMP_UTILS})
 endforeach()
 
 
+# function(simple_exe arg1)
+#     # message("arg1 = ${arg1}")
+# 
+#     add_executable( "${arg1}" "${arg1}.c" )
+#     target_include_directories(${arg1} PUBLIC ${CMAKE_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR})
+# 
+#     target_link_libraries( ${arg1} smputils1 )
+# endfunction()
+
 # simple_exe( smp_conf_general )
 # simple_exe( smp_conf_phy_event )
-# simple_exe( smp_conf_route_info )
-# simple_exe( smp_conf_zone_man_pass )
-# simple_exe( smp_conf_zone_perm_tbl )
-# simple_exe( smp_conf_zone_phy_info )
-# simple_exe( smp_discover )
-# simple_exe( smp_discover_list )
-# simple_exe( smp_ena_dis_zoning )
-# simple_exe( smp_phy_control )
-# simple_exe( smp_phy_test )
-# simple_exe( smp_read_gpio )
-# simple_exe( smp_rep_broadcast )
-# simple_exe( smp_rep_exp_route_tbl )
-# simple_exe( smp_rep_general )
-# simple_exe( smp_rep_manufacturer )
-# simple_exe( smp_rep_phy_err_log )
-# simple_exe( smp_rep_phy_event )
-# simple_exe( smp_rep_phy_event_list )
-# simple_exe( smp_rep_phy_sata )
-# simple_exe( smp_rep_route_info )
-# simple_exe( smp_rep_self_conf_stat )
-# simple_exe( smp_rep_zone_man_pass )
-# simple_exe( smp_rep_zone_perm_tbl )
-# simple_exe( smp_write_gpio )
-# simple_exe( smp_zone_activate )
-# simple_exe( smp_zone_lock )
-# simple_exe( smp_zone_unlock )
-# simple_exe( smp_zoned_broadcast )
-

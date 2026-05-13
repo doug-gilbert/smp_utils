@@ -1,4 +1,6 @@
 
+GNU Autotools build
+-------------------
 To build and install using the tarball, extract the files from
 the tarball, change directory to the top level within the
 extracted tree, and then:
@@ -10,7 +12,7 @@ extracted tree, and then:
 The './bootstrap' script can be used in place of './autogen.sh' .
 The last command will most likely require root privileges and will
 place the binaries in the /usr/local/bin directory. Since the utilities
-need root (superuser) permissions some distrubutions prefer to place the
+need root (superuser) permissions some distributions prefer to place the
 binaries in the /usr/sbin directory. To do that and place the man pages
 in their normal (Linux) location the ./configure line could be expanded
 to:
@@ -26,6 +28,51 @@ in this package) will depend on that shared library. The binaries can
 be linked instead with the static library with this invocation:
   # ./configure --disable-shared
 
+cmake build
+-----------
+This build is experimental, feedback encouraged. Firstly this cmake build
+is NOT intended to replace Autotools, the intention is that both will be
+supported and not interfere with one another.
+
+The primary configuration file in cmake is called CMakeLists.txt and there
+is one in the top level directory (of the source package) and others in
+the lib, src, include and doc directories. There is another "magic"
+configuration file call config.h.in.cmake that is explained in the
+top-level CMakeLists.txt file.
+
+To start the build process with cmake, in the simplest case call:
+    # cmake .
+
+Options can be requested like this
+    # cmake . -DENABLE_DEBUG=ON
+
+[The available options can be viewed with 'cmake -LH .' . for this
+ package it can be seen that ENABLE_DEBUG is default OFF .]
+
+The second step is to build the utilities, in the simplest case call:
+    # cmake --build .
+
+The shared library is in the lib directory and the utility executables
+are in the src directory.
+
+As an alternative or after 'cmake --build .' DEB and RPM packages can
+be built for Linux with:
+    # cpack .
+
+There are three packages each for DEB and RPM. One package has the
+utilities, man pages and some general information. A second package
+contains the shared library need for runtime. The third package
+is the "dev" (or "devel") version of the library that includes the
+project's public include files. That would be useful for another
+project that may want to use libsmputils1 .
+
+To clean up the build (artifact) files:
+    # cd <package_top_level_directory>
+    # make clean
+    # ./cmake_del_artifacts.sh 
+
+Cmake support for other platforms is coming, starting with FreeBSD.
+
 
 Douglas Gilbert
-26th August 2023
+13th May 2026
