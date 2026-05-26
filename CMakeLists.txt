@@ -7,7 +7,7 @@ project(smp_utils VERSION 0.99.9 LANGUAGES C)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g" )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" )
 
 string(TIMESTAMP BUILD_TIME "%Y%m%d %H:%M:%S")
 
