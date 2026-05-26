@@ -32,7 +32,7 @@ endif ( ENABLE_DEBUG )
 target_include_directories(smputils1
     PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/include>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scsi>
 )
 
 target_compile_features(smputils1 PUBLIC c_std_99)
