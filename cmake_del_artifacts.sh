@@ -1,18 +1,22 @@
 #!/bin/sh
 
-cd include
+# Designed to remove 'cmake . ; cmake --build . ' artifacts from an in-tree
+# build. For an out-of-tree build (e.g. 'cmake -S . -B build ; cd build ;
+# cmake --build . ; cpack . ') simply do 'cd .. ; rm -rf build ' .
+
+cd include || exit
 ./cmake_del_artifacts.sh
 cd ..
 
-cd lib
+cd lib || exit
 ./cmake_del_artifacts.sh
 cd ..
 
-cd src
+cd src || exit
 ./cmake_del_artifacts.sh
 cd ..
 
-cd doc
+cd doc || exit
 ./cmake_del_artifacts.sh
 cd ..
 

@@ -2,28 +2,10 @@
  * Copyright (c) 2006-2026, Douglas Gilbert
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#define _POSIX_C_SOURCE 200809L         /* for posix_memalign() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -37,7 +19,7 @@
 #include "smp_pr2serr.h"
 
 
-static const char * version_str = "1.31 20260501";    /* spl-5 rev 8 */
+static const char * version_str = "1.32 20260529";    /* spl-5 rev 8 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"
@@ -313,11 +295,11 @@ smp_get_connector_type_str(int conn_type, bool plink, int buff_len,
         snprintf(buff, buff_len, "Mini SAS HD 16i receptacle (SFF-8643)");
         pl_num = 16;
         break;
-    case 0x15:	/* was 'SAS SlimLine', changed ses4r03 */
+    case 0x15:  /* was 'SAS SlimLine', changed ses4r03 */
         snprintf(buff, buff_len, "SlimSAS 4i (SFF-8654)");
         pl_num = 4;
         break;
-    case 0x16:	/* was 'SAS SlimLine', changed ses4r03 */
+    case 0x16:  /* was 'SAS SlimLine', changed ses4r03 */
         snprintf(buff, buff_len, "SlimSAS 8i (SFF-8654)");
         pl_num = 8;
         break;
@@ -549,7 +531,7 @@ dStrHexFp(const char* str, int len, int no_ascii, FILE * fp)
     blen = (int)sizeof(buff);
     if (0 == no_ascii)  /* address at left and ASCII at right */
         formatstr = "%.76s\n";
-#if 0	/* compiler complains that < 0 and > 0 branches are the same */
+#if 0   /* compiler complains that < 0 and > 0 branches are the same */
     else if (no_ascii > 0)
         formatstr = "%s\n";     /* was: "%.58s\n" */
 #endif

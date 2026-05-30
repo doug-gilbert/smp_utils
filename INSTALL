@@ -43,7 +43,7 @@ top-level CMakeLists.txt file.
 To start the build process with cmake, in the simplest case call:
     # cmake .
 
-Options can be requested like this
+Options can be requested like this in the first step of a cmake build:
     # cmake . -DENABLE_DEBUG=ON
 
 [The available options can be viewed with 'cmake -LH .' . for this
@@ -67,9 +67,30 @@ project's public include files. That would be useful for another
 project that may want to use libsmputils1 .
 
 To clean up the build (artifact) files:
-    # cd <package_top_level_directory>
+    # cd <src_top_level_dir>
     # make clean
     # ./cmake_del_artifacts.sh 
+
+
+A _cleaner_ approach, because cmake generates lots of files (artifacts), is
+to create a build sub-directory off the top level source directory, then get
+cmake to put all its generated files under that sub-directory.
+    # cd <src_top_level_dir>
+    #
+    # cmake -S . -B build
+    # cd build
+    # cmake --build .
+    #
+    # cpack .
+
+The individual executables will be in the <src_top_level_dir>/build/src
+directory. The deb and rpm packages should be in the
+<src_top_level_dir>/build directory. There is no need to call the
+<src_top_level_dir>/cmake_del_artifacts.sh script. Once the packages
+and/or indivudual executable have been copied out of the build
+sub-directory, all of cmake's artifact files can be removed with:
+    rm -rf <src_top_level_dir>/build/
+
 
 Cmake support for other platforms is coming, starting with FreeBSD.
 

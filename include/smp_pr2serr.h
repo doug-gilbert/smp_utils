@@ -4,8 +4,8 @@
 /*
  * Copyright (c) 2004-2026 Douglas Gilbert.
  * All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the BSD_LICENSE file.
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
  *
  * This header is the same as sg_pr2serr.h but if they have the
  * same name it leads to a clash when the smp_utils and sg3_utils
@@ -36,7 +36,7 @@ extern "C" {
 
 
 #if defined(__GNUC__) || defined(__clang__)
-#ifdef SG_LIB_MINGW
+#ifdef SMP_LIB_MINGW
 /* MinGW uses Microsoft's printf */
 int pr2serr(const char * fmt, ...);
 

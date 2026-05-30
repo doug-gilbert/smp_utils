@@ -1,9 +1,6 @@
 
 MESSAGE( STATUS ">> Entering doc/CMakeLists.txt" )
 
-file(ARCHIVE_CREATE OUTPUT doc/smp_utils.8.gz PATHS doc/smp_utils.8 FORMAT raw COMPRESSION GZip)
-install(FILES smp_utils.8.gz DESTINATION "${CMAKE_INSTALL_MANDIR}/man8" COMPONENT utilities)
-
 set(SMP_UTILS
         smp_conf_general
         smp_conf_phy_event
@@ -29,6 +26,7 @@ set(SMP_UTILS
         smp_rep_self_conf_stat
         smp_rep_zone_man_pass
         smp_rep_zone_perm_tbl
+        smp_utils
         smp_write_gpio
         smp_zone_activate
         smp_zone_lock
@@ -39,12 +37,12 @@ set(SMP_UTILS
 foreach(util ${SMP_UTILS})
 
     file(ARCHIVE_CREATE
-         OUTPUT doc/${util}.8.gz
-         PATHS doc/${util}.8
+         OUTPUT ${CMAKE_BINARY_DIR}/doc/${util}.8.gz
+         PATHS ${CMAKE_SOURCE_DIR}/doc/${util}.8
          FORMAT raw
          COMPRESSION GZip
     )
-    install(FILES ${util}.8.gz
+    install(FILES ${CMAKE_BINARY_DIR}/doc/${util}.8.gz
             DESTINATION "${CMAKE_INSTALL_MANDIR}/man8"
             COMPONENT utilities
     )
