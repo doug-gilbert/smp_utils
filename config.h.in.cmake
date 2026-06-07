@@ -10,7 +10,7 @@
 #cmakedefine OS_ANDROID  1
 #cmakedefine OS_FREEBSD  1
 #cmakedefine SMP_LIB_FREEBSD  1
-#cmakedefine OS_NetBSD  1
+#cmakedefine OS_NETBSD  1
 #cmakedefine SMP_LIB_NETBSD  1
 #cmakedefine OS_OPENBSD  1
 #cmakedefine SMP_LIB_OPENBSD 1 

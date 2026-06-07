@@ -55,6 +55,19 @@ if ( BUILD_SHARED_LIBS )
     set_target_properties(smputils1 PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS ON
     )
+    target_include_directories(smputils1 PRIVATE
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    add_library(smputils1_static STATIC ${smputils1_gen} ${smputils1_lib_hal} )
+    set_target_properties(smputils1_static PROPERTIES
+        OUTPUT_NAME smputils1
+    )
+    target_include_directories(smputils1_static PRIVATE
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+    )
 else ( BUILD_SHARED_LIBS )
     MESSAGE( STATUS ">> Build a static library" )
     add_definitions ( -static )
@@ -75,7 +88,9 @@ endif ( ENABLE_DEBUG )
 target_include_directories(smputils1
     PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/scsi>
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
 )
 
 target_include_directories(smputils1 PRIVATE ${CMAKE_BINARY_DIR})
@@ -108,7 +123,15 @@ file(CREATE_LINK
     \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/libsmputils1.so\"
     SYMBOLIC)"
     COMPONENT development
+    # PR 6 seems to have 'NAMELINK_COMPONENT development' for the line above
 )
+
+if ( BUILD_SHARED_LIBS )
+    install(TARGETS smputils1_static
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            COMPONENT development
+    )
+endif ( BUILD_SHARED_LIBS )
 
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/smputils1ConfigVersion.cmake

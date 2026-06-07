@@ -10,9 +10,7 @@ include(CMakePackageConfigHelpers)
 set ( CMAKE_C_STANDARD 99 )
 set ( CMAKE_C_STANDARD_REQUIRED ON )
 set ( CMAKE_C_EXTENSIONS OFF )
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W" )
-
-add_compile_definitions ( _LARGEFILE64_SOURCE _FILE_OFFSET_BITS=64 )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H" )
 
 string(TIMESTAMP BUILD_TIME "%Y%m%d %H:%M:%S")
 
@@ -57,7 +55,7 @@ option ( DISABLE_LINUXBSG "option ignored, this is placeholder" OFF)
 # of this package.
 #
 # For both autotools and cmake in-tree builds, config.h is placed in the top
-# level source directory. For out-of-tree builds the config.h is placed in
+# level source directory. For out-of-tree builds config.h is placed in
 # the top level build directory (e.g. <top_level_src>/build/config.h ).
 
 set(FEATURE_COMMENT "//")
@@ -143,8 +141,7 @@ set(SMP_LIB_ANDROID 0)
 set(OS_ANDROID 0)
 set(OS_FREEBSD 0)
 set(SMP_LIB_FREEBSD 0)
-set(OS_NetBSD 0)
-#### xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+set(OS_NETBSD 0)
 set(SMP_LIB_NETBSD 0)
 set(OS_OPENBSD 0)
 set(SMP_LIB_OPENBSD 0)
@@ -225,7 +222,7 @@ else()
 endif()
 
 configure_file( ${CMAKE_SOURCE_DIR}/config.h.in.cmake ${CMAKE_BINARY_DIR}/config.h )
-add_definitions ( -DHAVE_CONFIG_H )
+# add_definitions ( -DHAVE_CONFIG_H ) # defined above in CMAKE_C_FLAGS
 
 
 add_subdirectory( include )
@@ -272,6 +269,8 @@ set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "libsmputils1-1")
 set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_NAME "libsmputils1-dev")
 set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS
     "libsmputils1-1 (= ${PROJECT_VERSION})")
+set(CPACK_DEBIAN_UTILITIES_PACKAGE_DEPENDS
+    "libsmputils1-1 (= ${PROJECT_VERSION})")
 SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "SMP is the SAS Management Protocol. These utilities interact with s SMP device (e.g. in a disk enclosure)")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Douglas Gilbert")
 set(CPACK_DEBIAN_UTILITIES_PACKAGE_SECTION "admin")
@@ -279,6 +278,21 @@ set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "libs")
 set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_SECTION "libdevel")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS " ")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+
+if (NOT DPKG_EXECUTABLE)
+    execute_process(
+        COMMAND uname -m
+        OUTPUT_VARIABLE HOST_ARCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (HOST_ARCH STREQUAL "x86_64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+    elseif (HOST_ARCH MATCHES "^aarch64|^arm64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
+    else ()
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${HOST_ARCH}")
+    endif ()
+endif ()
 
 SET(CPACK_DEB_COMPONENT_INSTALL YES)
 
@@ -291,6 +305,7 @@ set(CPACK_RPM_RUNTIME_PACKAGE_NAME "smp_utils-libs")
 set(CPACK_RPM_DEVELOPMENT_PACKAGE_NAME "smp_utils-devel")
 SET(CPACK_RPM_PACKAGE_DESCRIPTION "SMP is the SAS Management Protocol. These utilities interact with s SMP device (e.g. in a disk enclosure)")
 SET(CPACK_RPM_PACKAGE_DEPENDS " ")
+set(CPACK_RPM_DEVELOPMENT_PACKAGE_REQUIRES "smp_utils-libs = ${PROJECT_VERSION}")
 SET(CPACK_RPM_PACKAGE_LICENSE "BSD-2-Clause and GPL-2.0-or-later")
 SET(CPACK_RPM_PACKAGE_VENDOR "Douglas Gilbert")
 set(CPACK_RPM_FILE_NAME RPM-DEFAULT)

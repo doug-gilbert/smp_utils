@@ -83,7 +83,7 @@ fi
 
 
 %changelog
-* Sat May 30 2026 - dgilbert at interlog dot com
+* Sat Jun 06 2026 - dgilbert at interlog dot com
 - see ChangeLog, still pre-release
   * smp_utils-1.00
 * Thu Mar 05 2020 - dgilbert at interlog dot com
