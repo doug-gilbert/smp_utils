@@ -117,10 +117,10 @@ install(TARGETS smputils1
 # plain libsmputils1.so name (without the release version embedded).
 # Create the directory first so this works when CPack stages components
 # into separate trees.
-install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}\")
+install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
 file(CREATE_LINK
     \"libsmputils1-${PROJECT_VERSION}.so.1\"
-    \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/libsmputils1.so\"
+    \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libsmputils1.so\"
     SYMBOLIC)"
     COMPONENT development
     # PR 6 seems to have 'NAMELINK_COMPONENT development' for the line above
