@@ -14,12 +14,20 @@
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef SG_LIB_FREEBSD
+#include <sys/param.h>      /* PAGE_SIZE */
+#endif
+
 #include "smp_lib.h"
 #include "smp_unaligned.h"
 #include "smp_pr2serr.h"
 
 
-static const char * version_str = "1.32 20260529";    /* spl-5 rev 8 */
+static const char * version_str = "1.33 20260608";    /* spl-5 rev 8 */
 
 /* Assume original SAS implementations were based on SAS-1.1 . In SAS-2
  * and later, SMP responses should contain an accurate "response length"

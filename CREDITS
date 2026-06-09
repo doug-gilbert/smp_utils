@@ -17,3 +17,7 @@ Monty Montgomery <xiphmont>
 	Fix memory overwrite in smp_acc_io.c	[both 20210311]
 	Initialize i_params to avoid decisions based on stack garbage
 
+Paul Evans <pevans at redhat dot com>
+	Significant help with setting up the cmake build system so
+	that its output conforms with the existing GNU Autotools
+	build system [20260501]

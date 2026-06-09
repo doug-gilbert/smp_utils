@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 // This file (config.h.in.cmake) is used as a template to generate the
 // config.h file in the first step of a cmake build. This file should be
 // kept under source control (e.g. svn or git) while config.h can be
@@ -6,10 +9,12 @@
 
 #cmakedefine OS_LINUX  1
 #cmakedefine SMP_LIB_LINUX 1 
+#cmakedefine SG_LIB_LINUX 1 
 #cmakedefine SMP_LIB_ANDROID 1 
 #cmakedefine OS_ANDROID  1
 #cmakedefine OS_FREEBSD  1
 #cmakedefine SMP_LIB_FREEBSD  1
+#cmakedefine SG_LIB_FREEBSD  1
 #cmakedefine OS_NETBSD  1
 #cmakedefine SMP_LIB_NETBSD  1
 #cmakedefine OS_OPENBSD  1
@@ -22,6 +27,7 @@
 #cmakedefine SMP_LIB_HAIKU 1
 #cmakedefine OS_WIN32 1 
 #cmakedefine SMP_LIB_WIN32  1
+#cmakedefine SG_LIB_WIN32  1
 #cmakedefine SMP_LIB_MINGW  1
 #cmakedefine SMP_LIB_CYGWIN  1
 
@@ -48,4 +54,6 @@
 // # This will generate a line in the output_file. Then in CMLists.txt:
 // #      set(FEATURE_COMMENT "//")
 // @FEATURE_COMMENT@#define OPTIONAL_SETTING 1
+
+#endif
 

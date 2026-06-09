@@ -30,10 +30,10 @@ function(build_one util_name source_files)
 	# need to get lib/getopt.h with #include <getopt.h>
         target_include_directories(${util_name} PRIVATE ${CMAKE_SOURCE_DIR}/lib)
     endif ()
-    if ( SG_LIB_FREEBSD )
+    if ( SMP_LIB_FREEBSD )
 	target_include_directories( ${util_name} PRIVATE /usr/local/include )
         target_link_libraries( ${util_name} PRIVATE cam )
-    endif ( SG_LIB_FREEBSD )
+    endif ( SMP_LIB_FREEBSD )
 
     if ( NOT BUILD_SHARED_LIBS )
         target_link_options(${util_name} PRIVATE -static)
